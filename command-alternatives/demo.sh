@@ -8,7 +8,9 @@ IFS=$'\n\t'
 # Source the demo magic script (ensure the correct path)
 . ./../__demo_magic.sh
 
-TYPE_SPEED=30
+./../__tmux_timer.sh &
+
+TYPE_SPEED=10
 
 clear
 
@@ -16,34 +18,29 @@ clear
 DEMO_PROMPT="${GREEN}➜ ${CYAN}\W ${COLOR_RESET}"
 
 # Change to the /tmp directory
-pei "cd /tmp"
+pe "cd /tmp"
 
 # Traditional find vs modern fd (one level deep)
-pe "find . -maxdepth 1 -name '*.txt'"
-pe "fd . --max-depth 1 --extension txt"
+pei "find . -maxdepth 1 -name '*.txt'"
+pei "fd . --max-depth 1 --extension txt"
 
 # Traditional sed vs modern sd
-pe "echo 'Hello World' | sed 's/World/Universe/'"
-pe "echo 'Hello World' | sd 'World' 'Universe'"
+pei "echo 'Hello World' | sed 's/World/Universe/'"
+pei "echo 'Hello World' | sd 'World' 'Universe'"
 
 # Traditional ls vs modern exa
-pe "\ls -l"
-pe "exa -l"
+pei "\ls -l"
+pei "exa -l"
 
 # Traditional cat vs modern bat
 echo "Hello World" >README.md
-pe "cat README.md"
-pe "bat README.md"
+pei "cat README.md"
+pei "bat README.md"
 
 # Traditional grep vs modern ripgrep (rg)
 echo "Hello World" >example.txt
-pe "grep 'World' example.txt"
-pe "rg 'World' example.txt"
-
-# Traditional diff vs modern delta
-echo "Hello Universe" >example2.txt
-pe "diff example.txt example2.txt"
-pe "delta example.txt example2.txt"
+pei "grep 'World' example.txt"
+pei "rg 'World' example.txt"
 
 # Generate and display a markdown table using glow
 echo '
@@ -54,11 +51,9 @@ echo '
 | sed              | sd                 |
 | cat              | bat                |
 | grep             | ripgrep (rg)       |
-| du               | dust               |
-| diff             | delta              |
 ' >tools.md
 
-pe "glow tools.md"
+glow tools.md
 
 # Cleanup
-rm README.md example.txt example2.txt tools.md
+rm README.md example.txt tools.md
