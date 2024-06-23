@@ -10,7 +10,7 @@ IFS=$'\n\t'
 
 ./../__tmux_timer.sh &
 
-TYPE_SPEED=10
+TYPE_SPEED=15
 
 clear
 
@@ -29,8 +29,8 @@ pei "echo 'Hello World' | sed 's/World/Universe/'"
 pei "echo 'Hello World' | sd 'World' 'Universe'"
 
 # Traditional ls vs modern exa
-pei "\ls -l"
-pei "exa -l"
+pei "\ls /var/log"
+pei "exa /var/log"
 
 # Traditional cat vs modern bat
 echo "Hello World" >README.md
@@ -42,18 +42,7 @@ echo "Hello World" >example.txt
 pei "grep 'World' example.txt"
 pei "rg 'World' example.txt"
 
-# Generate and display a markdown table using glow
-echo '
-| Traditional Tool | Modern Alternative |
-|------------------|--------------------|
-| ls               | exa                |
-| find             | fd                 |
-| sed              | sd                 |
-| cat              | bat                |
-| grep             | ripgrep (rg)       |
-' >tools.md
-
-glow tools.md
+glow /home/decoder/dev/shorts/command-alternatives/tools.md
 
 # Cleanup
-rm README.md example.txt tools.md
+rm README.md example.txt
