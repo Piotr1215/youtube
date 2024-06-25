@@ -34,7 +34,12 @@ DEMO_COMMENT_COLOR=$GREY
 
 # variable to control output redirection
 NO_OUTPUT=false
+FIRST_COMMAND=true
 
+# Function to clear the screen
+clear_screen() {
+	clear
+}
 ##
 # prints the script usage
 ##
@@ -116,9 +121,19 @@ function p() {
 #
 ##
 function pe() {
+	if [ "$FIRST_COMMAND" = false ]; then
+		clear_screen
+	fi
+	FIRST_COMMAND=false
+
 	# print the command
 	p "$@"
 	run_cmd "$@"
+
+	# print dashes and wait for user input before proceeding
+	echo -n "-----"
+	read -r -s
+	echo # Add a newline after user presses Enter
 }
 
 ##
@@ -129,8 +144,18 @@ function pe() {
 # usage: pei "ls -l"
 #
 ##
-function pei {
-	NO_WAIT=true pe "$@"
+function pei() {
+	if [ "$FIRST_COMMAND" = false ]; then
+		clear_screen
+	fi
+	FIRST_COMMAND=false
+
+	NO_WAIT=true p "$@"
+	run_cmd "$@"
+
+	# wait for 2 seconds before clearing the screen
+	sleep 2
+	clear_screen
 }
 
 ##
