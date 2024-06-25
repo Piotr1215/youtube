@@ -154,7 +154,7 @@ function pei() {
 	run_cmd "$@"
 
 	# wait for 2 seconds before clearing the screen
-	sleep 2
+	sleep 1.5
 	clear_screen
 }
 
