@@ -10,7 +10,7 @@ IFS=$'\n\t'
 
 ./../__tmux_timer.sh &
 
-TYPE_SPEED=15
+TYPE_SPEED=20
 CLEAR_SCREEN=true
 
 clear
@@ -45,12 +45,6 @@ pe "rg 'pie\$' sample.txt"  # Matches lines ending with 'pie'
 # .+ matches any character (except newline) one or more times.
 pe "rg 'a.*e' sample.txt"  # Matches 'a' followed by 'e' with any characters in between
 pe "rg 'a..+e' sample.txt" # Matches 'a' followed by 'e' with one or more characters in between
-
-# 5. Grouping and Capturing
-# Parentheses ( ... ) are used to group parts of a regex pattern.
-# For example, (fruit) pie will match 'fruit pie'.
-pe "rg '(fruit) pie' sample.txt"
-pe "rg 'fruit pie' sample.txt"
 
 # 6. Using Captured Groups in Replacement with sd
 # Using sd to capture and replace multiple groups
