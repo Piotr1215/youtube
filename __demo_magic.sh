@@ -10,7 +10,7 @@ NO_WAIT=false
 PROMPT_TIMEOUT=0
 
 # don't show command number unless user specifies it
-SHOW_CMD_NUMS=false
+HOW_CMD_NUMS=false
 
 # handy color vars for pretty prompts
 BLACK="\033[0;30m"
@@ -136,6 +136,17 @@ function pe() {
 	echo # Add a newline after user presses Enter
 }
 
+function pem() {
+	# Execute the command silently and capture its output
+	output=$($@ 2>&1)
+
+	# Print the output
+	echo "$output"
+
+	# Wait for 2 seconds before proceeding
+	sleep 2
+}
+
 ##
 # print and executes a command immediately
 #
@@ -151,10 +162,19 @@ function pei() {
 	FIRST_COMMAND=false
 
 	NO_WAIT=true p "$@"
-	run_cmd "$@"
 
-	# wait for 2 seconds before clearing the screen
-	sleep 1.5
+	# Capture the output without displaying it
+	output=$(eval $@ 2>&1)
+
+	if [ -n "$output" ]; then
+		# If there's output, display it and wait for 2 seconds
+		echo "$output"
+		sleep 1.5
+	else
+		# If no output, just pause briefly to show the command
+		sleep 1
+	fi
+
 	clear_screen
 }
 
