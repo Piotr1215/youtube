@@ -1,0 +1,8 @@
+app:
+  name: mywebapp
+  version: 1.0.0
+  image: nginx:latest
+  replicas: 3
+database:
+  image: postgres:13
+  password: secretpassword

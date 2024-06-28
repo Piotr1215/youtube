@@ -1,0 +1,9 @@
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - '80:80'
+  database:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=secretpassword
