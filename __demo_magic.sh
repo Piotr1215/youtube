@@ -10,7 +10,7 @@ NO_WAIT=false
 PROMPT_TIMEOUT=0
 
 # don't show command number unless user specifies it
-HOW_CMD_NUMS=false
+SHOW_CMD_NUMS=false
 
 # handy color vars for pretty prompts
 BLACK="\033[0;30m"
@@ -137,11 +137,17 @@ function pe() {
 }
 
 function pem() {
-	# Execute the command silently and capture its output
-	output=$($@ 2>&1)
+	# Display the prompt
+	x=$(PS1="$DEMO_PROMPT" "$BASH" --norc -i </dev/null 2>&1 | sed -n '${s/^\(.*\)exit$/\1/p;}')
+	# show command number is selected
+	if $SHOW_CMD_NUMS; then
+		printf "[$((++C_NUM))] $x"
+	else
+		printf "$x"
+	fi
 
-	# Print the output
-	echo "$output"
+	# Execute the command and display its output directly
+	eval "$@"
 
 	# Wait for 2 seconds before proceeding
 	sleep 2
