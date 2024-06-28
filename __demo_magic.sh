@@ -175,7 +175,7 @@ function pei() {
 	if [ -n "$output" ]; then
 		# If there's output, display it and wait for 2 seconds
 		echo "$output"
-		sleep 1.5
+		sleep 2
 	else
 		# If no output, just pause briefly to show the command
 		sleep 1
