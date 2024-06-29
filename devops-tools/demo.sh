@@ -26,7 +26,6 @@ pei "yq '.app.image' deploy-config.yaml"
 pem "echo 2. Using sed and grep to update app version for next release"
 pei "sed -i 's/version: 1.0.0/version: 1.1.0/' deploy-config.yaml"
 pei "grep version deploy-config.yaml"
-pei "cat deploy-config.yaml"
 
 # 3. curl - Check our deployment API and parse the response
 pem "echo 3. Using curl to check deployment API status"
@@ -43,6 +42,7 @@ pem "echo 5. Using watch to check deployment progress logs"
 pem "echo 'Pods ready: 1/3' | tee -a deployment.log"
 pem "echo 'Pods ready: 2/3' | tee -a deployment.log"
 pem "echo 'Pods ready: 3/3' | tee -a deployment.log"
+clear
 
 # 6. journalctl - Query Systemd Journal Logs
 pem "echo 6. Using journalctl to view and filter system logs"
