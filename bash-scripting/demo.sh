@@ -33,12 +33,11 @@ run_expect_script() {
 EOF
 }
 
-# 1. Introduction Slides
-nvim -c 'FIX 25' -c 'SimulateTypingWithPause ./example/example-short.sh 20 paragraph'
-# slides ./slides.md
+# Introduction Slides
+slides ./slides.md
 
-./example/example.sh Alice
-# 0. Shebang
+# Shebang
+nvim -c 'FIX 25' -c 'SimulateTypingWithPause ./example/example.sh 30 paragraph'
 
 # Run script normally
 p "To run the script in the current directory we must first grant it executable permissions and then run it\n
