@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue-test
+  labels:
+    type: blue-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: blue-test
+  template:
+    metadata:
+      labels:
+        type: blue-test
+    spec:
+      containers:
+        - image: piotrzan/nginx-demo:blue
+          name: nginx-test
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxsvc
+  labels:
+    type: blue-test
+spec:
+  type: ClusterIP
+  selector:
+    type: blue-test
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
