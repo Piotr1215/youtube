@@ -87,7 +87,7 @@ countdown_quiz() {
 	display_question "$question" "$answers" "$width" "$height" false
 	read -p "" </dev/tty
 
-	for i in {5..1}; do
+	for i in {3..1}; do
 		clear_and_position "$height" $((height / 2 - 4))
 
 		# Generate figlet text, put it in a box, center it, and colorize it
