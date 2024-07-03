@@ -85,7 +85,7 @@ countdown_quiz() {
 	read -r width height <<<"$(get_pane_dimensions)"
 
 	display_question "$question" "$answers" "$width" "$height" false
-	sleep 2
+	read -p "" </dev/tty
 
 	for i in {5..1}; do
 		clear_and_position "$height" $((height / 2 - 4))
@@ -102,7 +102,9 @@ countdown_quiz() {
 	done
 
 	display_question "$question" "$answers" "$width" "$height" true
-	sleep 5
+
+	read -p "" </dev/tty
+
 }
 
 # Check if the questions file path is provided
