@@ -1,0 +1,4 @@
+"Which kubectl command is used to view the logs of a specific pod?" "kubectl describe pod;||kubectl logs pod||;kubectl get pod"
+"What command creates a new deployment named 'nginx' with the image 'nginx:latest'?" "||kubectl create deployment nginx --image=nginx:latest||;kubectl apply deployment nginx --image=nginx:latest;kubectl run deployment nginx --image=nginx:latest"
+"How do you scale a deployment named 'web-app' to 3 replicas?" "kubectl scale web-app --replicas=3;||kubectl scale deployment web-app --replicas=3||;kubectl set replicas deployment web-app 3"
+"Which command lists all pods in all namespaces?" "kubectl get all;||kubectl get pods -A||;kubectl list pods"
