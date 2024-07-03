@@ -1,0 +1,5 @@
+"Which command is used to print name of current/working directory" "||pwd||;ls;cd"
+"What command is used to create a new directory named 'myfolder'?" "||mkdir myfolder||;touch myfolder;rm myfolder"
+"How do you remove a file named 'example.txt'?" "||rm example.txt||;rmdir example.txt;delete example.txt"
+"Which command is used to rename file 'file1.txt' to 'file2.txt'?" "copy file1.txt file2.txt;||mv file1.txt file2.txt||;move file1.txt file2.txt"
+"How can you display the content of a file named 'document.txt'?" "view document.txt;||cat document.txt||;edit document.txt"
