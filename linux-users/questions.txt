@@ -1,0 +1,5 @@
+"Which command displays detailed information about current user?" "userdetails;userinfo -a;||id||;whoami"
+"How do you create a new user?" "newuser -d;||useradd||;createuser -d; "
+"What file contains group membership information?" "/group/etc;||/etc/group||;/etc/users;/group/users"
+"How do you add a user to a group?" "||usermod -aG group user||;useradd -aG group user;addgroup -a user;adduser -G group user"
+"Which command lists all users currently logged in?" "||who||;id;users;whoami"
