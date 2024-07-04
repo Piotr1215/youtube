@@ -1,0 +1,5 @@
+"Which command is used to exit Vim without saving?" ":stop;||:q!||;:let me out;:close"
+"Which keys are used to move the cursor around in Vim?" "a,s,d,w;||h,j,k,l||;arrow keys"
+"What are Vim macros?" "A way to zoom in Vim;A tool for copying text;||A powerful editing automation||;A method to save files quickly"
+"How do you delete a whole paragraph when inside this paragraph in Vim?" "dd/DD;||dip/dap||;dpp/dpa"
+"Which command allows you to search for a word in Vim?" "||/search_term||;:query word;find word;"
