@@ -1,0 +1,5 @@
+"Which command pulls a Docker image from a registry?" "docker get;docker fetch;||docker pull||;docker download"
+"How do you list all Docker images on your system?" "docker list;docker show;||docker images||;docker ps"
+"Which command builds a custom Docker image?" "docker create;||docker build||;docker make;docker compile"
+"How do you run a Docker container in detached mode?" "docker start -d;||docker run -d||;docker execute -d;docker launch -d"
+"Which command executes a command in a running container?" "docker run;docker do;||docker exec||;docker command"
