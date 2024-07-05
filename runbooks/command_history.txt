@@ -1,0 +1,1 @@
+kubectl -n web-hosting rollout restart deployment/important-webpage

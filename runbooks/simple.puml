@@ -1,0 +1,18 @@
+@startuml
+hide footbox
+title Automated Runbooks
+
+participant "Incident" as incident
+actor "On-call responder" as platform
+participant "Rubook" as runbook
+collections "Incidents Repository" as repo
+
+platform <- incident: acknowledged by
+platform -> runbook : execute
+group Succesfull Execution
+platform -> repo : push to
+else Errors
+  platform -> incident : Use diagnostic tools
+  platform -> "New Runbook" ** :create
+end
+@enduml

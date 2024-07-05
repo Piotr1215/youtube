@@ -1,0 +1,2 @@
+deploy-nginx:
+  kubectl create deployment important-webpage --image=nginx --replicas=5 -n web-hosting
