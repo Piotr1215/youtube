@@ -1,0 +1,5 @@
+"Which command initializes a new Git repository?" "git start;git begin;||git init||;git create"
+"How do you add a file to the staging area in Git?" "git stage;git include;||git add||;git put"
+"Which command creates a new branch in Git?" "git new;git create-branch;||git checkout -b||;git make-branch"
+"How do you view the changes committed in Git?" "git log;git history;||git show||;git display"
+"Which command merges a branch into the main branch in Git?" "git join;git combine;||git merge||;git integrate"
