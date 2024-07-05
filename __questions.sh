@@ -4,6 +4,9 @@
 tput civis
 stty -echo
 
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # Restore cursor and echo on exit
 trap 'tput cnorm; stty echo; exit 0' EXIT INT TERM
 
@@ -64,11 +67,17 @@ display_question() {
 			local display_answer
 			if [[ $answer == \|\|*\|\| ]]; then
 				answer=${answer//||/} # Remove ||
-				[[ $show_answer == true ]] && display_answer="$letter) $answer <--" || display_answer="$letter) $answer"
+				if [[ $show_answer == true ]]; then
+					display_answer="$letter) ${GREEN}$answer <--${NC}"
+					echo -e "$(printf "%${padding}s%s\n" "" "$display_answer")"
+				else
+					display_answer="$letter) $answer"
+					echo "$(printf "%${padding}s%s\n" "" "$display_answer")"
+				fi
 			else
 				display_answer="$letter) $answer"
+				echo "$(printf "%${padding}s%s\n" "" "$display_answer")"
 			fi
-			printf "%${padding}s%s\n" "" "$display_answer"
 			letter=$(echo "$letter" | tr "a-z" "b-za")
 		done
 	fi
@@ -87,20 +96,55 @@ countdown_quiz() {
 	display_question "$question" "$answers" "$width" "$height" false
 	read -p "" </dev/tty
 
+	clear_and_position "$height" $((height / 2 - 4))
+	center_text "$question" "$width"
+	echo
+
+	if [ -n "$answers" ]; then
+		IFS=';' read -ra ANSWERS <<<"$answers"
+		local max_length=0
+		for answer in "${ANSWERS[@]}"; do
+			answer=${answer//||/} # Remove || if present
+			[[ ${#answer} -gt $max_length ]] && max_length=${#answer}
+		done
+
+		local total_width=$((max_length + 4)) # 4 for "x) " and a space
+		local padding=$(((width - total_width) / 2))
+		local letter='a'
+		for answer in "${ANSWERS[@]}"; do
+			local display_answer
+			if [[ $answer == \|\|*\|\| ]]; then
+				answer=${answer//||/} # Remove ||
+				[[ $show_answer == true ]] && display_answer="$letter) $answer <--" || display_answer="$letter) $answer"
+			else
+				display_answer="$letter) $answer"
+			fi
+			printf "%${padding}s%s\n" "" "$display_answer"
+			letter=$(echo "$letter" | tr "a-z" "b-za")
+		done
+	fi
+
 	for i in {3..1}; do
-		clear_and_position "$height" $((height / 2 - 4))
+		tput cup $((height / 2 + 2)) 0
 
 		# Generate figlet text, put it in a box, center it, and colorize it
 		figlet_output=$(echo "$i" | figlet -f standard)
+		# Add padding to the number "1" to match the width of other numbers
 		boxed_output=$(echo "$figlet_output" | boxes -d stone -p a2v1)
+		if [ "$i" -eq 1 ]; then
+			boxed_output=$(echo "$figlet_output" | boxes -d stone -p a4v1)
+		fi
+
 		centered_output=$(echo "$boxed_output" | while IFS= read -r line; do
 			center_text "$line" "$width"
 		done)
 		echo -e "$centered_output" | lolcat -f -s 100 2>/dev/null
+		tput cup $((height / 2 + 4)) 0
 
 		sleep 1
 	done
 
+	clear_and_position "$height" $((height / 2 - 4))
 	display_question "$question" "$answers" "$width" "$height" true
 
 	read -p "" </dev/tty
