@@ -1,0 +1,5 @@
+"What does the Turing Test evaluate?" "Processing speed;Programming skill;||Human-like responses||;Computational power"
+"Which AI subset focuses on learning from data?" "Expert Systems;Natural Language Processing;Robotics;||Machine Learning||"
+"What does AGI stand for?" "Automated General Intelligence;Advanced Generative Intelligence;||Artificial General Intelligence||;Algorithmic Guided Intelligence"
+"Which AI field deals with human language?" "Computer Vision;Robotics;||Natural Language Processing||;Knowledge Representation"
+"What AI approach mimics the human brain?" "Fuzzy Logic;Genetic Algorithms;||Neural Networks||;Decision Trees"
