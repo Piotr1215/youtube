@@ -1,0 +1,5 @@
+"What does LAN stand for?" "Large Area Network;Long Access Node;||Local Area Network||;Linked Automatic Network"
+"What is the OSI model?" "Operating System Interface;||Open Systems Interconnection||;Open Source Initiative;Optical System Integration"
+"What's the purpose of DNS?" "Data encryption;||Domain name resolution||;Traffic control;File transfer"
+"Which is NOT a common network topology?" "Star;Ring;Bus;||Pyramid||"
+"What does DHCP do?" "Secure data;Route packets;||Assign IP addresses||;Encrypt messages"
