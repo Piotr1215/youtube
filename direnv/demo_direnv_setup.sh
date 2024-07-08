@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 set -eo pipefail
 . ./../__demo_magic.sh
-TYPE_SPEED=30
-clear
+TYPE_SPEED=15
 DEMO_PROMPT="${GREEN}➜ ${CYAN}\W ${COLOR_RESET}"
 
-pei "# Let's create a directory with an .envrc file"
-pei "mkdir -p direnv_demo"
-pei "echo 'export HELLO=\"World\"' > ./direnv_demo/.envrc"
-pei "cat ./direnv_demo/.envrc"
+# Setup test environment
+mkdir -p ./test_direnv
+cd ./test_direnv
+echo 'export TEST_VAR="Hello, Direnv!"' >./.envrc
 
-pei "# Now, let's try to use the environment variable"
-p "cd direnv_demo"
-cd ./direnv_demo
+# Explicitly deny the .envrc
+direnv deny 2>/dev/null || true
 
-pei "# Oops! We see a permission error. Let's allow the .envrc"
-pei "direnv allow"
+p "we are in test_direnv directory with the .envrc file with"
+bat ./.envrc
 
-pei "# Now, let's try again"
-pei "echo \$HELLO"
+# Reload the shell to apply changes
+pe "eval \"\$(direnv export bash)\""
 
-pei "# Let's exit the directory"
-pei "cd .."
-pei "echo \$HELLO"
+# Show current directory and TEST_VAR value
+pe "echo TEST_VAR=\$TEST_VAR"
 
-pei "# And enter again to see automatic loading"
-pei "cd direnv_demo"
-pei "echo \$HELLO"
+# Allow the .envrc file
+pe "direnv allow"
 
-echo "Demo completed!"
+# Reload the shell to apply changes
+pe "eval \"\$(direnv export bash)\""
+
+# Show current directory and TEST_VAR value after allowing .envrc
+pe "echo TEST_VAR=\$TEST_VAR"

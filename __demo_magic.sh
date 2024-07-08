@@ -121,7 +121,7 @@ function p() {
 #
 ##
 function pe() {
-	if [ "$FIRST_COMMAND" = false ]; then
+	if [ "$FIRST_COMMAND" = false ] && [ "$CLEAR_SCREEN" = true ]; then
 		clear_screen
 	fi
 	FIRST_COMMAND=false
@@ -131,7 +131,6 @@ function pe() {
 	run_cmd "$@"
 
 	# print dashes and wait for user input before proceeding
-	echo -n "-----"
 	read -r -s
 	echo # Add a newline after user presses Enter
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-title="Neo(vim): Introduciton"
+title="Direnv"
 
 if command -v figlet &>/dev/null && command -v boxes &>/dev/null; then
 	echo "$title" | figlet -f big | lolcat | boxes -d peek
