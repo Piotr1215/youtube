@@ -162,26 +162,25 @@ function pem() {
 #
 ##
 function pei() {
-	if [ "$FIRST_COMMAND" = false ]; then
+	if [ "$FIRST_COMMAND" = false ] && [ "$CLEAR_SCREEN" = true ]; then
 		clear_screen
 	fi
 	FIRST_COMMAND=false
-
 	NO_WAIT=true p "$@"
 
-	# Capture the output without displaying it
-	output=$(eval $@ 2>&1)
+	# Execute the command and capture all output
+	output=$(eval "$@" 2>&1)
 
-	if [ -n "$output" ]; then
-		# If there's output, display it and wait for 2 seconds
-		echo "$output"
-		sleep 2
-	else
-		# If no output, just pause briefly to show the command
-		sleep 1
+	# Display the output
+	echo "$output"
+
+	# Pause to allow reading the output
+	sleep 2
+
+	# Clear the screen only if CLEAR_SCREEN is set to true
+	if [ "$CLEAR_SCREEN" = true ]; then
+		clear_screen
 	fi
-
-	clear_screen
 }
 
 ##
