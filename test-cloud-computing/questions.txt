@@ -1,0 +1,7 @@
+"What does IaaS stand for?" "||Infrastructure as a Service||;Internet as a Service;Intercom as a Service"
+"What does CDN stand for?" "Central Data Node;||Content Delivery Network||;Content Distribution Network"
+"What does IOT stand for?" "||Internet of Things||;Internet Operational Technology;Internal Outbound Timestamp"
+"In what format is data exchanged in modern services most of the time?" "XML;||JSON||;CSV"
+"What is load balancing?" "Increases network speed;Balances server loads;||Distributes network traffic||"
+"What does API stand for?" "Advanced Protocol Integration;||Application Programming Interface||;Automated Process Instruction"
+"What is the primary purpose of HTTPS?" "Faster web browsing;||Secure data transmission||;Higher bandwidth allocation"
