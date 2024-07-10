@@ -1,0 +1,5 @@
+"What is SQL?" "Select Question Log;Store Query Load;||Structured Query Language||"
+"Explain ACID guarantees Atomicity, Consistency, Isolation, Durability" "Helps make databases more scalable;||Properties guaranteeing database reliability||;Makes databases fun to work with"
+"Which is NOT a database type?" "Relational;Document;||Picture||"
+"What does CAP Theorem state (Consistency Availability Partition Tolerance)?" "||Only 2 can true at the same time||;Only 1 can be true at the same time;All are true at the same time"
+"What does database index do?" "Ensures compliance;Helps with database location;||Improves query efficiency||"
