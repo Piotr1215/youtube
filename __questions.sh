@@ -47,7 +47,7 @@ display_question() {
 	local height=$4
 	local show_answer=$5
 
-	clear_and_position "$height" $((height / 2 - 4))
+	clear_and_position "$height" $((height / 3 - 4))
 
 	center_text "$question" "$width"
 	echo
@@ -96,7 +96,7 @@ countdown_quiz() {
 	display_question "$question" "$answers" "$width" "$height" false
 	read -p "" </dev/tty
 
-	clear_and_position "$height" $((height / 2 - 4))
+	clear_and_position "$height" $((height / 3 - 4))
 	center_text "$question" "$width"
 	echo
 
@@ -125,7 +125,7 @@ countdown_quiz() {
 	fi
 
 	for i in {3..1}; do
-		tput cup $((height / 2 + 2)) 0
+		tput cup $((height / 3 + 2)) 0
 
 		# Generate figlet text, put it in a box, center it, and colorize it
 		figlet_output=$(echo "$i" | figlet -f standard)
@@ -139,12 +139,12 @@ countdown_quiz() {
 			center_text "$line" "$width"
 		done)
 		echo -e "$centered_output" | lolcat -f -s 100 2>/dev/null
-		tput cup $((height / 2 + 4)) 0
+		tput cup $((height / 3 + 4)) 0
 
 		sleep 1
 	done
 
-	clear_and_position "$height" $((height / 2 - 4))
+	clear_and_position "$height" $((height / 3 - 4))
 	display_question "$question" "$answers" "$width" "$height" true
 
 	read -p "" </dev/tty
