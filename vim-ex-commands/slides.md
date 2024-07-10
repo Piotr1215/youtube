@@ -109,4 +109,3 @@ vim.keymap.set("n", "<leader>ef", "<cmd>lua *G.execute*file_and_show_output()<CR
 - `:'<,'>!cmd` for processing selected text
 - Custom key bindings streamline common shell interactions
 
-Remember: With great power comes great responsibility. Always review commands before execution, especially those that modify files or system state.
