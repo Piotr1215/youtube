@@ -1,0 +1,5 @@
+"How to list file permissions?" "||ls -l example.txt||;chmod -l example.txt;ls -p example.txt"
+"Grant owner read, write, and execute permissions?" "chmod u-rwx example.txt;||chmod u+rwx example.txt||;chmod u=xrw example.txt"
+"Change the ownership to 'newuser'?" "||sudo chown newuser example.txt||;sudo chmod newuser example.txt;sudo owner newuser example.txt"
+"Grant permissions to owner, none to group/others" "||chmod u+rwx,go-rwx example.txt||;chmod u+rwx,g+rx,o+rx example.txt;chmod u+rwx,g+rw,o+r example.txt"
+"Change file group ownership to 'newgroup'?" "||sudo chgrp newgroup example.txt||;sudo chown newgroup example.txt;sudo chown example.txt"
