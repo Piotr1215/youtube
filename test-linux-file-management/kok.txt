@@ -1,0 +1,16 @@
+graph 1 16.153 1.75
+node user 0.5 0.55556 1 0.30556 User rounded rectangle black lightgrey
+node kubernetes_api_server 4.3819 0.55556 1.7361 0.30556 "Kubernetes API Server" rounded box black lightgrey
+node spinapp_crd 7.125 0.55556 1.1111 0.30556 "SpinApp CRD" rounded box black lightgrey
+node spin_operator 9.4375 0.55556 1.1528 0.30556 "Spin Operator" rounded box black lightgrey
+node deployment 11.688 0.48611 1.0694 0.30556 Deployment rounded box black lightgrey
+node service 15.319 0.55556 1 0.30556 Service rounded box black lightgrey
+node spinapp 13.611 0.48611 1 0.30556 SpinApp rounded box black lightgrey
+edge user kubernetes_api_server 4 1.002 0.55556 1.4988 0.55556 2.292 0.55556 2.9836 0.55556 "kubectl apply -f" 2.1181 0.65972 solid black
+edge kubernetes_api_server spinapp_crd 4 5.2512 0.55556 5.5559 0.55556 5.8998 0.55556 6.2083 0.55556 solid black
+edge spinapp_crd spin_operator 4 7.6861 0.55556 7.9254 0.55556 8.213 0.55556 8.4847 0.55556 solid black
+edge spin_operator deployment 4 10.018 0.53785 10.265 0.53012 10.56 0.5209 10.832 0.5124 solid black
+edge spin_operator service 4 10.018 0.55556 11.122 0.55556 13.521 0.55556 14.674 0.55556 solid black
+edge deployment spinapp 4 12.224 0.48611 12.453 0.48611 12.724 0.48611 12.964 0.48611 solid black
+edge spinapp service 4 14.116 0.50638 14.29 0.51359 14.489 0.5218 14.673 0.52942 dashed black
+stop

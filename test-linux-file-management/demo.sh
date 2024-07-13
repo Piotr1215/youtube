@@ -21,4 +21,4 @@ p "How many can you answer? \n
    Only one answer is correct \n
    comment below how many you got right!"
 
-../__questions.sh questions.txt
+./graph-easy.sh

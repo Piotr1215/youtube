@@ -1,0 +1,38 @@
+@startuml
+
+package "Kubernetes" {
+    [User] -down-> [Kubernetes API Server]
+
+    package "Kubernetes API Server" {
+        [Kubernetes API Server]
+    }
+
+    package "SpinApp CRD" {
+        [SpinApp CRD]
+    }
+
+    package "Spin Operator" {
+        [Spin Operator]
+    }
+
+    package "Deployment" {
+        [Deployment]
+    }
+
+    package "Service" {
+        [Service]
+    }
+
+    package "SpinApp" {
+        [SpinApp]
+    }
+
+    [Kubernetes API Server] --> [SpinApp CRD]
+    [SpinApp CRD] --> [Spin Operator]
+    [Spin Operator] --> [Deployment]
+    [Spin Operator] --> [Service]
+    [Deployment] --> [SpinApp]
+    [SpinApp] --> [Service] : ""
+}
+
+@enduml
