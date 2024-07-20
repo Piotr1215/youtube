@@ -9,10 +9,6 @@ spec:
     matchLabels:
       demo: jobs
   parallelism: 5
-  metadata:
-      name: jobs-demo
-        namespace: demos
-  completionMode: Indexed
   completions: 15
   backoffLimit: 2
   template:
