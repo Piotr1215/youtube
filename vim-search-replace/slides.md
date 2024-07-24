@@ -99,7 +99,8 @@ Replace string in a line
 '\w'                     -----> Matches any word character
 '\d'                     -----> Matches any digit
 '\s'                     -----> Matches any whitespace
-'\b'                     -----> Matches word boundary
+'\v'                     -----> Very magic mode
+'\r'                     -----> Matches a newline
 ```
 ---
 
@@ -206,7 +207,7 @@ Use macros when substitution is too complex, especially when substituting on *mu
 
 ```lua
 ",<space>", ":nohlsearch<CR>"              -----> Stop search highlight
-"<leader>pa", "ggVGp"                      -----> select all
+"<leader>pa", "ggVGp"                      -----> select all & paste
 "<leader>sa", "ggVG"                       -----> select all
 "<leader>r", ":%s/\\v/g<left><left>"       -----> replace in file command mode, no need to type
 "<leader>ss", ":s/"                        -----> search and replace in line
