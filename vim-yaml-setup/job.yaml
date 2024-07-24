@@ -1,6 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.20.5-standalone-strict/_definitions.json
+
 apiVersion: extensions/v1beta1
-kind: jobs
+kind: Jobs
 metadata:
   name: jobs-demo
   namespace: demos
