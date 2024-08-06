@@ -1,4 +1,6 @@
-# Repo for recording shorts on terminal
+# Repo for my YouTube Channel
+
+Long form and short form content
 
 Each `short` lives in its own directory and has a runnable `demo.sh` script.
 
