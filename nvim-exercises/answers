@@ -1,0 +1,35 @@
+1. Remove extra spaces
+Patterns:
+- `%s/\v\s//` and `%s/\v\s$`
+  Target first space since we know that without `/g` only the first occurrence
+  will match. Second pattern removes space from end of line.
+- `%s/\v\s{2}/ / | %s/\v\s$//`
+  Double Substitutions with | command separator
+- `%s/\v\s{2}(.*)\s$/ \1`
+  Start search from 2 spaces, capture all and match single space at the end
+
+Macro:
+- `/\sx$x0`
+   Here `^M` stands for <kbd>Enter</kbd>, we are using search to find first
+   space
+   > check in your terminal for key-code by: Ctrl-v and key
+- `f ý5x$x0`
+  Another one with f and x
+- `%norm! f x$x`
+  Instead of running macro you can use normal mode to run sequence of keystrokes
+  > the `!` ensures that custom key mappings are excluded which is important in
+  > my case as `f` is a custom function
+  on each line of the file
+2. Add "-" making the whole thing a list
+- `%s/\v^/-`
+3. Convert to markdown style links 
+- `%s/\v(\S+)/[\1](https:\/\/github.com\/\1)`
+4. Sort by number of stars descending
+- `'<,'>!sort -k2 -rn`
+5. Create markdown table
+6. Convert to json
+7. Delete lines where stars are less than 1000 (use word boundary)
+8. Reverse the order of characters in the number of stars
+- `%s/\v(\d+)/\=reverse(submatch(0))`
+9. Capitalize words longer than 10 characters
+- `%s/\w\+/\=len(submatch(0)) > 10 ? toupper(submatch(0)) : submatch(0)/g`

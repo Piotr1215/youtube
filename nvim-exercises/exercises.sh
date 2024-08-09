@@ -53,4 +53,4 @@ for solution_file in "$@"; do
 done
 
 clear
-echo "Congratulations!" | figlet | lolcat
+echo "YAY!" | figlet | lolcat
