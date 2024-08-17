@@ -1,0 +1,3 @@
+Error: Disk quota exceeded
+Warning: CPU temperature high
+Info: System rebooted

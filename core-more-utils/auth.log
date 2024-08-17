@@ -1,0 +1,7 @@
+May 10 08:00:01 server1 sshd[1234]: Accepted publickey for user1 from 10.0.0.5 port 22345 ssh2
+May 10 08:00:05 server1 sudo: user1 : TTY=pts/0 ; PWD=/home/user1 ; USER=root ; COMMAND=/usr/bin/ls
+May 10 08:00:10 server2 sshd[5678]: Failed password for invalid user admin from 192.168.1.200 port 54321 ssh2
+May 10 08:00:15 server1 sshd[1235]: Disconnected from user user1 10.0.0.5 port 22345
+May 10 08:00:20 server2 sshd[5679]: Failed password for root from 192.168.1.200 port 54322 ssh2
+May 10 08:00:25 server3 sudo: user2 : TTY=pts/1 ; PWD=/var/log ; USER=root ; COMMAND=/bin/cat auth.log
+May 10 08:00:30 server1 sshd[1236]: Accepted publickey for user3 from 10.0.0.7 port 22347 ssh2

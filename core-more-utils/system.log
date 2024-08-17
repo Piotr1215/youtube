@@ -1,0 +1,7 @@
+2023-05-10T08:00:00.123Z server1 kernel: CPU0: Core temperature above threshold, cpu clock throttled
+2023-05-10T08:00:01.234Z server2 systemd[1]: Started Daily apt upgrade and clean activities.
+2023-05-10T08:00:02.345Z server3 nginx[2345]: 10.0.0.5 - - [10/May/2023:08:00:02 +0000] "GET / HTTP/1.1" 200 3456 "-" "Mozilla/5.0"
+2023-05-10T08:00:03.456Z server1 kernel: EXT4-fs (sda1): re-mounted. Opts: errors=remount-ro
+2023-05-10T08:00:04.567Z server2 CRON[3456]: (root) CMD (/usr/bin/php /var/www/html/cron.php)
+2023-05-10T08:00:05.678Z server3 kernel: TCP: request_sock_TCP: Possible SYN flooding on port 80. Sending cookies.
+2023-05-10T08:00:06.789Z server1 systemd[1]: Starting Daily man-db regeneration...

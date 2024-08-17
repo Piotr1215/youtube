@@ -1,0 +1,29 @@
+Hit:1 http://mirror.united-gameserver.de/ubuntu jammy InRelease
+Hit:2 http://ftp.stw-bonn.de/ubuntu jammy InRelease
+Hit:3 http://download.opensuse.org/repositories/home:/justkidding/xUbuntu_22.04  InRelease
+Hit:4 https://download.docker.com/linux/ubuntu jammy InRelease
+Get:5 https://cli.github.com/packages stable InRelease [3,917 B]
+Hit:6 https://mirror.plusserver.com/ubuntu/ubuntu jammy InRelease
+Hit:7 https://mirror.23m.com/ubuntu jammy InRelease
+Hit:8 https://packages.microsoft.com/repos/azure-cli jammy InRelease
+Hit:9 https://baltocdn.com/helm/stable/debian all InRelease
+Hit:10 https://ftp.uni-mainz.de/ubuntu jammy InRelease
+Hit:11 https://mirror.de.leaseweb.net/ubuntu jammy InRelease
+Get:12 https://apt.syncthing.net syncthing InRelease [15.1 kB]
+Get:13 http://deb.volian.org/volian scar InRelease [99 B]
+Err:13 http://deb.volian.org/volian scar InRelease
+  Clearsigned file is not valid, got 'NOSPLIT' (does the network require authentication?)
+Hit:14 http://apt.pop-os.org/proprietary jammy InRelease
+Get:15 https://repo.charm.sh/apt * InRelease
+Hit:16 https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy InRelease
+Hit:17 https://ppa.launchpadcontent.net/kubescape/kubescape/ubuntu jammy InRelease
+Get:18 https://pkgs.tailscale.com/stable/ubuntu jammy InRelease
+Hit:19 https://ppa.launchpadcontent.net/rmescandon/yq/ubuntu jammy InRelease
+Hit:20 http://apt.pop-os.org/release jammy InRelease
+Hit:21 http://apt.pop-os.org/ubuntu jammy InRelease
+Get:22 http://apt.pop-os.org/ubuntu jammy-security InRelease [129 kB]
+Get:23 https://apt.fury.io/wez * InRelease
+Get:24 http://apt.pop-os.org/ubuntu jammy-updates InRelease [128 kB]
+Hit:25 http://apt.pop-os.org/ubuntu jammy-backports InRelease
+Hit:26 https://pkgs.zabbly.com/incus/stable jammy InRelease
+Reading package lists...
