@@ -1,0 +1,2 @@
+1.
+awk '{ =; print -zsh }' costam | sponge costam
