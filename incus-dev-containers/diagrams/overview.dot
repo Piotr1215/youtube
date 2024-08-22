@@ -1,0 +1,22 @@
+digraph G {
+  node [shape=box, style="rounded"];
+  compound=true;
+  label="Dev Containers on Incus";
+
+      subgraph cluster_incus {
+       label="Incus";
+       neovim [label="Neovim Container\n(ssh, neovim, docker-cli, zsh)"];
+       utility [label="Utility Container"];
+       utility2 [label="Utility Container"];
+       neovim -> utility [label="SSH to[system container]"];
+       neovim -> utility2 [label="SSH to[system container]"];
+       neovim -> docker [label="docker exec to[docker container]"]; 
+      }
+       shared [label="Shared Storage on host\n(/mnt/dev)"];
+       neovim -- shared [label="Mount /mnt/dev"];
+      subgraph cluster_docker {
+        label="Docker";
+
+        docker [label="e.g. Busybox"];
+      }
+    }
