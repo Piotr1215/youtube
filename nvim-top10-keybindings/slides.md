@@ -27,8 +27,8 @@ paging: Slide %d / %d
 ## Terminal
 
 ```lua
-vim.keymap.set("n", "<leader>tsv", ":vsp term://", { desc = "Open vertical terminal split" })
-vim.keymap.set("n", "<leader>tsh", ":sp term://",  { desc = "Open horizontal terminal split" })
+vim.keymap.set("n", "<leader>Tsv", ":vsp term://", { desc = "Open vertical terminal split" })
+vim.keymap.set("n", "<leader>Tsh", ":sp term://",  { desc = "Open horizontal terminal split" })
 ```
 
 ---
@@ -36,9 +36,9 @@ vim.keymap.set("n", "<leader>tsh", ":sp term://",  { desc = "Open horizontal ter
 ## Selection
 
 ```lua
-vim.keymap.set("n", "<leader>L", "vg_",    { desc = "Select to end of line" })
-vim.keymap.set('n', 'pa', 'ggVGp',         { desc = "select all and paste" })
-vim.keymap.set('n', 'sa', 'ggVG',          { desc = "select all" })
+vim.keymap.set("n", "L", "vg_",    { desc = "Select to end of line" })
+vim.keymap.set('n', '<leader>pa', 'ggVGp',         { desc = "select all and paste" })
+vim.keymap.set('n', '<leader>sa', 'ggVG',          { desc = "select all" })
 vim.keymap.set("n", "<leader>gp", "`[v`]", { desc = "select pasted text" })
 ```
 
@@ -77,11 +77,13 @@ vim.keymap.set("n", "<BS>", "^", { desc = "Move to first non-blank character" })
 
 ---
 
-## Move current line up/down
+## Move current line/selection up/down
 
 ```lua
-vim.keymap.set("n", "<leader>j", ":m .+1<CR>==", { desc = "Move line down" })
-vim.keymap.set("n", "<leader>k", ":m .-2<CR>==", { desc = "Move line up" })
+vim.keymap.set("n", "<leader>mj", ":m .+1<CR>==",     { desc = "Move line down" })
+vim.keymap.set("n", "<leader>mk", ":m .-2<CR>==",     { desc = "Move line up" })
+vim.keymap.set("v", "<leader>mj", ":m '>+1<CR>gv=gv", { desc = "Move Line Down in Visual Mode" })
+vim.keymap.set("v", "<leader>mk", ":m '<-2<CR>gv=gv", { desc = "Move Line Up in Visual Mode" })
 ```
 
 ---
@@ -89,10 +91,10 @@ vim.keymap.set("n", "<leader>k", ":m .-2<CR>==", { desc = "Move line up" })
 ## Search and replace
 
 ```lua
-vim.keymap.set('n', 'ss', ':s/\\v',                             { desc = "search and replace on line" })
-vim.keymap.set('n', 'SS', ':%s/\\v',                            { desc = "search and replace in file" })
+vim.keymap.set('n', '<leader>ss', ':s/\\v',                             { desc = "search and replace on line" })
+vim.keymap.set('n', '<leader>SS', ':%s/\\v',                            { desc = "search and replace in file" })
 vim.keymap.set('v', '<leader><C-s>', ':s/\\%V',                 { desc = "Search only in visual selection using %V atom" })
-vim.keymap.set('v', '<C-r>', '"hy:%s/\\v<C-r>h//g<left><left>', { desc = "change selection" })
+vim.keymap.set('v', '<leader><C-r>', '"hy:%s/\\v<C-r>h//g<left><left>', { desc = "change selection" })
 ```
 
 ---
@@ -123,7 +125,7 @@ vim.keymap.set('n', '<leader>df', ':%d_<cr>', { desc = 'delete file content to b
 
 ```lua
 vim.keymap.set("n", "<leader>w", ":w<CR>",    { desc = "Quick save" })
-vim.keymap.set("n", "cx", ":!chmod +x %<cr>", { desc = "make file executable" })
+vim.keymap.set("n", "<leader>cx", ":!chmod +x %<cr>", { desc = "make file executable" })
 vim.keymap.set(
   "n",
   "<leader>cpf",
