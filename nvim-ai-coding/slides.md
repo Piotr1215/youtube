@@ -20,19 +20,17 @@ paging: Slide %d / %d
 - 🧠 Understanding AI-assisted coding in Neovim
 - 🔧 Setting up AI coding assistants
 - 💻 Practical usage and best practices
-- 🚀 Enhancing productivity while maintaining code quality
-
+- 🚀 Answer questions if Neovim is still relevant in the age of AI
 ---
 
 ## What is AI-Assisted Coding?
 
-- Uses machine learning models to suggest code completions
-- Learns from vast codebases and your own coding style
-- Can generate entire functions, documentation, or complex algorithms
-- Aims to speed up development and reduce repetitive tasks
+- AI-assisted coding is like having a smart coding buddy.
+- Suggests code completions, learns from vast codebases, and adapts to your style.
+- Helps generate functions, write docs, and create algorithms.
+- The goal ---> reduce repetitive tasks NOT to replace thinking!
 
 ---
-
 
 ## Popular AI Coding Assistants for Neovim
 
@@ -40,80 +38,83 @@ paging: Slide %d / %d
 - `jackMort/ChatGPT.nvim`: Integrate OpenAI's ChatGPT
 - `robitx/gp.nvim`: GPT integration for Neovim
 - `David-Kunz/gen.nvim`: AI code generation and editing
-- `joshuavial/aider.nvim`: OOS coding assistant wrapper
+- `joshuavial/aider.nvim`: OOS coding assistant wrapper (no need for plugin)
 
 ---
 
 ## Practical Use Cases
 
-1. Code Completion (Copilot)
-   - Real-time suggestions as you type
-   - Completes functions, loops, and complex structures
+### Code Completion (Copilot)
+- Real-time suggestions as you type
+- Completes functions, loops, and complex structures
 
-2. Code Rewriting and Chat (gp.nvim)
-   - Interactive chat for code explanations
-   - Rewrite and refactor code blocks
-
-3. Local Models with Ollama (gen.nvim)
-   - Simple formatting and code suggestions
-   - Slower response times, works offline
-
-4. Advanced Coding Assistant (aider.nvim)
-   - Open terminal window inside Neovim to run Aider
-   - Comprehensive AI-powered coding assistance
-
+```bash
+tmux switchc -t copilot
+```
 ---
 
-## Best Practices
+### Code Rewriting and Chat (gp.nvim)
+- Interactive chat for code explanations
+- Rewrite and refactor code blocks
 
-1. Review all AI suggestions carefully
-2. Use AI for inspiration, not blind acceptance
-3. Maintain consistent coding style and standards
-4. Leverage AI for repetitive tasks and boilerplate code
-5. Combine AI suggestions with your domain knowledge
-6. Use AI to explore alternative implementations
-
+```bash
+tmux switchc -t gp
+```
 ---
 
-## Customizing AI Behavior
+### Local Models with Ollama (gen.nvim)
+- Simple formatting and code suggestions
+- Slower response times, works offline
 
-```lua
--- Example: Customizing Copilot behavior
-vim.g.copilot_node_command = "/usr/local/n/versions/node/14.18.2/bin/node"
+```bash
+tmux switchc -t ollama
+```
+---
 
--- Disable Copilot for specific filetypes
-vim.g.copilot_filetypes = {
-    ["markdown"] = false,
-    ["yaml"] = false,
+### Advanced Coding Assistant (aider.nvim)
+- Open terminal window inside Neovim to run Aider
+- Comprehensive AI-powered coding assistance
+
+```bash
+tmux switchc -t aider
+```
+---
+
+## Bonus
+
+- chat from command line
+
+```bash
+gpt () {
+        local input
+        if [ -t 0 ]
+        then
+                input="$1"
+        else
+                input=$(cat | sed -r "s/\x1b\[[0-9;]*m//g")
+        fi
+        local tmpfile=$(mktemp /tmp/nvim_buffer_cleaned.XXXXXX)
+        echo "$input" > $tmpfile
+        nvim -c "GpChatNew" -c "call append(line('$')-1, readfile('$tmpfile'))" -c "normal! Gdd" -c "startinsert"
+        rm -v $tmpfile
 }
+```
 
--- Change suggestion accept key
-vim.api.nvim_set_keymap("i", "<C-L>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
+```bash
+tmux switchc -t gpt-chat
 ```
 
 ---
 
-## Troubleshooting Common Issues
+## Best Practices and Conclusion
 
-1. Ensure Neovim is updated to the latest version
-2. Check plugin compatibility with your Neovim version
-3. Verify API keys and authentication for AI services
-4. Monitor system resources (AI can be computationally intensive)
-5. Adjust suggestion frequency if overwhelmed
-6. Regularly update AI plugins for best performance
-
----
-
-## Conclusion
-
-- AI-assisted coding can significantly boost productivity
-- Proper setup and usage in Neovim is key to success
-- Balance AI suggestions with human oversight
-- Continuously refine your AI-assisted workflow
+- 🔍 Review all AI suggestions carefully
+- 🧠 Use AI after you understand the problem
+- 🔄 Leverage AI for repetitive tasks and boilerplate code
+- 📖 Use AI to explain complex code blocks
 
 ---
 
 ```bash
-../embrace_ai_coding
+../thats_all_folks
 ```
-</markdown_slides>

@@ -1,0 +1,2 @@
+sudo tail -n 20 /var/log/syslog
+tail -n 20 /var/log/syslog
