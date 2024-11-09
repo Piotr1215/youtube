@@ -2,12 +2,12 @@
 
 set -eo pipefail
 
-# Add source and line number where running in debug mode: __run_with_xtrace.sh generate_tmux_sessions.sh
+# Add source and line number wher running in debug mode: __run_with_xtrace.sh generate_tmux_sessions.sh
 # Set new line and tab for word splitting
 IFS=$'\n\t'
 
-# Declare an array to store session names
-sessions=("copilot" "gp" "ollama" "aider")
+# Declare an array to store session names from arguments
+sessions=("$@")
 
 # Function to create tmux sessions in the current directory
 generate_sessions() {
@@ -17,8 +17,6 @@ generate_sessions() {
 		tmux new-session -d -s "$session" -c "$current_dir"
 		echo "Created tmux session: $session"
 	done
-
-	# List all tmux sessions
 }
 
 # Function to close (kill) tmux sessions
@@ -31,9 +29,11 @@ close_sessions() {
 
 # Call functions based on the argument provided
 if [[ "$1" == "start" ]]; then
-	generate_sessions
+	shift
+	generate_sessions "$@"
 elif [[ "$1" == "stop" ]]; then
-	close_sessions
+	shift
+	close_sessions "$@"
 else
-	echo "Usage: $0 {start|stop}"
+	echo "Usage: $0 {start|stop} session1 session2 ..."
 fi
