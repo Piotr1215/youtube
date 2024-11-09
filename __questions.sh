@@ -11,13 +11,23 @@ NC='\033[0m' # No Color
 trap 'tput cnorm; stty echo; exit 0' EXIT INT TERM
 
 # Check for required commands
-for cmd in tmux figlet boxes lolcat; do
+# Check for required commands
+for cmd in tmux figlet boxes lolcat beep; do
 	if ! command -v $cmd &>/dev/null; then
-		echo "Error: $cmd is required but not installed. Please install it and try again." >&2
-		exit 1
+		if [ "$cmd" = "beep" ]; then
+			echo "Warning: beep is not installed. Falling back to terminal bell." >&2
+		else
+			echo "Error: $cmd is required but not installed. Please install it and try again." >&2
+			exit 1
+		fi
 	fi
 done
-
+# Function to produce a beep sound
+# Function to produce a beep sound
+# Function to produce a gentle bell-like sound
+make_beep() {
+	mpg123 -q /home/decoder/Downloads/robotic-countdown-43935.mp3 &
+}
 # Function to get the dimensions of the current tmux pane
 get_pane_dimensions() {
 	tmux display-message -p '#{pane_width} #{pane_height}'
@@ -115,7 +125,7 @@ countdown_quiz() {
 			local display_answer
 			if [[ $answer == \|\|*\|\| ]]; then
 				answer=${answer//||/} # Remove ||
-				[[ $show_answer == true ]] && display_answer="$letter) $answer <--" || display_answer="$letter) $answer"
+				display_answer="$letter) $answer"
 			else
 				display_answer="$letter) $answer"
 			fi
@@ -123,6 +133,9 @@ countdown_quiz() {
 			letter=$(echo "$letter" | tr "a-z" "b-za")
 		done
 	fi
+
+	# Play the countdown sound once at the start
+	mpg123 -q /home/decoder/Downloads/robotic-countdown-43935.mp3 &
 
 	for i in {3..1}; do
 		tput cup $((height / 3 + 2)) 0
@@ -148,7 +161,6 @@ countdown_quiz() {
 	display_question "$question" "$answers" "$width" "$height" true
 
 	read -p "" </dev/tty
-
 }
 
 # Check if the questions file path is provided
