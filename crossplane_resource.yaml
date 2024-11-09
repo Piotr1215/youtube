@@ -1,0 +1,11 @@
+apiVersion: databases.example.org/v1alpha1
+kind: PostgreSQLInstance
+metadata:
+  name: my-db
+spec:
+  parameters:
+    storageGB: 20
+  compositionSelector:
+    matchLabels:
+      provider: aws
+      region: us-west-2
