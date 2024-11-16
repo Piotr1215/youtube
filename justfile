@@ -42,17 +42,7 @@ freetext *free_text:
   #!/usr/bin/env bash
   export title="{{free_text}}"
   if command -v figlet &>/dev/null && command -v boxes &>/dev/null; then
-      echo "$title" | figlet -f pagga | boxes -d peek
-  else
-      echo "$title"
-  fi
-
-# show ending ascii
-demo *demo_title:
-  #!/usr/bin/env bash
-  export title="{{demo_title}}"
-  if command -v figlet &>/dev/null && command -v boxes &>/dev/null; then
-      echo "$title" | figlet -f pagga | boxes -d peek
+      echo "$title" | figlet -f pagga -w 200 | boxes -d peek
   else
       echo "$title"
   fi
@@ -63,7 +53,7 @@ intro *pres_title:
   export title="{{pres_title}}"
 
   if command -v figlet &>/dev/null && command -v boxes &>/dev/null; then
-    echo "$title" | figlet -f future | boxes -d peek
+    echo "$title" | figlet -f future -w 200 | boxes -d peek
   else
     echo "$title"
   fi
