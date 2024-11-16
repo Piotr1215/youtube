@@ -1,0 +1,34 @@
+@startuml
+hide footbox
+
+participant "Introduction" as V1
+  note left of V1
+    Showcases various automations 
+    that are possible with 
+    set of open source command line tools.
+  end note
+
+participant "Neovim integration" as V2
+participant "Reminders and Followups" as V3
+participant "Time Tracking" as V4
+participant "External Issue Sync" as V5 
+participant "5 more videos..." as V6
+' participant "Notes, annotaiton and priority" as V6 
+' participant "Custom Hooks: tmuxinator integration" as V7
+' participant "Custom Hooks: commands trigger" as V8
+' participant "Custom Hooks: labels automation" as V9
+' participant "URL & Browser Integration" as V10
+
+== Taskwarrior Series Progress ==
+
+group Completed Videos ✓
+V1 -[hidden]-> V1
+end
+
+group Current Video 🎥
+    V2 -[hidden]-> V2
+end
+
+V2 -> V3 : Next up 🔜
+
+@enduml

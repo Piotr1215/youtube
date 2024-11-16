@@ -9,7 +9,7 @@ diagrams                         := invocation_directory() + "/diagrams"
 default:
   @just --list
 
-# run graphasy diagram
+# run plantuml diagram
 plantuml diagram:
   #!/usr/bin/env bash  
   export diagram="{{diagram}}"
