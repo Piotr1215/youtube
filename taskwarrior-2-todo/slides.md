@@ -1,73 +1,114 @@
 ---
 theme: ../theme.json
-author: Cloud-Native Corner
+author: Cloud Native Corner
 date: MMMM dd, YYYY
 paging: Slide %d / %d
 ---
 
+# Taskwarrior Neovim Integration
+
 ```bash
-~~~just intro Title with Figlet
-This will render the presnetation title.
+~~~just intro_toilet TODO to Task Magic
+
 ~~~
 ```
 
 ---
 
-```bash
-~~~just intro_toilet Alternative Title with Toilet
-This will render the presnetation title.
-~~~
-```
+## Introduction 👋
 
----
-
-
-## Example Diagram with GraphEasy
-
-```bash
-~~~just digraph https-handshake
-It will be overriden by command output. The `https-handshake` is the name of digraph diagram to render.
-~~~
-```
-
----
-
-## Example Diagram with PlantUML
+- Integrate `taskwarrior` with `neovim`
+  > Convert TODOs to tasks
+  > Open and interact with tasks/TODOs
 
 ```bash
 ~~~just plantuml videos-progress
-It will be overriden by command output. the `dns-resolution` is the name of PlantUML diagram to render.
+
 ~~~
 ```
+
 ---
 
-## We can execute code in slides
+## Prerequisites 🛠️
 
-> Hit `Ctrl + e` to execute  the below code block
+- `taskopen`                         *taskwarrior plugin*  
+  > taskwarrior plugin written in nim
+- `tasks.lua`                        *custom neovim module*
+  > custom nvim module written in lua
+- `tmux`                             *terminal multiplexer*
+  > custom bash script triggered via taskopen
+- [optional] `taskwarrior-tui`       *taskwarrior TUI*
+  > taskwarrior TUI written in rust  
+
+---
+
+### Flow 💮
 
 ```bash
-ls -lah --color=always
-```
----
+~~~just plantuml prerequisites
 
-### Or run programs
-
-```go
-package main
-
-import "fmt"
-
-func main() {
-    fmt.Println("Hello, World!")
-}
-```
-
----
-
-# Demo
-
-```bash
-~~~just demo Let's Demo Something Cool
-Another text box for demo title.
 ~~~
 ```
+
+---
+
+## Quick Demo 🚀
+
+```bash
+tmux switchc -t demo
+```
+
+---
+
+## Under the Hood: Nvim module 🛠️
+
+```bash
+tmux switchc -t nvim-module
+```
+
+---
+
+## Under the Hood: Taskopen 🛠️
+
+```bash
+tmux switchc -t taskopen
+```
+
+---
+
+## Under the Hood: Taskwarrior config 🛠️
+
+```bash
+tmux switchc -t taskwarrior-config
+```
+
+---
+
+## Best Practices 💡
+
+- Keep TODOs single-line
+- Use consistent format
+- Add project context
+- Consider task urgency
+- Regular task review
+
+---
+
+## Coming Next 🚀
+
+```bash
+~~~just freetext Reminders and Follow-ups
+
+~~~
+```
+
+---
+
+## That's All Folks! 👋
+
+```bash
+~~~just intro_toilet That's all folks!
+
+~~~
+```
+

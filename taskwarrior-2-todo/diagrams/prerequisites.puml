@@ -1,0 +1,25 @@
+@startuml
+actor User
+hide footbox
+autonumber
+skinparam lifelineStrategy dotted
+!pragma teoz true
+participant "Neovim" as Neovim
+User -> Neovim: Create TODO comment
+User -> Neovim: Convert to Task
+note right: trigger (Ctrl+t)
+participant "Taskwarrior" as Taskwarrior
+Neovim -> Taskwarrior: lua module
+create participant Task
+Taskwarrior -> Task: Create
+participant "taskwarrior-tui" as TaskwarriorTUI
+participant "tmux" as Tmux
+Task -> TaskwarriorTUI: Sync
+User -> TaskwarriorTUI: Open task using taskopen
+TaskwarriorTUI -> Tmux: Launch session via taskopen
+Tmux -> Neovim: Open file at TODO
+User <--> Neovim: Remove TODO comment
+Neovim -> Taskwarrior : TODO done
+Taskwarrior -> Task !! : Mark as done
+
+@enduml

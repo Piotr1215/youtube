@@ -5,7 +5,7 @@ participant "Introduction" as V1
   note left of V1
     Showcases various automations 
     that are possible with 
-    set of open source command line tools.
+    set of 'open source' command-line tools.
   end note
 
 participant "Neovim integration" as V2
