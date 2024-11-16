@@ -1,9 +1,6 @@
 #!/usr/bin/env -S just --justfile
 
 # Variables will be overriden by the prepare recipe
-presentation_title               := "Change Title"
-demo_title                       := "Let's talk"
-free_text                        := "Free text"
 replace                          := if os() == "linux" { "sed -i"} else { "sed -i '' -e" }
 diagrams                         := invocation_directory() + "/diagrams"
 
