@@ -2,38 +2,70 @@
 
 set -eo pipefail
 
-# Add source and line number wher running in debug mode: __run_with_xtrace.sh generate_tmux_sessions.sh
+# Add source and line number when running in debug mode: __run_with_xtrace.sh generate_tmux_sessions.sh
 # Set new line and tab for word splitting
 IFS=$'\n\t'
-
-# Declare an array to store session names from arguments
-sessions=("$@")
 
 # Function to create tmux sessions in the current directory
 generate_sessions() {
 	local current_dir=$(pwd)
 
-	for session in "${sessions[@]}"; do
-		tmux new-session -d -s "$session" -c "$current_dir"
-		echo "Created tmux session: $session"
+	for session in "$@"; do
+		if tmux has-session -t "$session" 2>/dev/null; then
+			echo "Session '$session' already exists."
+		else
+			tmux new-session -d -s "$session" -c "$current_dir"
+			echo "Created tmux session: $session"
+		fi
 	done
 }
 
 # Function to close (kill) tmux sessions
 close_sessions() {
-	for session in "${sessions[@]}"; do
-		tmux kill-session -t "$session" 2>/dev/null || echo "Session $session does not exist."
-		echo "Closed tmux session: $session"
+	for session in "$@"; do
+		if tmux has-session -t "$session" 2>/dev/null; then
+			tmux kill-session -t "$session"
+			echo "Closed tmux session: $session"
+		else
+			echo "Session '$session' does not exist."
+		fi
 	done
 }
 
-# Call functions based on the argument provided
-if [[ "$1" == "start" ]]; then
+# Function to list all tmux sessions
+list_sessions() {
+	echo "Current tmux sessions:"
+	tmux list-sessions 2>/dev/null || echo "No active tmux sessions."
+}
+
+# Main logic
+case "$1" in
+start)
 	shift
+	if [ $# -eq 0 ]; then
+		echo "Error: No session names provided."
+		echo "Usage: $0 start <session_name> [<session_name> ...]"
+		exit 1
+	fi
 	generate_sessions "$@"
-elif [[ "$1" == "stop" ]]; then
+	;;
+stop)
 	shift
+	if [ $# -eq 0 ]; then
+		echo "Error: No session names provided."
+		echo "Usage: $0 stop <session_name> [<session_name> ...]"
+		exit 1
+	fi
 	close_sessions "$@"
-else
-	echo "Usage: $0 {start|stop} session1 session2 ..."
-fi
+	;;
+list)
+	list_sessions
+	;;
+*)
+	echo "Usage: $0 {start|stop|list} [session_name ...]"
+	echo "  start: Create new tmux sessions"
+	echo "  stop: Close existing tmux sessions"
+	echo "  list: Show all active tmux sessions"
+	exit 1
+	;;
+esac
