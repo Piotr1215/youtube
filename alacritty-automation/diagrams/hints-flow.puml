@@ -1,0 +1,30 @@
+@startuml
+skinparam handwritten false
+skinparam backgroundColor transparent
+skinparam defaultFontName "Comic Sans MS"
+
+participant "User" as user
+participant "Alacritty" as alacritty
+participant "Detector" as detector
+participant "System" as system
+
+user -> alacritty: Trigger hint mode (Ctrl+key)
+activate alacritty
+
+alacritty -> detector: Scan visible text
+activate detector
+
+detector -> alacritty: Match patterns (URLs/files)
+deactivate detector
+
+alacritty -> user: Show hints overlay
+user -> alacritty: Select hint
+
+alacritty -> system: Execute associated command
+activate system
+
+system --> user: Open URL/file
+deactivate system
+deactivate alacritty
+
+@enduml

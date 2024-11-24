@@ -1,0 +1,5 @@
+┌──────────────────────────────┐     ┌────────────────────────────┐     ┌────────────────────────────┐     ┌───────────────────────┐     ┌───────────────────────────┐
+│       Physical Console       │     │    TTY (TeleTYpewriter)    │     │     Terminal Emulator      │     │         Shell         │     │          Prompt           │
+│ - Original terminal hardware │     │ - Kernel's terminal driver │     │ - Modern terminal programs │     │ - Command interpreter │     │ - Command input indicator │
+│  - Physical keyboard/screen  │ ──> │   - Manages input/output   │ ──> │ - e.g., Alacritty, iTerm2  │ ──> │   - e.g., Bash, Zsh   │ ══> │  - Customizable display   │
+└──────────────────────────────┘     └────────────────────────────┘     └────────────────────────────┘     └───────────────────────┘     └───────────────────────────┘

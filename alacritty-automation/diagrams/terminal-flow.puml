@@ -1,0 +1,16 @@
+@startuml
+skinparam backgroundColor transparent
+skinparam sequenceMessageAlign center
+
+participant "User" as user
+participant "Terminal\nEmulator" as term
+participant "Shell" as shell
+participant "System" as sys
+
+user -> term: Enter command
+term -> shell: Process input
+shell -> sys: Execute
+sys --> term: Return output
+term --> user: Display result
+
+@enduml

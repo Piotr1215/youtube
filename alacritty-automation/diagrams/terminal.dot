@@ -1,0 +1,7 @@
+[ Hardware ] { label: "Physical Console\n- Original terminal hardware\n- Physical keyboard/screen" }
+[ OS Interface ] { label: "TTY (TeleTYpewriter)\n- Kernel's terminal driver\n- Manages input/output" }
+[ Software ] { label: "Terminal Emulator\n- Modern terminal programs\n- e.g., Alacritty, iTerm2" }
+[ Command Layer ] { label: "Shell\n- Command interpreter\n- e.g., Bash, Zsh" }
+[ User Interface ] { label: "Prompt\n- Command input indicator\n- Customizable display" }
+# Main flow
+[ Hardware ] -> [ OS Interface ]  ->  [ Software ] -> [ Command Layer ] => [ User Interface ]

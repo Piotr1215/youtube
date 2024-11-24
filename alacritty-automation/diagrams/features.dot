@@ -1,0 +1,22 @@
+digraph {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+    
+    core [label="Alacritty Core\nGPU Accelerated"];
+    config [label="Configuration Layer"];
+    features [label="Feature Modules"];
+    
+    subgraph cluster_features {
+        label="Key Features";
+        hints [label="Hints System\nURL & File Detection"];
+        themes [label="Theme Engine\nLive Reload"];
+        vim [label="Vi Mode\nText Navigation"];
+        custom [label="Custom Actions\nShell Integration"];
+    }
+    
+    core -> config;
+    config -> hints;
+    config -> themes;
+    config -> vim;
+    config -> custom;
+}
