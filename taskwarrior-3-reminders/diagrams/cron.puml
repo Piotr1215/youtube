@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam backgroundColor transparent
+skinparam participantPadding 20
+skinparam sequenceMessageAlign center
+
+title Task Reminders System Flow
+
+participant "Cron Daemon" as cron
+participant "Script" as script
+participant "Taskwarrior" as task
+participant "Zenity" as notify
+
+== Due Tasks Check (Every 4 min) ==
+cron -> script: Display notification
+
+== Follow-up Check (Daily) ==
+cron -> script: notify: Show follow-up alert
+@enduml

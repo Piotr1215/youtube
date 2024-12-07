@@ -1,0 +1,35 @@
+digraph {
+    rankdir=LR;
+    compound=true;
+    splines=true;
+    node [fontname="Handlee"];
+    
+    subgraph cluster_files {
+        label="Configuration";
+        allow [label="cron.allow"];
+        deny [label="cron.deny"];
+        spool [label="/var/spool/cron/\ncrontabs/"];
+    }
+    
+    subgraph cluster_command {
+        label="User Interface";
+        crontab [label="crontab\ncommand"];
+    }
+    
+    subgraph cluster_daemon {
+        label="System Service";
+        crond [label="cron daemon"];
+        exec [label="Job Execution"];
+    }
+    
+    user [label="User"];
+    
+    user -> crontab [label="crontab -e"];
+    crontab -> spool [label="write\ntable"];
+    
+    crond -> spool [label="read"];
+    crond -> exec [label="schedule"];
+    exec -> output [label="capture"];
+    
+    output [label="Mail/Logs"];
+}
