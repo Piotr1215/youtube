@@ -1,0 +1,33 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+    
+    subgraph cluster_yazi {
+        label="Yazi";
+        style=dashed;
+        
+        y_nav [label="Spatial Navigation"];
+        y_preview [label="Visual Preview"];
+        y_context [label="Current Context"];
+        
+        y_nav -> y_preview;
+        y_preview -> y_context;
+    }
+    
+    subgraph cluster_broot {
+        label="Broot";
+        style=dashed;
+        
+        b_tree [label="Tree Structure"];
+        b_search [label="Global Search"];
+        b_filter [label="Smart Filtering"];
+        
+        b_tree -> b_search;
+        b_search -> b_filter;
+    }
+    
+    yazi [label="Yazi\nSpatial Focus"];
+    broot [label="Broot\nTree Focus"];
+    
+    {rank=same; yazi broot}
+}

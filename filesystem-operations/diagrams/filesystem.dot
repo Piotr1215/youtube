@@ -1,0 +1,6 @@
+[User Application] --> [Logical FS]
+[Logical FS] --> [Virtual FS]
+[Virtual FS] --> [Physical FS]
+[Physical FS] --> [Partition 1]
+[Physical FS] --> [Partition 2]
+[Physical FS] --> [Partition 3]
