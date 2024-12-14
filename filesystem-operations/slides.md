@@ -1,7 +1,6 @@
 ---
 theme: ../theme.json
 author: Cloud Native Corner
-date: MMMM dd, YYYY
 paging: Slide %d / %d
 ---
 
@@ -83,17 +82,28 @@ tmux switchc -t tuis
 
 ## Key Takeaways 💡
 
-1. Learn tool combinations
-2. Create custom aliases
-3. Use fuzzy finding everywhere
-4. Leverage file previews
-5. Keyboard shortcuts
+- Learn tool combinations
+- Create custom aliases
+- Use fuzzy finding everywhere
+- Leverage file previews
+- Keyboard shortcuts
 
 ---
 
 ## Resources & Links 🔗
 
-- Modern Unix: github.com/ibraheemdev/modern-unix
-- Yazi: github.com/sxyazi/yazi
-- Broot: github.com/Canop/broot
-- FZF: github.com/junegunn/fzf
+- [Modern Unix](https://github.com/ibraheemdev/modern-unix)
+- [Yazi](https://github.com/sxyazi/yazi)
+- [Broot](https://github.com/Canop/broot)
+- [FZF](https://github.com/junegunn/fzf)
+
+---
+
+## That's All Folks! 👋
+
+```bash
+~~~just intro_toilet That's all folks!
+
+~~~
+```
+
