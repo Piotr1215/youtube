@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Check if a command was provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 'command to run'"
+    exit 1
+fi
+
+# Capture the command from the argument
+COMMAND="$1"
+
+# Capture the current session and window name
+current_session=$(tmux display-message -p '#S')
+current_window=$(tmux display-message -p '#I')
+current_pane=$(tmux display-message -p '#P')
+
+# Create a new vertical split pane
+tmux split-window -h
+new_pane=$(tmux display-message -p '#P')
+
+# Send the command to the new pane, followed by the wait-for signal
+tmux send-keys -t "$new_pane" "$COMMAND; tmux wait-for -S demo-exit" Enter
+
+# Automatically switch focus to the new pane
+tmux select-pane -t "$new_pane"
+
+# Wait for the new pane to signal that the command has exited
+tmux wait-for demo-exit
+
+# Close the new pane
+tmux kill-pane -t "$new_pane"
+
+# Switch back to the original pane
+tmux select-pane -t "$current_pane"
