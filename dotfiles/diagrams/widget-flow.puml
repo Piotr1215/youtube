@@ -1,0 +1,13 @@
+@startuml
+title Widget Processing Flow
+
+participant "Trigger Key" as key
+participant "Widget" as widget
+participant "Expansion Function" as expand
+participant "Command Line" as cmd
+
+key -> widget: Pressed
+widget -> expand: Check Pattern
+expand <--> widget: Pattern Found
+expand -> cmd: Apply Expansion
+@enduml
