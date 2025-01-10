@@ -135,6 +135,17 @@ function pe() {
 	echo # Add a newline after user presses Enter
 }
 
+function pec() {
+	# print the command
+	p "$@"
+	run_cmd "$@"
+
+	# print dashes and wait for user input before proceeding
+	read -r -s
+	echo # Add a newline after user presses Enter
+	clear_screen
+}
+
 function pem() {
 	# Display the prompt
 	x=$(PS1="$DEMO_PROMPT" "$BASH" --norc -i </dev/null 2>&1 | sed -n '${s/^\(.*\)exit$/\1/p;}')
