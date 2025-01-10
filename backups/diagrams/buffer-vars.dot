@@ -1,0 +1,2 @@
+[ LBUFFER ] --> [ Cursor Position\n'ls -lah' ] --> [ RBUFFER ] ==> [ BUFFER ]
+[ LBUFFER ] ==> [ BUFFER ]
