@@ -1,3 +1,0 @@
-[ Space Pressed ] --> [ Check abbrevs ] --> [ Pattern Match? ]
-[ Pattern Match? ] --> [ Execute Function ] --> [ Update LBUFFER ]
-[ Pattern Match? ] --> [ Insert Space ]

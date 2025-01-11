@@ -2,7 +2,7 @@
 set -eo pipefail
 IFS=$'\n\t'
 . ./../__demo_magic.sh
-TYPE_SPEED=50
+TYPE_SPEED=12
 clear
 
 # Base path variable
@@ -18,43 +18,36 @@ dd if=/dev/urandom of=$DEMO_BASE/demo/source/documents/image.jpg bs=1M count=1 2
 
 # Restic Section
 p "restic"
-pe "man restic | sed -n '/^DESCRIPTION$/,/^$/p'"
+man restic | sed -n '/^DESCRIPTION$/,/^$/p'
 pe "restic init --repo ./restic"
-pe "ls ./restic"
+pec "ls ./restic"
 pe "tree ./demo"
 pe "restic backup ./demo --repo ./restic"
-pe "restic snapshots --repo ./restic"
+pec "restic snapshots --repo ./restic"
 export snapshot_id=$(restic snapshots --repo ./restic --json | jq -r '.[0].short_id')
 pe "restic restore --repo ./restic --target ./restore $snapshot_id"
 pec "tree ./restore"
 
 # Rclone Section
 p "rclone"
-pe "info rclone 2>/dev/null | sed -n '/About rclone/,/^$/p' | sed '1,2d;\$d'"
+info rclone 2>/dev/null | sed -n '/About rclone/,/^$/p' | sed '1,2d;$d'
 pe "rclone listremotes"
-pe "rclone ls azure:"
+pe "rclone tree azure:backup"
 pe "rclone copy ./demo azure:backup"
 pec "rclone tree azure:backup"
-
-pe "az storage blob list --account-name rclonedemosa --container-name backup --output table"
-
-# Cleanup
+pec "az storage blob list --account-name rclonedemosa --container-name backup --output table"
 pe "rclone delete azure:backup"
+pec "rclone tree azure:backup"
 
-pec "rclone ls azure:"
-
-# Rsync
 # Rsync Section
 p "rsync"
-pe "man rsync | sed -n '/^DESCRIPTION$/,/^$/p'"
+man rsync | sed -n '/^DESCRIPTION$/,/^$/p'
 pe "mkdir -p ./remote_storage"
 pe "rsync -avz --progress ./demo/ ./remote_storage/"
-pe "tree ./remote_storage"
-
-# To demonstrate rsync's incremental backup feature
+pec "tree ./remote_storage"
 pe "echo 'New file' > ./demo/source/documents/new_doc.txt"
 pe "rsync -avz --progress ./demo/ ./remote_storage/"
-pe "tree ./remote_storage"
+pec "tree ./remote_storage"
 
 rm -drf $DEMO_BASE/demo
 rm -drf $DEMO_BASE/restic

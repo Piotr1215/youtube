@@ -8,7 +8,7 @@ paging: Slide %d / %d
 # Terminal Backup Strategies 💾
 
 ```bash
-~~~just intro_toilet Backup from terminal
+~~~just intro_toilet Terminal Backup
 
 ~~~
 ```
@@ -23,16 +23,6 @@ paging: Slide %d / %d
 > 3 Copies (1 original 2 copies)
 > 2 Media Types
 > 1 Offsite Copy
-
----
-
-## Backup Flow 🔄
-
-```bash
-~~~just plantuml backup-flow
-
-~~~
-```
 
 ---
 
@@ -117,12 +107,18 @@ tmux switchc -t demo
 
 ---
 
+## Backup Script
+
+```bash
+../npane ~/dev/dotfiles/scripts/__backup.sh 
+```
+---
+
 ## Best Practices 📋
 
 - Test First:      *Verify backup process in safe environment*
-- Restore Testing: *Regular restore verification*
+- Restore:         *Regular restore verification*
 - Version Control: *Backup your backup scripts*
-- Rotation:        *Keep backups relevant and manageable*
 - Encryption:      *Always encrypt sensitive data*
 
 ---
