@@ -1,11 +1,13 @@
 # Repo for my YouTube Channel
 
-Long form and short form content
+Long and short form content
 
-Each `short` lives in its own directory and has a runnable `demo.sh` script.
+Scripts and presentation for each `video` lives in its own directory and:
+- can have optional runnable `demo.sh` script
+- usually has `slides.md` to run terminal presentation.
 
-The `demo.sh` script contains all the commands run in the short, which is easy
-to execute in a local environment.
+The `demo.sh` script contains all the commands run in the video, which is easy
+to execute in a local environment given that the prerequisites are met.
 
 ## Building on open source
 
