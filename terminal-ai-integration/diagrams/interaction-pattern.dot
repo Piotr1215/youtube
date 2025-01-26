@@ -1,0 +1,15 @@
+digraph {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+    
+    LLM [label="LLM\nAssistant"];
+    BUFFER [label="Neovim\nBuffer"];
+    HUMAN [label="Human\nReview"];
+    SYSTEM [label="System\nExecution"];
+    
+    LLM -> BUFFER [label="Command"];
+    BUFFER -> HUMAN [label="Display"];
+    HUMAN -> SYSTEM [label="Execute"];
+    SYSTEM -> BUFFER [label="Output"];
+    BUFFER -> LLM [label="Update Context"];
+}

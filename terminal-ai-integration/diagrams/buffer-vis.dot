@@ -1,0 +1,18 @@
+digraph {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+    
+    subgraph cluster_buffer {
+        label="Buffer System";
+        style=filled;
+        color="#333333";
+        fillcolor="#1a1a1a";
+        
+        cmd [label="Current Command"];
+        output [label="Previous Output"];
+        state [label="System State"];
+        context [label="Context Window"];
+        
+        {cmd, output, state} -> context [style=dashed];
+    }
+}
