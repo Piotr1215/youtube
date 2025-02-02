@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Capture the current session and window name
+current_session=$(tmux display-message -p '#S')
+current_window=$(tmux display-message -p '#I')
+
+# File path from the input parameter
+FILE_PATH="$1"
+
+# Create a new window and run neovim
+tmux new-window
+new_window=$(tmux display-message -p '#I')
+tmux send-keys -t "$new_window" "nvim $FILE_PATH; tmux wait-for -S nvim-exit" Enter
+
+# Automatically switch focus to the new window
+tmux select-window -t "$new_window"
+
+# Wait for the new window to signal that Neovim has exited
+tmux wait-for nvim-exit
+
+# Close the new window
+tmux kill-window -t "$new_window"
+
+# Switch back to the original window
+tmux select-window -t "$current_window"
