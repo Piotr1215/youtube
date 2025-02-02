@@ -1,0 +1,14 @@
+@startuml
+title Systemd timer pattern
+
+participant "Service (timer)" as timer
+participant "Service (regular)" as service
+participant "Script or command" as script
+
+timer -> service: Trigger service and exit
+note left: Type=oneshot
+
+service -> script: Trigger script or command
+note left: Type=simple
+
+@enduml
