@@ -9,6 +9,21 @@ diagrams                         := invocation_directory() + "/diagrams"
 default:
   @just --list
 
+# crate tmux demo sesison
+tmux_demo:
+  tmux new-session -d -s demo
+
+# start a new folder with template structure
+start folder_name:
+  #!/usr/bin/env bash
+  mkdir -p "{{folder_name}}/diagrams"
+  
+  cp slides_template.md "{{folder_name}}/slides.md"
+  chmod +x "{{folder_name}}/slides.md"
+  
+  echo "Created new folder structure in: {{folder_name}}"
+  cd "{{folder_name}}" && nvim slides.md
+
 # run plantuml diagram
 plantuml diagram:
   #!/usr/bin/env bash  
