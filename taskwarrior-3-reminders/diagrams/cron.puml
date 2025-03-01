@@ -1,5 +1,4 @@
 @startuml
-!theme plain
 skinparam backgroundColor transparent
 skinparam participantPadding 20
 skinparam sequenceMessageAlign center

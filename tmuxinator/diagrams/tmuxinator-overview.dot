@@ -1,0 +1,18 @@
+digraph {
+    rankdir=LR;
+    node [fontname="monospace", fontsize=12, shape=box, style=rounded, color="#6272a4", fillcolor="#282a36", fontcolor="#f8f8f2", style="rounded,filled"];
+    edge [color="#ff79c6", fontcolor="#f8f8f2", fontname="monospace", fontsize=10];
+    
+    yaml [label="YAML Config\nFile", shape=note, fillcolor="#bd93f9", style="filled,rounded"];
+    tmuxinator [label="Tmuxinator", fillcolor="#50fa7b", style="filled,rounded", penwidth=2];
+    tmux [label="tmux Session", fillcolor="#8be9fd", style="filled,rounded"];
+    windows [label="Windows", fillcolor="#f1fa8c", style="filled,rounded"];
+    panes [label="Panes", fillcolor="#ffb86c", style="filled,rounded"];
+    commands [label="Shell\nCommands", shape=box, fillcolor="#ff5555", style="filled,rounded"];
+    
+    yaml -> tmuxinator [label="defines"];
+    tmuxinator -> tmux [label="creates"];
+    tmux -> windows [label="contains"];
+    windows -> panes [label="split into"];
+    panes -> commands [label="executes"];
+}

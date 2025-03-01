@@ -1,0 +1,29 @@
+@startuml
+
+title Tmuxinator Workflow
+
+actor "User" as user
+participant "Terminal" as term
+participant "Tmuxinator" as tmux
+participant "tmux Process" as proc
+participant "Shell" as shell
+
+user -> term: tmuxinator new project
+
+user -> term: tmuxinator start project
+tmux -> proc: Create session
+
+loop For each window
+    tmux -> proc: Create panes
+    tmux -> proc: Execute commands
+    proc -> shell: Run commands in panes
+end
+
+tmux -> proc: Set layouts
+tmux -> proc: Select startup window/pane
+tmux -> user: Attach to session
+
+user -> proc: Exit or detach
+proc -> tmux: Execute hooks (if configured)
+
+@enduml
