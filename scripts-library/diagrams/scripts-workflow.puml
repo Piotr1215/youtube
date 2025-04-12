@@ -1,0 +1,35 @@
+@startuml
+title Script Development Workflow
+
+actor "User" as user
+participant "Problem\nIdentification" as problem
+participant "Design &\nArchitecture" as design
+participant "Implementation" as implementation
+participant "Testing" as testing
+participant "Integration" as integration
+participant "AI Assistant\n(Optional)" as ai
+
+user -> problem : Identify need
+problem -> design : Define requirements
+
+group Manual Development
+  design -> implementation : Implement script
+  implementation -> testing : Test functionality
+end
+
+group AI-Assisted (with caution)
+  design -> ai : Provide requirements
+  ai -> implementation : Generate draft
+  implementation -> testing : Rigorous testing
+end
+
+testing -> integration : Add to library
+integration -> user : Use script
+
+note right of ai
+  Only after establishing 
+  clear requirements and
+  architecture
+end note
+
+@enduml
