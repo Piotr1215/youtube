@@ -1,0 +1,22 @@
+IMPORTANT: Only read this instructions file and complete the task based ONLY on the instructions below.
+Do NOT read the solution file or use diff to compare with the solution unless explicitly permitted by the user or if you are completely stuck.
+
+I need your help editing a file called 'exercise' in the current directory.
+
+TASK: Extract and format structured data from unstructured text
+
+This involves:
+1. Identifying key-value pairs in a document
+2. Extracting headers and section titles
+3. Converting the extracted information into a structured format
+4. Organizing the data in a logical, hierarchical manner
+
+You can:
+- Use 'cat exercise' to view the current file
+- Use the Edit function to modify the file
+- Run the commands multiple times to check your progress
+
+ONLY if you are completely stuck or if explicitly permitted by the user:
+- Use 'diff exercise /home/decoder/dev/youtube/user-vs-ai/exercises/05.text-extraction/solution | cat' to see differences
+
+Please help me transform this file step by step based on your understanding of data extraction and structuring. Focus on applying your knowledge rather than looking at the solution.

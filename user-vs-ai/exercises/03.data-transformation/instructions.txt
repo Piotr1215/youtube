@@ -1,0 +1,22 @@
+IMPORTANT: Only read this instructions file and complete the task based ONLY on the instructions below.
+Do NOT read the solution file or use diff to compare with the solution unless explicitly permitted by the user or if you are completely stuck.
+
+I need your help editing a file called 'exercise' in the current directory.
+
+TASK: Convert CSV product data to JSON
+
+This involves:
+1. Converting the CSV data to a properly formatted JSON array of objects
+2. Preserving all field names exactly as they appear in the CSV
+3. Converting numeric values (product_id, price_usd, stock_count) to numbers (not strings)
+4. Ensuring proper JSON indentation for readability
+
+You can:
+- Use 'cat exercise' to view the current file
+- Use one of the commands above to convert the file
+- Run the commands multiple times to check your progress
+
+ONLY if you are completely stuck or if explicitly permitted by the user:
+- Use 'diff exercise /home/decoder/dev/youtube/user-vs-ai/exercises/03.data-transformation/solution | cat' to see differences
+
+Please help me transform this file. Focus on applying your knowledge rather than looking at the solution.

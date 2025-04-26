@@ -1,0 +1,29 @@
+IMPORTANT: Only read this instructions file and complete the task based ONLY on the instructions below.
+Do NOT read the solution file or use diff to compare with the solution unless explicitly permitted by the user or if you are completely stuck.
+
+I need your help editing a file called 'exercise' in the current directory.
+
+TASK: Organize functions by category and alphabetically within each category
+
+This involves:
+1. Identifying the different categories marked by comments (ADMIN FUNCTIONS, USER ACTIONS, etc.)
+2. Grouping all functions under their appropriate category headers
+3. Sorting functions alphabetically within each category
+4. Preserving the overall comment structure and formatting
+5. Maintaining each function's implementation exactly as is
+
+The categories should appear in this order:
+1. ADMIN FUNCTIONS
+2. SYSTEM UTILITIES
+3. USER ACTIONS
+4. VALIDATION FUNCTIONS
+
+You can:
+- Use 'cat exercise' to view the current file
+- Use the Edit function to modify the file
+- Run the commands multiple times to check your progress
+
+ONLY if you are completely stuck or if explicitly permitted by the user:
+- Use 'diff exercise /home/decoder/dev/youtube/user-vs-ai/exercises/04.line-sorting/solution | cat' to see differences
+
+Please help me transform this file step by step based on your understanding of code organization principles. Focus on applying your knowledge rather than looking at the solution.

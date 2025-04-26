@@ -1,0 +1,122 @@
+[
+{
+  "product_id": 1,
+  "product_name": "Laptop",
+  "price_usd": 1200.00,
+  "stock_count": 15,
+  "category": "electronics",
+  "status": "in_stock"
+},
+{
+  "product_id": 2,
+  "product_name": "Headphones",
+  "price_usd": 100.00,
+  "stock_count": 32,
+  "category": "electronics",
+  "status": "in_stock"
+},
+{
+  "product_id": 3,
+  "product_name": "Coffee Maker",
+  "price_usd": 80.00,
+  "stock_count": 7,
+  "category": "electronics",
+  "status": "in_stock"
+},
+{
+  "product_id": 4,
+  "product_name": "Running Shoes",
+  "price_usd": 120.00,
+  "stock_count": 25,
+  "category": "sports",
+  "status": "in_stock"
+},
+{
+  "product_id": 5,
+  "product_name": "Blender",
+  "price_usd": 60.00,
+  "stock_count": 12,
+  "category": "kitchen",
+  "status": "in_stock"
+},
+{
+  "product_id": 6,
+  "product_name": "Smartphone",
+  "price_usd": 800.00,
+  "stock_count": 21,
+  "category": "electronics",
+  "status": "in_stock"
+},
+{
+  "product_id": 7,
+  "product_name": "Yoga Mat",
+  "price_usd": 25.00,
+  "stock_count": 18,
+  "category": "sports",
+  "status": "in_stock"
+},
+{
+  "product_id": 8,
+  "product_name": "Toaster",
+  "price_usd": 40.00,
+  "stock_count": 9,
+  "category": "kitchen",
+  "status": "in_stock"
+},
+{
+  "product_id": 9,
+  "product_name": "Monitor",
+  "price_usd": 350.00,
+  "stock_count": 11,
+  "category": "electronics",
+  "status": "in_stock"
+},
+{
+  "product_id": 10,
+  "product_name": "Dumbbells",
+  "price_usd": 50.00,
+  "stock_count": 14,
+  "category": "sports",
+  "status": "in_stock"
+},
+{
+  "product_id": 11,
+  "product_name": "Desk Lamp",
+  "price_usd": 30.00,
+  "stock_count": 22,
+  "category": "home",
+  "status": "in_stock"
+},
+{
+  "product_id": 12,
+  "product_name": "Keyboard",
+  "price_usd": 70.00,
+  "stock_count": 13,
+  "category": "electronics",
+  "status": "in_stock"
+},
+{
+  "product_id": 13,
+  "product_name": "Cutting Board",
+  "price_usd": 20.00,
+  "stock_count": 31,
+  "category": "kitchen",
+  "status": "in_stock"
+},
+{
+  "product_id": 14,
+  "product_name": "Book Shelf",
+  "price_usd": 120.00,
+  "stock_count": 4,
+  "category": "home",
+  "status": "low_stock"
+},
+{
+  "product_id": 15,
+  "product_name": "Tennis Racket",
+  "price_usd": 90.00,
+  "stock_count": 8,
+  "category": "sports",
+  "status": "in_stock"
+}
+]

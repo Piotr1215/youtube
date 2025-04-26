@@ -1,0 +1,22 @@
+IMPORTANT: Only read this instructions file and complete the task based ONLY on the instructions below.
+Do NOT read the solution file or use diff to compare with the solution unless explicitly permitted by the user or if you are completely stuck.
+
+I need your help editing a file called 'exercise' in the current directory.
+
+TASK: Convert Python dictionary to properly formatted JSON with correct indentation
+
+This involves:
+1. Fixing Python-style booleans (True/False) to JSON format (true/false)
+2. Adding proper JSON indentation with 2 spaces
+3. Formatting nested arrays and objects properly
+4. Ensuring all JSON syntax is valid
+
+You can:
+- Use 'cat exercise' to view the current file
+- Use the Edit function to modify the file
+- Run the commands multiple times to check your progress
+
+ONLY if you are completely stuck or if explicitly permitted by the user:
+- Use 'diff exercise /home/decoder/dev/youtube/user-vs-ai/exercises/01.json-formatting/solution | cat' to see differences
+
+Please help me transform this file step by step based on your understanding of proper JSON formatting. Focus on applying your knowledge rather than looking at the solution.

@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "roles": [
+        "admin",
+        "editor"
+      ],
+      "settings": {
+        "theme": "dark",
+        "notifications": true,
+        "language": "en-US"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "roles": [
+        "viewer"
+      ],
+      "settings": {
+        "theme": "light",
+        "notifications": false,
+        "language": "fr-FR"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Bob Johnson",
+      "email": "bob@example.com",
+      "roles": [
+        "editor"
+      ],
+      "settings": {
+        "theme": "system",
+        "notifications": true,
+        "language": "en-GB"
+      }
+    }
+  ]
+}

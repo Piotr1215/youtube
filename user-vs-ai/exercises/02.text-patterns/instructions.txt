@@ -1,0 +1,22 @@
+IMPORTANT: Only read this instructions file and complete the task based ONLY on the instructions below.
+Do NOT read the solution file or use diff to compare with the solution unless explicitly permitted by the user or if you are completely stuck.
+
+I need your help editing a file called 'exercise' in the current directory.
+
+TASK: Standardize phone number formats in a contact list
+
+This involves:
+1. Identifying different phone number formats in the text
+2. Converting all formats to the standard XXX-XXX-XXXX format
+3. Ensuring all parentheses, dots, and spaces are removed
+4. Maintaining the 555 area code in all numbers
+
+You can:
+- Use 'cat exercise' to view the current file
+- Use the Edit function to modify the file
+- Run the commands multiple times to check your progress
+
+ONLY if you are completely stuck or if explicitly permitted by the user:
+- Use 'diff exercise /home/decoder/dev/youtube/user-vs-ai/exercises/02.text-patterns/solution | cat' to see differences
+
+Please help me transform this file step by step based on your understanding of phone number formatting. Focus on applying your knowledge rather than looking at the solution.

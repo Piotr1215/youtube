@@ -1,0 +1,16 @@
+product_id,product_name,price_usd,stock_count,category,status
+1,Laptop,1200.00,15,electronics,in_stock
+2,Headphones,100.00,32,electronics,in_stock
+3,Coffee Maker,80.00,7,electronics,in_stock
+4,Running Shoes,120.00,25,sports,in_stock
+5,Blender,60.00,12,kitchen,in_stock
+6,Smartphone,800.00,21,electronics,in_stock
+7,Yoga Mat,25.00,18,sports,in_stock
+8,Toaster,40.00,9,kitchen,in_stock
+9,Monitor,350.00,11,electronics,in_stock
+10,Dumbbells,50.00,14,sports,in_stock
+11,Desk Lamp,30.00,22,home,in_stock
+12,Keyboard,70.00,13,electronics,in_stock
+13,Cutting Board,20.00,31,kitchen,in_stock
+14,Book Shelf,120.00,4,home,low_stock
+15,Tennis Racket,90.00,8,sports,in_stock
