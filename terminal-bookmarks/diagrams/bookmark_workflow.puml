@@ -1,0 +1,32 @@
+@startuml
+!theme plain
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 15
+skinparam maxmessagesize 100
+
+actor User
+participant Terminal
+participant "Bookmarks" as BM
+participant Neovim
+
+== Core Workflow ==
+
+group Adding Bookmarks
+  User -> Terminal: Add from terminal
+  Terminal -> BM: Write
+  
+  User -> Neovim: Add (<leader>ba, <leader>bA)
+  Neovim -> BM: Write
+end
+
+group Using Bookmarks
+  User -> Terminal: Ctrl+L
+  Terminal -> BM: Read
+  BM -> Terminal: Return bookmarks
+  
+  User -> Neovim: <leader>bl
+  Neovim -> BM: Read
+  BM -> Neovim: Return bookmarks
+end
+
+@enduml

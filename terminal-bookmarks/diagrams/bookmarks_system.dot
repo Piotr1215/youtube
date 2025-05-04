@@ -1,0 +1,20 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+    
+    // Simple components
+    bookmarks [label="Shared\nBookmarks", shape=box];
+    
+    // Terminal side
+    terminal [label="Terminal\n(FZF)"];
+    
+    // Neovim side
+    neovim [label="Neovim\n(Telescope)"];
+    
+    // Simple connections
+    terminal -> bookmarks [dir=both];
+    neovim -> bookmarks [dir=both];
+    
+    // Rank
+    {rank=same; terminal; neovim;}
+}
