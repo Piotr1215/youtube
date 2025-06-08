@@ -22,7 +22,7 @@ start folder_name:
   chmod +x "{{folder_name}}/slides.md"
   
   echo "Created new folder structure in: {{folder_name}}"
-  cd "{{folder_name}}" && nvim slides.md
+  cd "{{folder_name}}"
 
 # run plantuml diagram
 plantuml diagram:

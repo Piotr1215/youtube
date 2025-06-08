@@ -1,0 +1,20 @@
+@startuml
+!theme plain
+
+participant "Tmux Pane" as pane
+participant "Monitor Script" as monitor
+participant "Notification Files" as files
+participant "Argos" as argos
+participant "Keybinding" as key
+
+pane -> monitor: pipe-pane output
+monitor -> monitor: pattern detection
+alt Pattern Found
+    monitor -> files: create notification file
+    files -> argos: poll files (2s)
+    argos -> argos: update menu bar
+    key -> files: process oldest file
+    key -> pane: switch to session
+    key -> files: remove file
+end
+@enduml
