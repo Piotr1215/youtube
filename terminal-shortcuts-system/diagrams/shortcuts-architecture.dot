@@ -1,0 +1,19 @@
+digraph G {
+    rankdir=TB;
+    node [shape=box];
+    
+    yaml [label="shortcuts.yaml\n(Data Store)"];
+    script [label="__app_shortcuts_help.sh\n(Interface)"];
+    fzf [label="fzf\n(Search Engine)"];
+    user [label="User", shape=ellipse];
+    autokey [label="Autokey\n(Global Hotkey)"];
+    terminal [label="Terminal\n(apphelp alias)"];
+    
+    user -> autokey [label="Ctrl+Alt+H"];
+    user -> terminal [label="apphelp"];
+    autokey -> script;
+    terminal -> script;
+    script -> yaml [label="yq parse"];
+    script -> fzf [label="pipe data"];
+    fzf -> user [label="interactive UI"];
+}

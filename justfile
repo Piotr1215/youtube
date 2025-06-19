@@ -9,6 +9,10 @@ diagrams                         := invocation_directory() + "/diagrams"
 default:
   @just --list
 
+# list all youtbube videos
+list_videos:
+  /home/decoder/dev/dotfiles/scripts/__get_youtube_videos.py --date
+
 # crate tmux demo sesison
 tmux_demo:
   tmux new-session -d -s demo
