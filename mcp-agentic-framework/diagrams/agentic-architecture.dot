@@ -1,0 +1,43 @@
+digraph G {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fillcolor=lightblue];
+    edge [color=darkblue];
+    
+    // Problem side (left)
+    subgraph cluster_problem {
+        label="Without Framework";
+        style=filled;
+        fillcolor=mistyrose;
+        
+        iso1 [label="Claude\nSession 1", fillcolor=lightcoral];
+        iso2 [label="Claude\nSession 2", fillcolor=lightcoral];
+        iso3 [label="Claude\nSession 3", fillcolor=lightcoral];
+        
+        // No connections - isolated!
+    }
+    
+    // Solution side (right)
+    subgraph cluster_solution {
+        label="With Agentic Framework";
+        style=filled;
+        fillcolor=lightgreen;
+        
+        agent1 [label="Agent 1\nDeveloper", fillcolor=lightblue];
+        agent2 [label="Agent 2\nTester", fillcolor=lightblue];
+        agent3 [label="Agent 3\nReviewer", fillcolor=lightblue];
+        
+        framework [label="Agentic\nFramework\n(MCP Server)", shape=ellipse, fillcolor=gold];
+        
+        storage [label="Message\nStorage", shape=box, fillcolor=lightgray];
+    }
+    
+    // Connections in solution
+    agent1 -> framework [dir=both];
+    agent2 -> framework [dir=both];
+    agent3 -> framework [dir=both];
+    framework -> storage;
+    
+    // Labels
+    problem_label [label="❌ No communication\n❌ No discovery\n❌ No persistence", shape=none];
+    solution_label [label="✅ Full communication\n✅ Agent discovery\n✅ Message persistence", shape=none];
+}

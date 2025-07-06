@@ -1,0 +1,22 @@
+digraph G {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled"];
+    
+    // Orchestrator at top
+    orchestrator [label="Orchestrator\nAgent", fillcolor=gold, shape=ellipse];
+    
+    // Workers at bottom
+    worker1 [label="Worker 1", fillcolor=lightblue];
+    worker2 [label="Worker 2", fillcolor=lightblue];
+    worker3 [label="Worker 3", fillcolor=lightblue];
+    
+    // Task assignment
+    orchestrator -> worker1 [label="Task A"];
+    orchestrator -> worker2 [label="Task B"];
+    orchestrator -> worker3 [label="Task C"];
+    
+    // Results back
+    worker1 -> orchestrator [label="Result A", style=dashed];
+    worker2 -> orchestrator [label="Result B", style=dashed];
+    worker3 -> orchestrator [label="Result C", style=dashed];
+}

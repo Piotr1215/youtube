@@ -1,0 +1,21 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled"];
+    
+    // Monitor detects issue
+    monitor [label="Monitor\nAgent", fillcolor=red];
+    
+    // Broadcast to all
+    broadcast [label="🚨 ALERT\nBroadcast", shape=ellipse, fillcolor=orange];
+    
+    // All agents respond
+    agent1 [label="Agent 1\nResponding", fillcolor=lightgreen];
+    agent2 [label="Agent 2\nResponding", fillcolor=lightgreen];
+    agent3 [label="Agent 3\nResponding", fillcolor=lightgreen];
+    
+    // Flow
+    monitor -> broadcast [label="High CPU!"];
+    broadcast -> agent1;
+    broadcast -> agent2;
+    broadcast -> agent3;
+}

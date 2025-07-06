@@ -1,0 +1,41 @@
+digraph G {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fillcolor=lightblue];
+    edge [color=darkblue];
+    
+    // Agents
+    subgraph cluster_agents {
+        label="AI Agents";
+        style=filled;
+        fillcolor=lightyellow;
+        
+        agent1 [label="Developer\nAgent", fillcolor=lightgreen];
+        agent2 [label="Tester\nAgent", fillcolor=lightgreen];
+        agent3 [label="Architect\nAgent", fillcolor=lightgreen];
+    }
+    
+    // MCP Server
+    subgraph cluster_server {
+        label="MCP Server";
+        style=filled;
+        fillcolor=lightcyan;
+        
+        registry [label="Agent\nRegistry", shape=box];
+        msgstore [label="Message\nStore", shape=box];
+        api [label="HTTP API\nEndpoint"];
+    }
+    
+    // File Storage
+    storage [label="File Storage\n/tmp/mcp-agentic-framework/", shape=box, fillcolor=lightgray];
+    
+    // Connections
+    agent1 -> api [label="register\nsend\ncheck"];
+    agent2 -> api [label="discover\nbroadcast"];
+    agent3 -> api [label="messages\nstatus"];
+    
+    api -> registry [label="manage\nagents"];
+    api -> msgstore [label="store\nretrieve"];
+    
+    registry -> storage [label="agents.json"];
+    msgstore -> storage [label="messages/*.json"];
+}

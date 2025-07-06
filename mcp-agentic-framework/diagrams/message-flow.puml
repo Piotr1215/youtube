@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam sequenceBoxBorderColor transparent
+skinparam responseMessageBelowArrow true
+
+participant "Agent A" as A
+participant "MCP Server" as MCP
+participant "File Storage" as FS
+participant "Agent B" as B
+
+A -> MCP: Send Message
+MCP -> FS: Store
+B -> MCP: Check Messages
+MCP -> FS: Read
+FS -> MCP: [{from: A}]
+MCP -> B: Message
+note over A,B: Auto-cleanup after reading
+@enduml

@@ -1,0 +1,30 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled"];
+    edge [color=darkblue];
+    
+    // Tmux panes
+    subgraph cluster_tmux {
+        label="Tmux Session";
+        style=filled;
+        fillcolor=lightgray;
+        rank=same;
+        
+        pane1 [label="Pane 1\nDeveloper", fillcolor=lightgreen];
+        pane2 [label="Pane 2\nTester", fillcolor=lightgreen];
+        pane3 [label="Pane 3\nReviewer", fillcolor=lightgreen];
+    }
+    
+    // Framework in middle
+    framework [label="Agentic\nFramework", shape=ellipse, fillcolor=gold];
+    
+    // Storage on right
+    storage [label="Message\nStorage", fillcolor=lightblue];
+    
+    // Connections
+    pane1 -> framework [dir=both];
+    pane2 -> framework [dir=both];
+    pane3 -> framework [dir=both];
+    
+    framework -> storage;
+}

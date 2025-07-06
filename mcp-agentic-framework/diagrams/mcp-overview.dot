@@ -1,0 +1,35 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled"];
+    
+    // Host/Client side
+    subgraph cluster_host {
+        label="Host Application";
+        style=filled;
+        fillcolor=lightgreen;
+        
+        host [label="Claude CLI\n(or other host)", fillcolor=palegreen];
+        client [label="MCP Client", fillcolor=lightblue];
+    }
+    
+    // Server side
+    server [label="MCP Server", shape=ellipse, fillcolor=lavender];
+    
+    // Capabilities
+    subgraph cluster_capabilities {
+        label="Server Exposes";
+        style=filled;
+        fillcolor=lightyellow;
+        
+        tools [label="Tools"];
+        resources [label="Resources"];
+        prompts [label="Prompts"];
+    }
+    
+    // Connections
+    host -> client [label="uses"];
+    client -> server [label="connects via\nHTTP/stdio/SSE"];
+    server -> tools;
+    server -> resources;
+    server -> prompts;
+}
