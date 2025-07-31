@@ -1,0 +1,17 @@
+@startuml
+!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.4.0
+skinparam monochrome true
+skinparam shadowing false
+
+rectangle "1 Physical GPU" as GPU {
+  rectangle "50%" as P1
+  rectangle "25%" as P2  
+  rectangle "25%" as P3
+}
+
+P1 -down-> "Training Pod" : allocated
+P2 -down-> "Inference Pod" : allocated
+P3 -down-> "Dev Pod" : allocated
+
+note right of GPU : KAI enables\nfractional GPU\nallocation
+@enduml

@@ -1,0 +1,22 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box];
+    
+    subgraph cluster_resources {
+        label="Cluster Resources";
+        GPU1 [label="GPU 1"];
+        GPU2 [label="GPU 2"];
+        CPU [label="CPU Nodes"];
+    }
+    
+    subgraph cluster_teams {
+        label="Team Allocations";
+        ML [label="ML Team\n4x 0.25 GPU"];
+        Research [label="Research Team\n1x Full GPU"];
+        DevOps [label="DevOps Team\nCPU Only"];
+    }
+    
+    GPU1 -> ML [label="shared"];
+    GPU2 -> Research [label="dedicated"];
+    CPU -> DevOps;
+}

@@ -1,0 +1,13 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box];
+    
+    // Traditional approach
+    "Host (Traditional)" -> "Single Scheduler" -> "All Teams RISK";
+    
+    // vCluster approach
+    "Host (vCluster)" -> "vCluster A";
+    "Host (vCluster)" -> "vCluster B";
+    "vCluster A" -> "KAI Scheduler";
+    "vCluster B" -> "Default Scheduler";
+}
