@@ -1,0 +1,14 @@
+digraph G {
+    rankdir=TB;
+    node [shape=box];
+    
+    GPU [label="1 Physical GPU\n(100%)"];
+    
+    P1 [label="Training Pod\n50%"];
+    P2 [label="Inference Pod\n25%"];
+    P3 [label="Dev Pod\n25%"];
+    
+    GPU -> P1;
+    GPU -> P2;
+    GPU -> P3;
+}

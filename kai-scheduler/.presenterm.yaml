@@ -1,0 +1,24 @@
+defaults:
+  theme: dark
+  margin:
+    percent: 0
+
+snippet:
+  exec:
+    enable: true
+    custom:
+      diagrams:
+        filename: "diagram.sh"
+        commands:
+          - ["bash", "diagram.sh"]
+  exec_replace:
+    enable: true
+  threads: 2
+
+mermaid:
+  scale: 2
+  background: transparent
+  theme: dark
+
+options:
+  implicit_slide_ends: true
