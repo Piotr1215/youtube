@@ -78,13 +78,38 @@ flowchart TB
 
 <!-- end_slide -->
 
-## Deploy KIND Cluster
+## Configure Docker for GPU Support
 
 ```bash +exec
-kind create cluster --config=kind-config.yaml --name kai-demo
+# Configure Docker to use NVIDIA runtime (required for GPU passthrough)
+sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
+
+# Restart Docker to apply the new runtime
+sudo systemctl restart docker
+
+# Verify Docker is active and runtime is available
+until sudo systemctl is-active docker | grep -q "active" && docker info >/dev/null 2>&1; do
+  echo "Waiting for Docker to restart..."
+  sleep 2
+done
+
+# Show the new default runtime
+echo "Docker restarted successfully!"
+echo "Default runtime changed to: $(docker info --format '{{.DefaultRuntime}}')"
 ```
 
-> **Note**: vCluster works with ANY Kubernetes cluster (cloud, on-prem, local)
+> **Note**: This enables GPU support in containers. We'll revert this at the end.
+
+<!-- end_slide -->
+
+## Deploy GPU-Enabled Cluster
+
+```bash +exec
+# Use nvkind for GPU support
+nvkind cluster create --name kai-demo --config-template=nvkind-config.yaml
+```
+
+> **Note**: Using nvkind to enable GPU pass-through to the cluster
 
 <!-- end_slide -->
 
@@ -96,6 +121,45 @@ kubectl get nodes
 ```
 
 <!-- snippet_output: get_nodes -->
+
+<!-- end_slide -->
+
+## Install NVIDIA Device Plugin
+
+```bash +exec
+# Label worker node as having GPU
+kubectl label node kai-demo-worker nvidia.com/gpu.present=true
+
+# Install NVIDIA device plugin
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.16.2/deployments/static/nvidia-device-plugin.yml
+```
+
+> **Note**: Device plugin enables GPU resource scheduling in Kubernetes
+
+<!-- end_slide -->
+
+## Verify GPU Access
+
+```bash +exec
+# Create RuntimeClass for NVIDIA if it doesn't exist
+kubectl apply -f - <<EOF
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: nvidia
+handler: nvidia
+EOF
+
+# Wait for device plugin to be ready
+kubectl wait --for=condition=ready pod -n kube-system -l name=nvidia-device-plugin-ds --timeout=60s
+
+# Test GPU access with a simple pod
+kubectl run gpu-test --image=nvidia/cuda:12.2.0-base-ubuntu20.04 \
+  --rm -it --restart=Never \
+  --overrides='{"spec":{"runtimeClassName":"nvidia","nodeSelector":{"nvidia.com/gpu.present":"true"}}}' \
+  -- nvidia-smi -L
+```
+
 
 <!-- end_slide -->
 
@@ -124,6 +188,8 @@ helm upgrade -i kai-scheduler \
   --create-namespace \
   --version $KAI_VERSION
 ```
+
+> **KAI Scheduler**: NVIDIA's Kubernetes scheduler that enables fractional GPU sharing and advanced scheduling policies through a queue-based system
 
 <!-- end_slide -->
 
@@ -157,7 +223,7 @@ kubectl get endpoints -n kai-scheduler
 
 ```bash +exec
 head -n 20 queues.yaml
-kubectl apply -f queues.yaml || echo "Note: If webhook errors occur, wait for KAI to fully initialize"
+kubectl apply -f queues.yaml
 ```
 
 <!-- end_slide -->
@@ -203,7 +269,6 @@ graph LR
 
 
 > Deploy vCluster with the special configuration
-> The kai-scheduler-values.yaml disables owner references to allow KAI's pod-grouper to work
 
 ```bash +exec +id:create_vcluster
 cat kai-scheduler-values.yaml
@@ -214,6 +279,8 @@ vcluster create my-vcluster \
   --values kai-scheduler-values.yaml \
   --connect=false
 ```
+
+> The kai-scheduler-values.yaml disables owner references to allow KAI's pod-grouper to work
 
 <!-- snippet_output: create_vcluster -->
 
@@ -256,7 +323,7 @@ kubectl --context kind-kai-demo get pod -n vcluster-my-vcluster -l app=vcluster 
     (.spec.containers[] | "  \(.name): \(.image)")'
 ```
 
-> **Architecture**: Init container copies K8s binaries, syncer runs embedded k3s API server & controller!
+> **Architecture**: Init container prepares the environment, syncer synchronizes resources between host and virtual cluster!
 
 <!-- end_slide -->
 
@@ -338,31 +405,21 @@ echo "Queue: $(kubectl get pod cpu-pod -o jsonpath='{.metadata.labels.kai\.sched
 
 <!-- end_slide -->
 
-## vCluster Isolation Demo: CRDs
+## GPU Workload Example
 
-
-> CRDs created in vCluster are isolated from the host cluster
-> The test-crd.yaml defines a simple CustomResourceDefinition for demonstration
-
-```bash +exec
-head -n 15 test-crd.yaml
-kubectl apply -f test-crd.yaml
-```
-
-<!-- end_slide -->
-
-## Verify Isolation: CRD Only in vCluster!
-
+> Deploy a GPU pod with KAI scheduler for fractional GPU allocation
+> The gpu-pod.yaml includes GPU fraction annotation for sharing
 
 ```bash +exec
-# In vCluster
-kubectl get crd demos.vcluster.io --no-headers | awk '{print "✓ Found:", $1}'
+cat gpu-pod.yaml
+kubectl apply -f gpu-pod.yaml
 
-# In Host Cluster  
-kubectl --context kind-kai-demo get crd demos.vcluster.io 2>&1 | grep -q "NotFound" && echo "✗ Not found - Isolated!"
+# Verify GPU access
+kubectl wait --for=condition=ready pod gpu-pod --timeout=30s
+kubectl exec gpu-pod -- nvidia-smi | grep "GTX 1060"
 ```
 
-> **Key takeaway**: Changes in vCluster don't affect the host cluster
+> **GPU Sharing**: KAI allows multiple pods to share the same GPU!
 
 <!-- end_slide -->
 
@@ -376,6 +433,20 @@ kubectl --context kind-kai-demo get crd demos.vcluster.io 2>&1 | grep -q "NotFou
 # First disconnect from current vCluster, then create new one
 vcluster disconnect
 vcluster create research-cluster --connect=false
+
+# Wait for it to be ready
+kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-research-cluster --timeout=300s
+```
+
+<!-- end_slide -->
+
+## Connect to Research Cluster
+
+> Connect to the research team's virtual cluster
+
+```bash +exec
+# Connect to research cluster
+vcluster connect research-cluster
 ```
 
 <!-- end_slide -->
@@ -385,28 +456,37 @@ vcluster create research-cluster --connect=false
 > Research team uses vanilla K8s without KAI scheduler
 
 ```bash +exec
-# Connect to research cluster and create deployment
-vcluster connect research-cluster -- kubectl create deployment nginx --image=nginx:alpine
+# Create web app deployment and service
+cat web-app.yaml
+kubectl apply -f web-app.yaml
 
 # Show it uses default scheduler (not KAI)
-vcluster connect research-cluster -- kubectl get deployment nginx -o jsonpath='{.spec.template.spec.schedulerName}'
+kubectl get deployment web-app -o jsonpath='{.spec.template.spec.schedulerName}'
 echo " (empty = default scheduler)"
 ```
 
 <!-- end_slide -->
 
-## Compare Both vClusters
+## Web Page
+
+```bash +exec
+kubectl port-forward deployment/web-app 8081:80 &
+curl http://localhost:8081/
+```
+
+<!-- end_slide -->
+
+## Compare Both Virtual Clusters
 
 > Let's see the key differences between the two teams' setups
 
 ```bash +exec
-echo "=== vCluster Pods in Host Cluster ==="
-kubectl --context kind-kai-demo get pods -A | grep -E "vcluster-my-vcluster|vcluster-research-cluster" | grep -v "^NAME"
-
-echo ""
-echo "=== Scheduler Configuration ==="
-echo "Dev Team (my-vcluster):      Uses KAI scheduler with queue system"
-echo "Research Team (research):    Uses default Kubernetes scheduler"
+# Show all workload pods across both virtual clusters with their schedulers
+kubectl get pods -A --context kind-kai-demo \
+  -o custom-columns='NAMESPACE:.metadata.namespace,POD:.metadata.name,SCHEDULER:.spec.schedulerName' | \
+  grep -E "(vcluster-my-vcluster|vcluster-research-cluster)" | \
+  grep -v -E "(coredns|my-vcluster-0|research-cluster-0)" | \
+  sort | column -t
 ```
 
 > Each team has their own isolated environment with different schedulers!
@@ -424,6 +504,29 @@ echo "Research Team (research):    Uses default Kubernetes scheduler"
 | No namespace limitations | → | ✅ Full flexibility for any K8s customization |
 
 > **KAI was just an example - vCluster enables ANY K8s customization!**
+
+<!-- end_slide -->
+
+## Cleanup: Revert Docker Runtime
+
+```bash +exec
+# Remove the default-runtime setting to revert to runc
+sudo jq 'del(."default-runtime")' /etc/docker/daemon.json | sudo sponge /etc/docker/daemon.json
+
+# Restart Docker to apply changes
+sudo systemctl restart docker
+
+# Verify Docker is active and runtime is available
+until sudo systemctl is-active docker | grep -q "active" && docker info >/dev/null 2>&1; do
+  echo "Waiting for Docker to restart..."
+  sleep 2
+done
+
+# Verify default runtime is back to runc
+echo "Default runtime: $(docker info --format '{{.DefaultRuntime}}')"
+```
+
+> **Important**: This restores Docker to use runc (the standard runtime)
 
 <!-- end_slide -->
 
