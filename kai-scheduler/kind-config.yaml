@@ -5,6 +5,3 @@ nodes:
   extraPortMappings:
   - containerPort: 30000
     hostPort: 30000
-  extraMounts:
-  - hostPath: /dev/null
-    containerPath: /var/run/nvidia-container-devices

@@ -3,24 +3,34 @@
 # Capture the current session and window name
 current_session=$(tmux display-message -p '#S')
 current_window=$(tmux display-message -p '#I')
-current_pane=$(tmux display-message -p '#P')
 
-# Script path from the input parameter
-SCRIPT_PATH="$1"
+# Check if we have a command argument
+if [ $# -gt 0 ]; then
+    # Execute the command directly in a new window
+    tmux new-window -n "demo"
+    new_window=$(tmux display-message -p '#I')
+    tmux send-keys -t "$current_session:$new_window" "clear; $*; echo ''; echo 'Press Enter to close...'; read; tmux wait-for -S demo-exit" Enter
+else
+    # Create a temporary script file for heredoc input
+    TEMP_SCRIPT=$(mktemp /tmp/spane-XXXXXX.sh)
+    
+    # Read from stdin
+    cat > "$TEMP_SCRIPT"
+    
+    # Make the script executable
+    chmod +x "$TEMP_SCRIPT"
+    
+    # Create a new window and run the demo script
+    tmux new-window -n "demo"
+    new_window=$(tmux display-message -p '#I')
+    tmux send-keys -t "$current_session:$new_window" "clear; bash $TEMP_SCRIPT; echo ''; echo 'Press Enter to close...'; read; rm -f $TEMP_SCRIPT; tmux wait-for -S demo-exit" Enter
+fi
 
-# Create a new vertical split pane and run the demo script
-tmux split-window -h
-new_pane=$(tmux display-message -p '#P')
-tmux send-keys -t "$new_pane" "clear; bash $SCRIPT_PATH; tmux wait-for -S demo-exit" Enter
-
-# Automatically switch focus to the new pane
-tmux select-pane -t "$new_pane"
-
-# Wait for the new pane to signal that the demo script has exited
+# Wait for the new window to signal that the demo script has exited
 tmux wait-for demo-exit
 
-# Close the new pane
-tmux kill-pane -t "$new_pane"
+# Close the new window
+tmux kill-window -t "$current_session:$new_window"
 
-# Switch back to the original pane
-tmux select-pane -t "$current_pane"
+# Switch back to the original window
+tmux select-window -t "$current_session:$current_window"

@@ -1,0 +1,50 @@
+# AI-generated ast-grep rules for Go error handling
+
+rules:
+  - id: bare-error-return
+    language: go
+    pattern: |
+      if $ERR != nil {
+        return $$$ARGS, $ERR
+      }
+    message: Wrap errors with context for better debugging
+    severity: warning
+
+  - id: panic-on-error
+    language: go
+    pattern: |
+      if $ERR != nil {
+        panic($ERR)
+      }
+    message: Don't panic on errors, return them properly
+    severity: error
+
+  - id: ignored-error
+    language: go
+    pattern: |
+      $FUNC($$$ARGS)
+    constraints:
+      FUNC:
+        regex: '^[a-z][a-zA-Z0-9]*$'
+    message: Check if function returns an error that should be handled
+    severity: info
+
+  - id: fmt-errorf-without-wrap
+    language: go
+    pattern: |
+      fmt.Errorf($FMT, $ERR)
+    constraints:
+      FMT:
+        regex: '^".*%v"$'
+    message: Use %w to wrap errors instead of %v
+    severity: warning
+
+  - id: direct-http-error-return
+    language: go
+    pattern: |
+      resp, err := http.$METHOD($$$ARGS)
+      if err != nil {
+        return $$$RETS, err
+      }
+    message: Wrap HTTP errors with request context
+    severity: warning
