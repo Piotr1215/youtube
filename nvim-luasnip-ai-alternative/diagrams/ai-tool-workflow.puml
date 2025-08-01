@@ -1,0 +1,38 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor transparent
+skinparam defaultFontName Courier
+skinparam defaultFontSize 14
+skinparam rectangle {
+    BackgroundColor lightblue
+    BorderColor black
+    FontColor black
+}
+
+rectangle "Your Codebase" as code
+rectangle "AI Analysis\n(One-time)" as ai
+rectangle "ast-grep Rules" as ast
+rectangle "LuaSnip Snippets" as lua
+rectangle "Local Intelligence\n(Forever)" as local
+
+code --> ai : Analyze patterns
+ai --> ast : Generate rules
+ai --> lua : Create snippets
+ast --> local : Semantic search
+lua --> local : Smart completion
+local --> code : Instant feedback
+
+note right of ai
+  Free/cheap models
+  Run once per project
+  Extract YOUR patterns
+end note
+
+note bottom of local
+  Zero latency
+  100% private
+  No subscription
+end note
+
+@enduml

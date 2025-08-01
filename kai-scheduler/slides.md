@@ -39,20 +39,7 @@ paging: Slide %d / %d
 ## Create kind Cluster
 
 > Single node cluster for faster demo setup
-
-```yaml
-# kind-config.yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 30000
-    hostPort: 30000
-  extraMounts:
-  - hostPath: /dev/null
-    containerPath: /var/run/nvidia-container-devices
-```
+> The kind-config.yaml includes extraMounts for NVIDIA container runtime integration
 
 ---
 
@@ -124,27 +111,13 @@ Default vCluster behavior:
 ## The Solution ✅
 
 > Disable owner references to let KAI's pod-grouper work
-
-```yaml
-# kai-scheduler-values.yaml
-experimental:
-  syncSettings:
-    setOwner: false
-```
+> The kai-scheduler-values.yaml configures vCluster for KAI compatibility
 
 ---
 
 ## Create vCluster Config File
 
-> Save the configuration for KAI compatibility
-
-```bash
-cat > kai-scheduler-values.yaml << 'EOF'
-experimental:
-  syncSettings:
-    setOwner: false
-EOF
-```
+> The kai-scheduler-values.yaml is already prepared for KAI compatibility
 
 ---
 
@@ -182,60 +155,33 @@ nvidia-smi || echo "No GPUs detected - using CPU only"
 
 ## CPU Workload Example
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: cpu-pod
-spec:
-  schedulerName: kai-scheduler
-  containers:
-  - name: main
-    image: ubuntu
-    args: ["sleep", "infinity"]
-    resources:
-      requests:
-        cpu: 100m
-        memory: 250M
+> Deploy a CPU-only pod using KAI scheduler
+> The cpu-pod.yaml specifies resource requests and the KAI scheduler
+
+```bash
+kubectl apply -f cpu-pod.yaml
 ```
 
 ---
 
 ## GPU Workload Example 🎮
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: gpu-pod
-spec:
-  schedulerName: kai-scheduler
-  containers:
-  - name: main
-    image: ubuntu
-    command: ["nvidia-smi"]
-    resources:
-      requests:
-        nvidia.com/gpu: '1'
+> Deploy a GPU workload that requests one full GPU
+> The gpu-pod.yaml runs nvidia-smi to verify GPU access
+
+```bash
+kubectl apply -f gpu-pod.yaml
 ```
 
 ---
 
 ## Fractional GPU Magic ✨
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: gpu-sharing
-  annotations:
-    gpu-fraction: "0.5"  # Half GPU!
-spec:
-  schedulerName: kai-scheduler
-  containers:
-  - name: main
-    image: ubuntu
-    args: ["sleep", "infinity"]
+> Deploy a pod that uses only half a GPU
+> The gpu-sharing.yaml uses annotations to request fractional GPU allocation
+
+```bash
+kubectl apply -f gpu-sharing.yaml
 ```
 
 ---

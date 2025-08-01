@@ -1,0 +1,50 @@
+@startuml
+!define RECTANGLE class
+
+skinparam backgroundColor transparent
+skinparam defaultFontName Courier
+skinparam defaultFontSize 14
+skinparam rectangle {
+    BackgroundColor lightblue
+    BorderColor black
+    FontColor black
+}
+skinparam arrow {
+    Color black
+    FontColor black
+}
+
+rectangle "Code Patterns" as patterns
+rectangle "LuaSnip Engine" as luasnip
+rectangle "ast-grep Rules" as astgrep
+rectangle "LSP Server" as lsp
+rectangle "Editor (Neovim)" as editor
+rectangle "Developer" as dev
+
+dev --> patterns : Identifies
+patterns --> luasnip : Configure snippets
+patterns --> astgrep : Define rules
+astgrep --> lsp : Provides diagnostics
+luasnip --> editor : Expansion engine
+lsp --> editor : Real-time feedback
+editor --> dev : Instant tooling
+
+note right of luasnip
+  - Dynamic nodes
+  - Context awareness
+  - Transformations
+end note
+
+note left of astgrep
+  - AST matching
+  - Meta variables
+  - Code actions
+end note
+
+note bottom of editor
+  Unified workflow
+  Zero latency
+  Local execution
+end note
+
+@enduml

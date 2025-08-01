@@ -1,0 +1,79 @@
+{
+  "author": {
+    "name": "Cloud Native Corner",
+    "email": "",
+    "url": ""
+  },
+  "presentation": {
+    "margin": {
+      "top": 3,
+      "bottom": 3,
+      "left": 6,
+      "right": 6
+    }
+  },
+  "slides": {
+    "big_text": {
+      "color": "yellow"
+    },
+    "title": {
+      "color": "magenta"
+    },
+    "subtitle": {
+      "color": "blue"
+    },
+    "author": {
+      "color": "green"
+    },
+    "date": {
+      "color": "cyan"
+    },
+    "paging": {
+      "color": "gray"
+    }
+  },
+  "elements": {
+    "h1": {
+      "color": "magenta",
+      "margin": {
+        "top": 1,
+        "bottom": 1
+      }
+    },
+    "h2": {
+      "color": "yellow",
+      "margin": {
+        "top": 1,
+        "bottom": 1
+      }
+    },
+    "h3": {
+      "color": "blue"
+    },
+    "list": {
+      "margin": {
+        "top": 1,
+        "bottom": 1
+      }
+    },
+    "table": {
+      "margin": {
+        "top": 1,
+        "bottom": 1
+      }
+    },
+    "code": {
+      "margin": {
+        "top": 1,
+        "bottom": 1
+      }
+    },
+    "quote": {
+      "margin": {
+        "top": 1,
+        "bottom": 1
+      },
+      "color": "italic_cyan"
+    }
+  }
+}
