@@ -1,0 +1,32 @@
+# vCluster configuration with virtual scheduler enabled
+experimental:
+  syncSettings:
+    setOwner: false  # Required for KAI scheduler
+
+# Enable virtual scheduler
+controlPlane:
+  distro:
+    k8s:
+      enabled: true
+      scheduler:
+        enabled: true
+
+# Sync configuration
+sync:
+  fromHost:
+    # Enable node syncing to get GPU resources
+    nodes:
+      enabled: true
+      syncBackChanges: false
+    # Sync runtime classes from host
+    runtimeClasses:
+      enabled: true
+    # Sync CSI drivers (auto-enabled with virtual scheduler)
+    csiDrivers:
+      enabled: auto
+    csiNodes:
+      enabled: auto
+    csiStorageCapacities:
+      enabled: auto
+    storageClasses:
+      enabled: auto

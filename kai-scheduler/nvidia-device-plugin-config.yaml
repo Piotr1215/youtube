@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvidia-device-plugin-config
+  namespace: kube-system
+data:
+  config.json: |
+    {
+      "version": "v1",
+      "flags": {
+        "migStrategy": "none",
+        "failOnInitError": false,
+        "nvidiaDriverRoot": "/",
+        "plugin": {
+          "passDeviceSpecs": true,
+          "deviceListStrategy": ["volume-mounts"],
+          "deviceIDStrategy": "uuid",
+          "cdiAnnotationPrefix": "cdi.k8s.io/",
+          "nvidiaCTKPath": "/usr/bin/nvidia-ctk",
+          "containerDriverRoot": "/driver-root"
+        }
+      },
+      "resources": {
+        "gpus": [
+          {
+            "pattern": "*",
+            "name": "nvidia.com/gpu"
+          }
+        ]
+      },
+      "sharing": {
+        "timeSlicing": {}
+      }
+    }

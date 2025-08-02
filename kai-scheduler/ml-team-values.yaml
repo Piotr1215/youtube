@@ -1,0 +1,18 @@
+# Enable virtual scheduling inside vCluster
+experimental:
+  syncSettings:
+    setOwner: false  # Required for KAI scheduler
+
+controlPlane:
+  distro:
+    k8s:
+      enabled: true
+      scheduler:
+        enabled: true  # Enable virtual scheduler
+
+sync:
+  fromHost:
+    nodes:
+      enabled: true  # Sync nodes from host
+    runtimeClasses:
+      enabled: true  # Sync nvidia runtime class
