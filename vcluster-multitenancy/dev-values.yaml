@@ -1,0 +1,31 @@
+# Development Team vCluster - Resource Controls
+policies:
+  # Resource quota for the entire vCluster
+  resourceQuota:
+    enabled: true
+    quota:
+      cpu: "2"
+      memory: 4Gi
+      pods: "10"
+      requests.storage: 5Gi
+  
+  # Automatic resource limits for all containers
+  limitRange:
+    enabled: true
+    default:
+      cpu: 500m
+      memory: 512Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "2"
+      memory: 2Gi
+
+# Network isolation
+sync:
+  toHost:
+    services:
+      enabled: true
+    ingresses:
+      enabled: false  # Dev doesn't need external access

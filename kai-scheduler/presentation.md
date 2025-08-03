@@ -1,6 +1,6 @@
 ---
 title: vCluster + NVIDIA KAI Scheduler
-author: Piotr Zaniewski | vCluster Labs
+author: Piotr | vCluster Labs
 date: 2025-01-31
 ---
 

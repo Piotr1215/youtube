@@ -1,0 +1,31 @@
+# Partner Team vCluster - Pre-populated with Platform Resources
+experimental:
+  deploy:
+    vcluster:
+      manifests: |-
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: platform-config
+          namespace: default
+        data:
+          API_ENDPOINT: "https://api.platform.local"
+          ENVIRONMENT: "partner"
+        ---
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: platform-credentials
+          namespace: default
+        type: Opaque
+        stringData:
+          token: "partner-readonly-token"
+
+# Limited resources
+policies:
+  resourceQuota:
+    enabled: true
+    quota:
+      pods: "5"
+      cpu: "1"
+      memory: "2Gi"
