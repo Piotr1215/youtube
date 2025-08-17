@@ -1,48 +1,39 @@
 ---
-theme: ../theme.json
+title: Replace Me
 author: Cloud Native Corner
-date: MMMM, YYYY
-paging: Slide %d / %d
+date: 2025-01-31
 ---
 
-# Title 🚀
+# Replace Me
 
-```bash
-~~~just intro_toilet Your Title Here
-
-~~~
+```bash +exec_replace
+just intro_toilet Your Title Here
 ```
 
----
+<!-- end_slide -->
 
 ## Introduction
 
-- 🎯 First key point
-- 🔧 Second key point
-- 📝 Third key point
+| Key Points |
+|------------|
+| First key point |
+| Second key point |
+| Third key point |
 
----
+<!-- end_slide -->
 
-## Best Practices 💡
+## Resources
 
-- First best practice
-- Second best practice
-- Third best practice
+| Resource |
+|----------|
+| Resource 1 |
+| Resource 2 |
+| Resource 3 |
 
----
-
-## Resources 📚
-
-- Resource 1
-- Resource 2
-- Resource 3
-
----
+<!-- end_slide -->
 
 # That's All Folks! 👋
 
-```bash
-~~~just intro_toilet That's all folks!
-
-~~~
+```bash +exec_replace
+just intro_toilet That\'s all folks!
 ```
