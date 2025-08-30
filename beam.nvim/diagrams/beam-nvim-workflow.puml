@@ -1,0 +1,47 @@
+@startuml
+!define SEQUENCE
+hide footbox
+skinparam backgroundColor #282c34
+skinparam participant {
+    BackgroundColor #61afef
+    BorderColor #528bff
+    FontColor #ffffff
+}
+skinparam sequence {
+    ArrowColor #98c379
+    LifeLineBorderColor #e06c75
+    LifeLineBackgroundColor #3e4451
+}
+skinparam note {
+    BackgroundColor #3e4451
+    BorderColor #61afef
+    FontColor #abb2bf
+}
+
+actor User
+participant "beam.nvim" as Beam
+participant "Vim Search" as Search
+participant "Vim Buffer" as Buffer
+
+User -> Beam: ,yiw (remote yank word)
+activate Beam
+
+group beam.nvim Workflow
+    Beam -> User: 1. Text object chosen\n(iw already specified)
+    note right: Object selected\nbefore location
+    
+    Beam -> Search: 2. Activate search mode
+    activate Search
+    User -> Search: Type search pattern with highlight\nNavigate with Ctrl-G / Ctrl-T
+    
+    User -> Search: Press Enter\n(select match)
+    deactivate Search
+    
+    Beam -> Buffer: 3. Apply operator remotely
+    Buffer --> User: Text yanked/deleted changed/visually selected
+    
+end
+
+deactivate Beam
+
+@enduml

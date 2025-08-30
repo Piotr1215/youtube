@@ -1,0 +1,48 @@
+@startuml
+!define SEQUENCE
+skinparam backgroundColor #282c34
+hide footbox
+skinparam participant {
+    BackgroundColor #61afef
+    BorderColor #528bff
+    FontColor #ffffff
+}
+skinparam sequence {
+    ArrowColor #98c379
+    LifeLineBorderColor #e06c75
+    LifeLineBackgroundColor #3e4451
+}
+skinparam note {
+    BackgroundColor #3e4451
+    BorderColor #61afef
+    FontColor #abb2bf
+}
+
+actor User
+participant "Vim Buffer" as Buffer
+participant "Cursor" as Cursor
+participant "Motion Plugin\n(optional)" as Motion
+
+User -> Buffer: "I need to edit line 42"
+activate Buffer
+
+group Traditional Workflow
+    User -> Cursor: 1. Navigate to target\n(/, ?, gg, G, etc.)
+    activate Cursor
+    note right: Must remember\noriginal position
+    
+    Cursor -> Buffer: Jump to location
+    
+    User -> Buffer: 2. Select text object\n(iw, aw, i", etc.)
+    
+    User -> Buffer: 3. Apply operator\n(d, y, c, etc.)
+    Buffer --> User: Text modified
+    
+    User -> Cursor: 4. Navigate back\n(Ctrl-O, '', etc.)
+    note right: Manual return\nto original position
+    deactivate Cursor
+end
+
+deactivate Buffer
+
+@enduml
