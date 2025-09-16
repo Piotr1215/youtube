@@ -19,6 +19,30 @@ echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 
 <!-- end_slide -->
 
+## Namespace Tenancy
+
+![namespae](./namespaces.png) 
+
+> Noisy neighbors
+
+<!-- end_slide -->
+
+## vCluster Tenancy
+
+![vcluster](./vcluster.png) 
+
+> Your own cluster shared infra
+
+<!-- end_slide -->
+
+## vCluster Advanced Tenancy
+
+![advanced-tenancy](./vcluster-private.png) 
+
+> Your own cluster and infra
+
+<!-- end_slide -->
+
 ## What is vCluster?
 
 ```mermaid +render
@@ -62,6 +86,7 @@ flowchart TB
 
 <!-- end_slide -->
 
+
 ## Deploy Kubernetes Cluster
 
 ```bash +exec
@@ -69,7 +94,6 @@ kind create cluster --name vcluster-multitenancy --config kind-multitenancy.yaml
 ```
 
 > **Note**: vCluster can run on any Kubernetes cluster (managed, on prem)
-
 <!-- end_slide -->
 
 ## Flexible Multi-Tenancy Models
