@@ -13,15 +13,3 @@ sync:
 controlPlane:
   coredns:
     enabled: true
-    embedded: true
-
-networking:
-  resolveDNS:
-    # Allow prod to reach dev team services
-    - hostname: "*.dev.local"
-      target:
-        hostname: "*.vcluster-dev-team.svc.cluster.local"
-    # Map specific service for cross-vCluster communication
-    - service: default/dev-api
-      target:
-        hostService: vcluster-dev-team/web-app-x-default-x-dev-team

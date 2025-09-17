@@ -494,4 +494,5 @@ vcluster list
 
 ```bash +exec_replace
 echo "Thank You!" | figlet -f small -c -w 90
+echo "Thank You!" | figlet -f small -w 90
 ```
