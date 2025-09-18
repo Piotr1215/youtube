@@ -13,6 +13,8 @@ For better output display, use the spane script in a separate terminal
 
 > Adapt Kubernetes isolation to your exact needs
 
+![vCluster Logo](./vcluster-logo-main.png)
+
 ```bash +exec_replace
 echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 ```
@@ -492,7 +494,8 @@ vcluster list
 
 > Questions?
 
+![vCluster Logo](./vcluster-logo-main.png)
+
 ```bash +exec_replace
-echo "Thank You!" | figlet -f small -c -w 90
 echo "Thank You!" | figlet -f small -w 90
 ```
