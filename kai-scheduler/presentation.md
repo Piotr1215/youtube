@@ -116,7 +116,7 @@ nvkind cluster create --name kai-demo --config-template=nvkind-config.yaml
 ## Check nodes
 
 
-```bash +exec_replace
+```bash +exec
 kubectl get nodes
 ```
 
@@ -205,7 +205,7 @@ kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=300s
 
 > KAI scheduler uses webhooks for queue validation - let's ensure they're ready
 
-```bash +exec_replace
+```bash +exec
 # Check webhook endpoints are available
 kubectl get validatingwebhookconfigurations | grep kai || echo "Waiting for KAI webhooks..."
 kubectl get endpoints -n kai-scheduler
@@ -215,14 +215,13 @@ kubectl get endpoints -n kai-scheduler
 
 ## Configure KAI Scheduler Queues
 
-
-> KAI uses a parent/child queue hierarchy for resource allocation and scheduling priorities
-> The queues.yaml file defines a default parent queue and a test child queue with unlimited quotas
-
 ```bash +exec
 head -n 20 queues.yaml
 kubectl apply -f queues.yaml
 ```
+
+> KAI uses a parent/child queue hierarchy for resource allocation and scheduling priorities
+> The queues.yaml file defines a default parent queue and a test child queue with unlimited quotas
 
 <!-- end_slide -->
 
@@ -291,16 +290,6 @@ vcluster create my-vcluster \
 
 ```bash +exec
 kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-my-vcluster --timeout=300s
-```
-
-<!-- end_slide -->
-
-## Connect to vCluster
-
-
-> When ready, connect to your vCluster
-
-```bash +exec
 vcluster connect my-vcluster
 ```
 
