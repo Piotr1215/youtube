@@ -1,0 +1,10 @@
+experimental:
+  syncSettings:
+    setOwner: false  # Required for KAI pod-grouper
+
+sync:
+  fromHost:
+    nodes:
+      enabled: true
+    runtimeClasses:
+      enabled: true
