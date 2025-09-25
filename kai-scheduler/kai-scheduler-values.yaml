@@ -1,8 +1,0 @@
-experimental:
-  syncSettings:
-    setOwner: false
-
-sync:
-  fromHost:
-    runtimeClasses:
-      enabled: true
