@@ -12,6 +12,7 @@ IMAGES=(
     "piotrzan/nginx-demo:green"
     "busybox:1.28"
     "ghcr.io/loft-sh/vcluster:latest"
+    "piotrzan/sre-haiku-generator:latest"
 )
 
 # Pull images locally

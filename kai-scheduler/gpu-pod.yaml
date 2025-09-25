@@ -4,6 +4,7 @@ metadata:
   name: gpu-pod
   labels:
     kai.scheduler/queue: test
+    app: sre-haiku
   annotations:
     kai.scheduler/gpu-fraction: "0.5"  # Request half GPU
 spec:
@@ -12,9 +13,15 @@ spec:
   nodeSelector:
     nvidia.com/gpu.present: "true"
   containers:
-  - name: main
-    image: nvidia/cuda:12.2.0-base-ubuntu20.04
-    command: ["sleep", "infinity"]
+  - name: sre-haiku
+    image: piotrzan/sre-haiku-generator:latest
+    ports:
+    - containerPort: 5000
     env:
     - name: NVIDIA_VISIBLE_DEVICES
       value: "all"
+    - name: OPENAI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: openai-secret
+          key: api-key

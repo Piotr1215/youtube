@@ -17,78 +17,13 @@ echo "vCluster + KAI" | figlet -f small -w 90
 <!-- end_slide -->
 
 
-## Setup: GPU-Enabled Kind Cluster
+## Setup Demo Environment
 
-> Setting up a local Kubernetes cluster with GPU support using Kind and nvkind
-> **Note:** Usually run before the talk to save time
-
-```bash +exec
-# Configure Docker for GPU pass-through
-sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
-sudo systemctl restart docker
-
-# Wait for Docker to be ready
-until docker info >/dev/null 2>&1; do
-  sleep 2
-done
-
-# Create cluster with GPU support
-nvkind cluster create --name kai-demo --config-template=nvkind-config.yaml
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-
-# Preload images into kind cluster for faster demo
-./preload-images.sh
-```
-
-<!-- end_slide -->
-
-
-## Deploy KAI Scheduler on Host Cluster
-
-> Installing KAI directly on the host cluster - this affects all workloads
+> Running preflight setup for the demo
 
 ```bash +exec
-# Deploy KAI v0.7.11 directly on host cluster
-KAI_VERSION=v0.7.11
-
-helm upgrade -i kai-scheduler \
-  oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
-  -n kai-scheduler --create-namespace \
-  --version $KAI_VERSION \
-  --set "global.gpuSharing=true" &
-
-# Continue with GPU setup while KAI installs in background
-```
-
-<!-- end_slide -->
-
-
-## Install GPU Device Plugin
-
-> The NVIDIA device plugin enables Kubernetes to discover and allocate GPU resources to pods
-
-```bash +exec
-# Label worker node for GPU workloads
-kubectl label node kai-demo-worker nvidia.com/gpu.present=true --overwrite
-
-# Install NVIDIA device plugin
-kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.16.2/deployments/static/nvidia-device-plugin.yml
-
-# Create RuntimeClass for NVIDIA containers
-kubectl apply -f - <<EOF
-apiVersion: node.k8s.io/v1
-kind: RuntimeClass
-metadata:
-  name: nvidia
-handler: nvidia
-EOF
-
-# Wait for device plugin
-kubectl wait --for=condition=ready pod -n kube-system \
-  -l name=nvidia-device-plugin-ds --timeout=60s
-
-# Wait for KAI scheduler to be ready
-kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
+# Setup the entire demo environment
+./setup-cluster.sh
 ```
 
 <!-- end_slide -->
@@ -183,38 +118,62 @@ flowchart TB
 <!-- end_slide -->
 
 
-## Configure KAI Scheduler and Deploy Test Pod
+## What Actually Runs on GPUs?
 
-> KAI uses Queue CRDs to manage resources. This pod requests 50% of a GPU.
+> Understanding GPU workloads in modern infrastructure
 
-```bash +exec
-# Apply queue configuration and test pod
-kubectl apply -f queues.yaml
-kubectl apply -f gpu-pod.yaml
+| **Workload** | **Examples** | **GPU Usage** |
+|---|---|---|
+| **Model Training** | Fine-tuning LLMs, Deep Learning | 100% for hours/days |
+| **Stable Diffusion** | Image generation | ~50% GPU |
+| **LLM Inference** | ChatGPT API, Claude API | 25-75% depending on model |
+| **Video Processing** | Transcoding, streaming | Variable 20-80% |
+| **CUDA Development** | Jupyter notebooks, testing | Often < 20% |
+| **Batch Processing** | Scientific computing | Spikes to 100% |
 
-# Wait for pod to be scheduled
-kubectl wait --for=condition=ready pod gpu-pod --timeout=30s || true
-kubectl get pod gpu-pod -o wide
+<!-- end_slide -->
 
+
+## The Power of GPU Sharing
+
+```bash +exec_replace
+cat << 'EOF'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    KAI enables sharing these workloads
+           on the SAME GPU!
+
+    Instead of: 4 GPUs for 4 light workloads
+    With KAI:   1 GPU shared by 4 workloads
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
 ```
 
 <!-- end_slide -->
 
 
-## Monitor GPU Allocation
+## Deploy GPU Demo
 
-> Checking that KAI successfully scheduled our pod with fractional GPU allocation
-
-```bash +exec_replace
-echo "━━━ GPU ALLOCATION STATUS ━━━"
-echo "  • GPU Fraction: $(kubectl get pod gpu-pod -o jsonpath='{.metadata.annotations.kai\.scheduler/gpu-fraction}' 2>/dev/null || echo 'N/A')"
-echo "  • Scheduler:    $(kubectl get pod gpu-pod -o jsonpath='{.spec.schedulerName}' 2>/dev/null || echo 'N/A')"
-echo "  • Queue:        $(kubectl get pod gpu-pod -o jsonpath='{.metadata.labels.kai\.scheduler/queue}' 2>/dev/null || echo 'N/A')"
-echo ""
-echo "━━━ KAI SCHEDULER COMPONENTS ━━━"
-echo "  • Running Pods: $(kubectl get pods -n kai-scheduler --no-headers | wc -l)"
-echo "  • Pod shell: $( kubectl exec gpu-pod -- nvidia-smi)"
+```bash +exec
+./deploy-gpu-pod.sh
 ```
+
+<!-- end_slide -->
+
+
+## Scan QR Code
+
+<!-- column_layout: [1, 2, 1] -->
+<!-- column: 1 -->
+
+```bash +exec
+curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | tee /tmp/ngrok_url | qrencode -t UTF8 -s 1 -m 2
+echo ""
+cat /tmp/ngrok_url
+```
+
+<!-- reset_layout -->
 
 <!-- end_slide -->
 
@@ -608,6 +567,10 @@ graph TB
 > Cleaning up the demo environment
 
 ```bash +exec
+# Kill ngrok process
+pkill -f ngrok || true
+
+# Delete the Kind cluster
 kind delete cluster --name kai-demo
 
 # Revert Docker runtime configuration
