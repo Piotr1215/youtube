@@ -282,21 +282,7 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 > vCluster can swap out Kubernetes components like schedulers, providing isolated testing environments
 
 ```bash +exec
-# Create vCluster with KAI-specific configuration
-cat << 'EOF' > kai-vcluster.yaml
-experimental:
-  syncSettings:
-    setOwner: false  # Required for KAI pod-grouper
-
-sync:
-  fromHost:
-    nodes:
-      enabled: true
-    runtimeClasses:
-      enabled: true
-EOF
-
-# Create isolated vCluster
+# Create isolated vCluster with KAI-specific configuration
 vcluster create kai-isolated --values kai-vcluster.yaml --connect=false
 
 # Connect to the vCluster
@@ -459,7 +445,7 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 > Multiple teams can run different scheduler versions simultaneously
 
 ```bash +exec
-# Create multiple vClusters for different teams
+# Create multiple vClusters for different teams using existing config
 # Team 1: Stable version
 vcluster create team-stable --values kai-vcluster.yaml --connect=false &
 

@@ -54,25 +54,8 @@ kubectl wait --for=condition=ready pod -n kube-system \
 # Wait for KAI scheduler to be ready
 kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
 
-# Wait for CRDs to be established
-kubectl wait --for=condition=Established crd/queues.scheduling.run.ai --timeout=60s
-
-# Create KAI queues
-kubectl apply -f - <<EOF
-apiVersion: scheduling.run.ai/v1alpha1
-kind: Queue
-metadata:
-  name: default
-spec:
-  priority: 100
----
-apiVersion: scheduling.run.ai/v1alpha1
-kind: Queue
-metadata:
-  name: test
-spec:
-  priority: 100
-EOF
+# Apply KAI queues configuration
+kubectl apply -f queues.yaml
 
 # Preload images into kind cluster for faster demo
 ./preload-images.sh
