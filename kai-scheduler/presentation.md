@@ -1,4 +1,3 @@
-
 <!--
 Note: Commands marked with +exec can be run with Ctrl+E
 For better output display, use the spane script in a separate terminal
@@ -22,7 +21,16 @@ echo "vCluster + KAI" | figlet -f small -w 90
 > Running preflight setup for the demo
 
 ```bash +exec
-# Setup the entire demo environment
+# Configure Docker for GPU pass-through
+# Create cluster with GPU support (port 5000 exposed for demo app)
+# Install metrics server with Kind-specific configuration
+# Create secret for OpenAI API (from environment variable)
+# Deploy KAI Scheduler
+# Label worker node for GPU workloads
+# Install NVIDIA device plugin
+# Create RuntimeClass for NVIDIA containers
+# Apply KAI queues configuration
+# Preload images into kind cluster for faster demo
 ./setup-cluster.sh
 ```
 
@@ -40,12 +48,12 @@ graph LR
     GPU --> C[0.25 Dev]
 ```
 
-| **Feature** | **Benefit** |
-|---|---|
+| **Feature**               | **Benefit**                        |
+| ------------------------- | ---------------------------------- |
 | Fractional GPU allocation | Share single GPU between workloads |
-| Queue-based scheduling | Hierarchical resource management |
-| Topology awareness | Optimize for hardware layout |
-| Fair sharing | Prevent resource monopolization |
+| Queue-based scheduling    | Hierarchical resource management   |
+| Topology awareness        | Optimize for hardware layout       |
+| Fair sharing              | Prevent resource monopolization    |
 
 > **Open-sourced 2025:** Enterprise GPU management for the community
 
@@ -55,6 +63,10 @@ graph LR
 ## Verify GPU Access
 
 > Running nvidia-smi in a test pod to confirm GPU passthrough is working
+
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
 
 ```bash +exec
 # Test GPU accessibility
@@ -106,12 +118,12 @@ flowchart TB
     class Shared,CertManager2,Ingress2 service
 ```
 
-| **Feature** | **Benefit** |
-|---|---|
-| Full Kubernetes API | Certified Kubernetes distribution |
-| Complete isolation | Separate control plane per team |
-| Resource efficiency | Shared infrastructure, isolated workloads |
-| Sub-minute provisioning | Instant test environments |
+| **Feature**             | **Benefit**                               |
+| ----------------------- | ----------------------------------------- |
+| Full Kubernetes API     | Certified Kubernetes distribution         |
+| Complete isolation      | Separate control plane per team           |
+| Resource efficiency     | Shared infrastructure, isolated workloads |
+| Sub-minute provisioning | Instant test environments                 |
 
 > **vCluster** = Containerized Kubernetes inside a Pod!
 
@@ -122,38 +134,24 @@ flowchart TB
 
 > Understanding GPU workloads in modern infrastructure
 
-| **Workload** | **Examples** | **GPU Usage** |
-|---|---|---|
-| **Model Training** | Fine-tuning LLMs, Deep Learning | 100% for hours/days |
-| **Stable Diffusion** | Image generation | ~50% GPU |
-| **LLM Inference** | ChatGPT API, Claude API | 25-75% depending on model |
-| **Video Processing** | Transcoding, streaming | Variable 20-80% |
-| **CUDA Development** | Jupyter notebooks, testing | Often < 20% |
-| **Batch Processing** | Scientific computing | Spikes to 100% |
+| **Workload**         | **Examples**                    | **GPU Usage**             |
+| -------------------- | ------------------------------- | ------------------------- |
+| **Model Training**   | Fine-tuning LLMs, Deep Learning | 100% for hours/days       |
+| **Stable Diffusion** | Image generation                | ~50% GPU                  |
+| **LLM Inference**    | ChatGPT API, Claude API         | 25-75% depending on model |
+| **Video Processing** | Transcoding, streaming          | Variable 20-80%           |
+| **CUDA Development** | Jupyter notebooks, testing      | Often < 20%               |
+| **Batch Processing** | Scientific computing            | Spikes to 100%            |
 
 <!-- end_slide -->
 
-
-## The Power of GPU Sharing
-
-```bash +exec_replace
-cat << 'EOF'
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    KAI enables sharing these workloads
-           on the SAME GPU!
-
-    Instead of: 4 GPUs for 4 light workloads
-    With KAI:   1 GPU shared by 4 workloads
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EOF
-```
-
-<!-- end_slide -->
 
 
 ## Deploy GPU Demo
+
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
 
 ```bash +exec
 ./deploy-gpu-pod.sh
@@ -167,10 +165,11 @@ EOF
 <!-- column_layout: [1, 2, 1] -->
 <!-- column: 1 -->
 
-```bash +exec
-curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | tee /tmp/ngrok_url | qrencode -t UTF8 -s 1 -m 2
+```bash +exec_replace
+NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+echo "$NGROK_URL" | qrencode -t UTF8 -s 1 -m 2
 echo ""
-cat /tmp/ngrok_url
+echo "$NGROK_URL"
 ```
 
 <!-- reset_layout -->
@@ -228,7 +227,7 @@ EOF
 graph LR
     subgraph "Production Cluster"
         subgraph "vCluster Test"
-            TEST["Test Environment<br/>KAI v0.8 Beta"]
+            TEST["Test Environment<br/>KAI v0.9.3"]
         end
 
         PROD["Production<br/>KAI v0.7 Stable"]
@@ -256,12 +255,12 @@ graph LR
 
 ```bash +exec_replace
 cat << 'EOF'
-Current Situation:
+Host-cluster scheduler:
 • Single scheduler controls entire cluster
 • Any changes affect all workloads
 • No isolation between teams
 
-Business Impact:
+Impact:
 • Blocked innovation due to risk
 • Slow adoption of new features
 • Teams waiting on scheduler upgrades
@@ -275,6 +274,10 @@ EOF
 
 
 ## Deploy KAI in vCluster
+
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
 
 > vCluster can swap out Kubernetes components like schedulers, providing isolated testing environments
 
@@ -305,11 +308,27 @@ vcluster connect kai-isolated
 
 ## vCluster Resource Footprint
 
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
+
 > vCluster runs as a single pod with minimal overhead
 
 ```bash +exec_replace
-echo "━━━ VCLUSTER POD RESOURCES ━━━"
-kubectl get pod -n vcluster-kai-isolated -l app=vcluster -o custom-columns=NAME:.metadata.name,CPU:.spec.containers[0].resources.requests.cpu,MEMORY:.spec.containers[0].resources.requests.memory
+echo "━━━ VCLUSTER POD DETAILS ━━━"
+kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o custom-columns=NAME:.metadata.name,CPU:.spec.containers[0].resources.requests.cpu,MEMORY:.spec.containers[0].resources.requests.memory
+echo ""
+echo "━━━ VCLUSTER CONTAINERS ━━━"
+kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o jsonpath='INIT CONTAINERS:
+{range .items[0].spec.initContainers[*]}  {.name}: {.image}
+{end}
+MAIN CONTAINERS:
+{range .items[0].spec.containers[*]}  {.name}: {.image}
+{end}'
+echo ""
+echo ""
+echo "━━━ VCLUSTER DATA STORAGE ━━━"
+kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c syncer -- ls -lh /data/state.db 2>/dev/null || echo "  SQLite database: /data/state.db"
 ```
 
 <!-- end_slide -->
@@ -320,10 +339,16 @@ kubectl get pod -n vcluster-kai-isolated -l app=vcluster -o custom-columns=NAME:
 
 > Same KAI installation but inside vCluster - production remains untouched
 
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
+
 ```bash +exec
-# Already connected from previous slide
+# Connect to vCluster first
+vcluster connect kai-isolated
+
 # Install KAI in isolated environment
-KAI_VERSION=v0.7.11
+KAI_VERSION=v0.9.3
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
   -n kai-scheduler --create-namespace \
@@ -333,6 +358,17 @@ helm upgrade -i kai-scheduler \
 kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
 ```
 
+
+<!-- end_slide -->
+
+## KAI Scheduler Pods
+
+> View KAI scheduler components 
+
+```bash +exec +acquire_terminal
+k9s -c pods -n kai-scheduler
+```
+
 <!-- end_slide -->
 
 
@@ -340,32 +376,37 @@ kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
 
 > GPU sharing works identically inside vCluster but with zero production risk
 
-```bash +exec
-# Apply queues and test workload
-kubectl apply -f queues.yaml
-kubectl apply -f gpu-pod.yaml
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
 
-# Show pod status without waiting
-kubectl get pod gpu-pod -o wide
+```bash +exec
+# Apply queues and deploy two pods with different GPU fractions
+kubectl apply -f queues.yaml
+kubectl apply -f gpu-demo-pod1.yaml
+kubectl apply -f gpu-demo-pod2.yaml
+
+kubectl wait --for=condition=ready pod -n default --all --timeout=120s
+
+# Show both pods sharing the GPU
+kubectl get pods -l app=gpu-demo -o custom-columns=NAME:.metadata.name,FRACTION:.metadata.annotations."kai\.scheduler/gpu-fraction",STATUS:.status.phase
 ```
 
 <!-- end_slide -->
 
 
-## Verify KAI Scheduler in vCluster
 
-> KAI is fully functional inside vCluster while host cluster continues normally
+## GPU Sharing Status
 
 ```bash +exec_replace
-echo "━━━ VCLUSTER STATUS ━━━"
-echo "  • Pod:         $(kubectl get pod gpu-pod -o jsonpath='{.metadata.name}' 2>/dev/null || echo 'N/A')"
-echo "  • Scheduler:   $(kubectl get pod gpu-pod -o jsonpath='{.spec.schedulerName}' 2>/dev/null || echo 'N/A')"
-echo "  • GPU Fraction: $(kubectl get pod gpu-pod -o jsonpath='{.metadata.annotations.kai\.scheduler/gpu-fraction}' 2>/dev/null || echo 'N/A')"
-echo ""
-echo "━━━ ISOLATION ━━━"
-echo "  • Level:       COMPLETE"
-echo "  • Risk:        ZERO"
-echo "  • Rollback:    30 seconds"
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
+
+```bash +exec
+vcluster connect kai-isolated > /dev/null 2>&1
+
+kubectl get pods -l app=gpu-demo \
+  -o custom-columns='POD:metadata.name,GPU FRACTION:metadata.annotations.kai\.scheduler/gpu-fraction,STATUS:status.phase'
 ```
 
 <!-- end_slide -->
@@ -374,16 +415,11 @@ echo "  • Rollback:    30 seconds"
 
 ## Version Switching with vCluster
 
-> Switch between scheduler versions instantly. vCluster also supports snapshot/restore for complete state management.
-
 ```bash +exec_replace
-cat << 'EOF'
-Simulating critical bug discovered in KAI deployment
-
-Traditional approach: 30-60 minute rollback
-vCluster approach: Watch this...
-EOF
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 ```
+
+> Switch between scheduler versions instantly. vCluster also supports snapshot/restore for complete state management.
 
 ```bash +exec
 # Disconnect from vCluster
@@ -401,7 +437,7 @@ time vcluster delete kai-isolated --delete-namespace
 ```bash +exec_replace
 cat << 'EOF'
 Challenge:
-  • ML Team needs KAI v0.8 beta for new features
+  • ML Team needs KAI v0.9.3 for new features
   • Research Team requires stable KAI v0.7
   • Dev Team uses default scheduler
 
@@ -415,6 +451,10 @@ EOF
 
 
 ## Parallel Scheduler Versions
+
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
 
 > Multiple teams can run different scheduler versions simultaneously
 
@@ -436,23 +476,27 @@ wait
 
 ## Install Different KAI Versions Per Team
 
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
+
 > Each team gets their preferred scheduler version in complete isolation
 
 ```bash +exec +id:teams
-# Team Stable: v0.7.10 (production)
+# Team Stable: v0.9.2 (production)
 vcluster connect team-stable
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
   -n kai-scheduler --create-namespace \
-  --version v0.7.10 --wait &
+  --version v0.9.2 --wait &
 STABLE_PID=$!
 
-# Team Beta: v0.7.11 (testing)
+# Team Beta: v0.9.3 (testing)
 vcluster connect team-beta
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
   -n kai-scheduler --create-namespace \
-  --version v0.7.11 --wait &
+  --version v0.9.3 --wait &
 BETA_PID=$!
 
 # Wait for both installations
@@ -474,32 +518,33 @@ vcluster disconnect
 
 > Each team's workloads are managed by their own scheduler version
 
+```bash +exec_replace
+kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
+
 ```bash +exec
-# Deploy to team-stable
+# Deploy to team-stable (30% + 50% GPU allocation)
 vcluster connect team-stable
-kubectl apply -f queues.yaml
-kubectl apply -f gpu-pod.yaml
+kubectl apply -f queues.yaml,gpu-demo-pod1.yaml,gpu-demo-pod2.yaml
 vcluster disconnect
 
-# Deploy to team-beta
+# Deploy to team-beta (different allocation strategy)
 vcluster connect team-beta
-kubectl apply -f queues.yaml
-kubectl apply -f gpu-pod.yaml
+kubectl apply -f queues.yaml,gpu-demo-pod1.yaml,gpu-demo-pod2.yaml
 vcluster disconnect
 ```
 
 <!-- end_slide -->
 
 
-
-## Verify Parallel Operations
+## Parallel Operations
 
 > Both vClusters are running with different KAI versions
 
 ```markdown
 PARALLEL SCHEDULER DEPLOYMENTS
-- team-stable: KAI v0.7.10 (production)
-- team-beta:   KAI v0.7.11 (beta testing)
+- team-stable: KAI v0.9.2 (production)
+- team-beta:   KAI v0.9.3 (beta testing)
 
 CLUSTER STATUS
 - Host Impact:  NONE
@@ -513,16 +558,26 @@ vcluster list
 
 <!-- end_slide -->
 
+## View Running vClusters
+
+> View all vClusters and their resources (Press :q to exit)
+
+```bash +exec +acquire_terminal
+k9s -c pods
+```
+
+<!-- end_slide -->
+
 
 ## Operational Capabilities Achieved
 
-| **Capability** | **Time Saved** | **Risk Reduced** |
-|---|---|---|
-| Test scheduler upgrades | 4 hours → 5 min | 100% → 0% |
-| Rollback bad changes | 2 hours → 30 sec | Critical → None |
-| A/B test versions | Not possible → Easy | High → Zero |
-| Per-team schedulers | Days → Minutes | Complex → Simple |
-| GPU sharing validation | Weeks → Hours | High → None |
+| **Capability**          | **Time Saved**      | **Risk Reduced** |
+| ----------------------- | ------------------- | ---------------- |
+| Test scheduler upgrades | 4 hours → 5 min     | 100% → 0%        |
+| Rollback bad changes    | 2 hours → 30 sec    | Critical → None  |
+| A/B test versions       | Not possible → Easy | High → Zero      |
+| Per-team schedulers     | Days → Minutes      | Complex → Simple |
+| GPU sharing validation  | Weeks → Hours       | High → None      |
 
 > **Measured Impact:** Based on typical enterprise deployment scenarios
 
@@ -535,11 +590,11 @@ vcluster list
 graph TB
     subgraph "Production GPU Cluster"
         subgraph "vCluster: ML Team"
-            ML["KAI v0.8 Beta<br/>Fractional GPU<br/>High Priority"]
+            ML["KAI v0.9.3<br/>Fractional GPU<br/>High Priority"]
         end
 
         subgraph "vCluster: Research"
-            RES["KAI v0.7 Stable<br/>Dedicated GPU<br/>Standard Priority"]
+            RES["KAI v0.9.2 Stable<br/>Dedicated GPU<br/>Standard Priority"]
         end
 
         subgraph "vCluster: Development"
