@@ -121,9 +121,9 @@ flowchart TB
 | **Feature**             | **Benefit**                               |
 | ----------------------- | ----------------------------------------- |
 | Full Kubernetes API     | Certified Kubernetes distribution         |
-| Complete isolation      | Separate control plane per team           |
+| Flexible isolation      | Separate control plane per team           |
 | Resource efficiency     | Shared infrastructure, isolated workloads |
-| Sub-minute provisioning | Instant test environments                 |
+| Sub-minute provisioning | Instant test/dev/ci environments          |
 
 > **vCluster** = Containerized Kubernetes inside a Pod!
 
@@ -136,16 +136,14 @@ flowchart TB
 
 | **Workload**         | **Examples**                    | **GPU Usage**             |
 | -------------------- | ------------------------------- | ------------------------- |
-| **Model Training**   | Fine-tuning LLMs, Deep Learning | 100% for hours/days       |
-| **Stable Diffusion** | Image generation                | ~50% GPU                  |
-| **LLM Inference**    | ChatGPT API, Claude API         | 25-75% depending on model |
-| **Video Processing** | Transcoding, streaming          | Variable 20-80%           |
-| **CUDA Development** | Jupyter notebooks, testing      | Often < 20%               |
-| **Batch Processing** | Scientific computing            | Spikes to 100%            |
+| Model Training       | Fine-tuning LLMs, Deep Learning | 100% for hours/days       |
+| Stable Diffusion     | Image generation                | ~50% GPU                  |
+| LLM Inference        | ChatGPT API, Claude API         | 25-75% depending on model |
+| Video Processing     | Transcoding, streaming          | Variable 20-80%           |
+| CUDA Development     | Jupyter notebooks, testing      | Often < 20%               |
+| Batch Processing     | Scientific computing            | Spikes to 100%            |
 
 <!-- end_slide -->
-
-
 
 ## Deploy GPU Demo
 
@@ -162,20 +160,12 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 
 ## Scan QR Code
 
-<!-- column_layout: [1, 2, 1] -->
-<!-- column: 1 -->
-
 ```bash +exec_replace
 NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
 echo "$NGROK_URL" | qrencode -t UTF8 -s 1 -m 2
 echo ""
 echo "$NGROK_URL"
 ```
-
-<!-- reset_layout -->
-
-<!-- end_slide -->
-
 
 ## Upgrading Schedulers in Production
 
@@ -221,7 +211,7 @@ EOF
 <!-- end_slide -->
 
 
-## Solution: vCluster Isolation (Not New Clusters!)
+## Solution: vCluster Isolation
 
 ```mermaid +render
 graph LR
@@ -282,11 +272,19 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 > vCluster can swap out Kubernetes components like schedulers, providing isolated testing environments
 
 ```bash +exec
+cat ./kai-vcluster.yaml
 # Create isolated vCluster with KAI-specific configuration
 vcluster create kai-isolated --values kai-vcluster.yaml --connect=false
 
 # Connect to the vCluster
 vcluster connect kai-isolated
+```
+
+<!-- end_slide -->
+### Check Install Progress
+
+```bash +exec +acquire_terminal
+k9s -c pods
 ```
 
 <!-- end_slide -->
@@ -380,22 +378,6 @@ kubectl get pods -l app=gpu-demo -o custom-columns=NAME:.metadata.name,FRACTION:
 
 <!-- end_slide -->
 
-
-
-## GPU Sharing Status
-
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
-```
-
-```bash +exec
-vcluster connect kai-isolated > /dev/null 2>&1
-
-kubectl get pods -l app=gpu-demo \
-  -o custom-columns='POD:metadata.name,GPU FRACTION:metadata.annotations.kai\.scheduler/gpu-fraction,STATUS:status.phase'
-```
-
-<!-- end_slide -->
 
 
 
@@ -546,7 +528,7 @@ vcluster list
 
 ## View Running vClusters
 
-> View all vClusters and their resources (Press :q to exit)
+> View all vClusters and their resources
 
 ```bash +exec +acquire_terminal
 k9s -c pods
