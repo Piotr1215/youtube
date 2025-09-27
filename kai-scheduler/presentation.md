@@ -15,7 +15,6 @@ echo "vCluster + KAI" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-
 ## Setup Demo Environment
 
 > Running preflight setup for the demo
@@ -35,7 +34,6 @@ echo "vCluster + KAI" | figlet -f small -w 90
 ```
 
 <!-- end_slide -->
-
 
 ## What is NVIDIA KAI Scheduler?
 
@@ -59,7 +57,6 @@ graph LR
 
 <!-- end_slide -->
 
-
 ## Verify GPU Access
 
 > Running nvidia-smi in a test pod to confirm GPU passthrough is working
@@ -78,57 +75,17 @@ kubectl run gpu-verify --image=nvidia/cuda:12.2.0-base-ubuntu20.04 \
 
 <!-- end_slide -->
 
-
-## What is vCluster?
-
-```mermaid +render
-%%{init: {'flowchart' : {'curve' : 'linear'}}}%%
-flowchart TB
-    subgraph host["Host Kubernetes Cluster"]
-        subgraph vclusters[" "]
-            direction LR
-            subgraph vc1["vCluster 1"]
-                W1["Team 1<br/>Workloads"]
-            end
-
-            subgraph vc2["vCluster 2"]
-                direction TB
-                W2["Team 2<br/>Workloads"]
-                Ingress2["• Ingress"]
-                CertManager2["• Cert Manager"]
-            end
-
-            subgraph vc3["vCluster 3"]
-                W3["Team 3<br/>Workloads"]
-            end
-        end
-
-        Shared["Shared Services<br/>(Cert Manager, Ingress Controller)"]
-    end
-
-    W1 --> Shared
-    W3 --> Shared
-
-    classDef cluster fill:#495057,stroke:#fff,stroke-width:2px,color:#fff
-    classDef workload fill:#6c757d,stroke:#fff,stroke-width:2px,color:#fff
-    classDef service fill:#343a40,stroke:#fff,stroke-width:2px,color:#fff
-
-    class vc1,vc2,vc3 cluster
-    class W1,W2,W3 workload
-    class Shared,CertManager2,Ingress2 service
-```
-
-| **Feature**             | **Benefit**                               |
-| ----------------------- | ----------------------------------------- |
-| Full Kubernetes API     | Certified Kubernetes distribution         |
-| Flexible isolation      | Separate control plane per team           |
-| Resource efficiency     | Shared infrastructure, isolated workloads |
-| Sub-minute provisioning | Instant test/dev/ci environments          |
-
-> **vCluster** = Containerized Kubernetes inside a Pod!
+<!-- include: ../_partials/what-is-vcluster.md -->
 
 <!-- end_slide -->
 
+<!-- include: ../_partials/vcluster-architecture.md -->
+
+<!-- end_slide -->
+
+<!-- include: ../_partials/vcluster-syncer.md -->
+
+<!-- end_slide -->
 
 ## What Actually Runs on GPUs?
 
@@ -145,6 +102,34 @@ flowchart TB
 
 <!-- end_slide -->
 
+## vCluster Resource Allocation Intelligence
+
+> How vCluster prevents resource oversubscription in multi-tenant GPU environments
+
+```bash +exec_replace
+cat << 'EOF' | ccze -A
+HOST CLUSTER NODE (64 CPUs, 8 GPUs):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Resources:     64 CPUs, 8 GPUs
+System Reserved:     -1.5 CPUs
+Kube Reserved:       -1.0 CPUs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Allocatable:         62.5 CPUs, 8 GPUs
+
+vCLUSTER VIEW (Dynamic Allocation):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+vCluster-ML:         30.5 CPUs, 4 GPUs
+vCluster-Research:   20.0 CPUs, 3 GPUs
+vCluster-Dev:        12.0 CPUs, 1 GPU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total:              62.5 CPUs, 8 GPUs ✓
+EOF
+```
+
+> **Critical Feature:** vCluster syncer dynamically updates allocatable values as pods start/stop, preventing oversubscription
+
+<!-- end_slide -->
+
 ## Deploy GPU Demo
 
 ```bash +exec_replace
@@ -156,7 +141,6 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 ```
 
 <!-- end_slide -->
-
 
 ## Scan QR Code
 
@@ -198,7 +182,6 @@ EOF
 
 <!-- end_slide -->
 
-
 ## GPU Scheduling: Risk Analysis
 
 | **Failure Mode** | **Impact**           | **Recovery Time** | **Business Cost** |
@@ -211,7 +194,6 @@ EOF
 > **Industry Data:** Enterprise downtime costs $100k-1M+ per hour (New Relic 2024)
 
 <!-- end_slide -->
-
 
 ## Solution: vCluster Isolation
 
@@ -241,8 +223,6 @@ graph LR
 
 <!-- end_slide -->
 
-
-
 ## Production Scheduler Risk
 
 ```bash +exec_replace
@@ -263,25 +243,45 @@ EOF
 
 <!-- end_slide -->
 
+## Deploy KAI in vCluster: Virtual Scheduler Configuration
 
+> Using virtual scheduler for true KAI isolation per team
 
-## Deploy KAI in vCluster
+```yaml
+experimental:
+  syncSettings:
+    setOwner: false  # Required for KAI pod-grouper
 
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+controlPlane:
+  advanced:
+    virtualScheduler:
+      enabled: true   # Runs scheduler iside a virtual cluster
+
+sync:
+  fromHost:
+    nodes:
+      enabled: true   # Syncs host nodes for labels detection
+    runtimeClasses:
+      enabled: true   # Syncs NVIDIA runtime
+    # Auto-enabled with virtual scheduler:
+    csiDrivers: auto
+    csiNodes: auto
+    csiStorageCapacities: auto
 ```
 
-> vCluster can swap out Kubernetes components like schedulers, providing isolated testing environments
-
-```bash +exec_replace
-ccze -A < ./kai-vcluster.yaml
-```
+| **Virtual Scheduler Benefits** | **Impact**                                |
+| ------------------------------ | ----------------------------------------- |
+| Independent KAI versions       | Each team runs v0.7.11, v0.9.2, or v0.9.3 |
+| Complete scheduler isolation   | KAI decisions stay within vCluster        |
+| True scheduling autonomy       | No cross-team interference                |
+| Verified working               | Pods scheduled by vCluster's KAI          |
 
 ```bash +exec
 vcluster create kai-isolated --values kai-vcluster.yaml
 ```
 
 <!-- end_slide -->
+
 ### Check Install Progress
 
 ```bash +exec +acquire_terminal
@@ -290,38 +290,38 @@ k9s -c pod
 
 <!-- end_slide -->
 
-
-## vCluster Resource Footprint
+## vCluster Resource Footprint & Internals
 
 ```bash +exec_replace
 kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 ```
 
-> vCluster runs as a single pod with minimal overhead
+> Understanding what runs inside a vCluster pod
+
+```bash +exec_replace
+cat << 'EOF' | ccze -A
+━━━ vCluster Components ━━━
+CONTROL PLANE:
+  • API Server (k8s): Handles all K8s API calls
+  • Syncer: Bi-directional resource sync with host
+  • SQLite/etcd: Complete state isolation
+  • Scheduler (optional): Independent scheduling decisions
+EOF
+```
 
 ```bash +exec_replace
 echo "━━━ Resources Utilization ━━━"
 kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o custom-columns=NAME:.metadata.name,CPU:.spec.containers[0].resources.requests.cpu,MEMORY:.spec.containers[0].resources.requests.memory
 echo ""
-echo "━━━ Containers ━━━"
-kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o jsonpath='INIT CONTAINERS:
-{range .items[0].spec.initContainers[*]}  {.name}: {.image}
-{end}
-MAIN CONTAINERS:
-{range .items[0].spec.containers[*]}  {.name}: {.image}
-{end}'
-echo ""
 echo "━━━ Data Storage ━━━"
-kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c syncer -- ls -lh /data/state.db 2>/dev/null || echo "  SQLite database: /data/state.db"
+kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c syncer -- ls -lh /data/state.db 2>/dev/null || echo "  SQLite database: /data/state.db (10-50MB typical)"
 ```
 
 <!-- end_slide -->
 
-
-
 ## Install KAI Inside vCluster
 
-> Same KAI installation but inside vCluster - host cluster remains untouched
+> Installing KAI scheduler that will make independent scheduling decisions
 
 ```bash +exec_replace
 kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
@@ -331,8 +331,8 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 # Connect to vCluster first
 vcluster connect kai-isolated
 
-# Install KAI in isolated environment
-KAI_VERSION=v0.9.3
+# Install KAI - it will be THE scheduler for this vCluster
+KAI_VERSION=v0.7.11
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
   -n kai-scheduler --create-namespace \
@@ -356,10 +356,23 @@ k9s -c pod -n kai-scheduler
 
 ## GPU Workloads
 
-> GPU sharing works identically inside vCluster but with zero production risk
+> KAI inside vCluster schedules pods independently with GPU sharing
 
 ```bash +exec_replace
 kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```
+
+```bash +exec_replace
+cat << 'EOF' | ccze -A
+SCHEDULING FLOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Pod submitted with schedulerName: kai-scheduler
+2. vCluster's virtual scheduler sees pod
+3. KAI scheduler (inside vCluster) makes decision
+4. Pod scheduled to synced node
+5. Syncer translates to host cluster
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
 ```
 
 ```bash +exec +acquire_terminal
@@ -384,9 +397,6 @@ kubectl get pods -l app=gpu-demo -o custom-columns=NAME:.metadata.name,FRACTION:
 
 <!-- end_slide -->
 
-
-
-
 ## Version Switching with vCluster
 
 ```bash +exec_replace
@@ -405,7 +415,6 @@ time vcluster delete kai-isolated --delete-namespace
 
 <!-- end_slide -->
 
-
 ## Multi-Team Requirements
 
 ```bash +exec_replace
@@ -423,6 +432,15 @@ EOF
 
 <!-- end_slide -->
 
+## Why vCluster (Not Namespaces or Multiple Clusters)?
+
+| **Approach** | **Cost**      | **Isolation**  | **Flexibility** | **Time to Deploy** |
+| ------------ | ------------- | -------------- | --------------- | ------------------ |
+| Namespaces   | $0            | ⭐             | ⭐              | Seconds            |
+| New Clusters | $5-50K/mo     | ⭐⭐⭐⭐⭐     | ⭐⭐⭐⭐⭐      | Hours/Days         |
+| **vCluster** | **< $100/mo** | **⭐⭐⭐⭐⭐** | **⭐⭐⭐⭐⭐**  | **< 1 minute**     |
+
+<!-- end_slide -->
 
 ## Parallel Scheduler Versions
 
@@ -447,25 +465,24 @@ wait
 
 <!-- end_slide -->
 
-
 ## Install Different KAI Versions Per Team
 
 ```bash +exec_replace
 kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 ```
 
-> Each team gets their preferred scheduler version in complete isolation
+> Each team's vCluster runs its own KAI version with virtual scheduler
 
 ```bash +exec +id:teams
-# Team Stable: v0.9.2 (production)
+# Team Stable: v0.7.11 (stable)
 vcluster connect team-stable
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
   -n kai-scheduler --create-namespace \
-  --version v0.9.2 --wait &
+  --version v0.7.11 --wait &
 STABLE_PID=$!
 
-# Team Beta: v0.9.3 (testing)
+# Team Beta: v0.9.3 (testing new features)
 vcluster connect team-beta
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
@@ -486,7 +503,6 @@ vcluster disconnect
 <!-- snippet_output: teams -->
 
 <!-- end_slide -->
-
 
 ## Deploy Workloads to Both Teams
 
@@ -510,20 +526,21 @@ vcluster disconnect
 
 <!-- end_slide -->
 
-
 ## Parallel Operations
 
-> Both vClusters are running with different KAI versions
+> Both vClusters running with independent KAI schedulers
 
 ```markdown
 PARALLEL SCHEDULER DEPLOYMENTS
-- team-stable: KAI v0.9.2 (production)
-- team-beta:   KAI v0.9.3 (beta testing)
+- team-stable: KAI v0.7.11 (stable version)
+- team-beta:   KAI v0.9.3 (testing new features)
 
-CLUSTER STATUS
-- Host Impact:  NONE
-- Isolation:    COMPLETE
-- Risk:         ZERO
+ARCHITECTURE
+- Virtual Scheduler: ENABLED in each vCluster
+- KAI Location:      Inside each vCluster
+- Scheduling:        Independent per team
+- Host Impact:       NONE
+- Isolation:         COMPLETE
 ```
 
 ```bash +exec
@@ -537,11 +554,10 @@ vcluster list
 > View all vClusters and their resources
 
 ```bash +exec +acquire_terminal
-k9s -c pods
+k9s -c pod
 ```
 
 <!-- end_slide -->
-
 
 ## Operational Capabilities Achieved
 
@@ -556,40 +572,6 @@ k9s -c pods
 > **Measured Impact:** Based on typical enterprise deployment scenarios
 
 <!-- end_slide -->
-
-
-## Architecture Example
-
-```mermaid +render
-graph TB
-    subgraph "Production GPU Cluster"
-        subgraph "vCluster: ML Team"
-            ML["KAI v0.9.3<br/>Fractional GPU<br/>High Priority"]
-        end
-
-        subgraph "vCluster: Research"
-            RES["KAI v0.9.2 Stable<br/>Dedicated GPU<br/>Standard Priority"]
-        end
-
-        subgraph "vCluster: Development"
-            DEV["Default Scheduler<br/>CPU Only<br/>Best Effort"]
-        end
-
-        GPU["Physical GPU Pool<br/>Shared Infrastructure"]
-
-        ML --> GPU
-        RES --> GPU
-        DEV --> GPU
-    end
-
-    style ML fill:#4dabf7,color:#fff
-    style RES fill:#51cf66,color:#fff
-    style DEV fill:#868e96,color:#fff
-    style GPU fill:#ffd43b,color:#333
-```
-
-<!-- end_slide -->
-
 
 ## Cleanup
 
@@ -608,7 +590,6 @@ sudo systemctl restart docker
 ```
 
 <!-- end_slide -->
-
 
 ## Resources
 
