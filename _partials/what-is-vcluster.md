@@ -1,0 +1,47 @@
+## What is vCluster?
+<!-- new_lines: 1 -->
+```mermaid +render
+%%{init: {'flowchart' : {'curve' : 'linear'}}}%%
+flowchart TB
+    subgraph host["Host Kubernetes Cluster"]
+        subgraph vclusters[" "]
+            direction LR
+            subgraph vc1["vCluster 1"]
+                W1["Team 1<br/>Workloads"]
+            end
+
+            subgraph vc2["vCluster 2"]
+                direction TB
+                W2["Team 2<br/>Workloads"]
+                Ingress2["• Ingress"]
+                CertManager2["• Cert Manager"]
+            end
+
+            subgraph vc3["vCluster 3"]
+                W3["Team 3<br/>Workloads"]
+            end
+        end
+
+        Shared["Shared Services<br/>(Cert Manager, Ingress Controller)"]
+    end
+
+    W1 --> Shared
+    W3 --> Shared
+
+    classDef cluster fill:#495057,stroke:#fff,stroke-width:2px,color:#fff
+    classDef workload fill:#6c757d,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#343a40,stroke:#fff,stroke-width:2px,color:#fff
+
+    class vc1,vc2,vc3 cluster
+    class W1,W2,W3 workload
+    class Shared,CertManager2,Ingress2 service
+```
+<!-- new_lines: 1 -->
+| **Feature**             | **Benefit**                               |
+| ----------------------- | ----------------------------------------- |
+| Full Kubernetes API     | Certified Kubernetes distribution         |
+| Flexible isolation      | Separate control plane per team           |
+| Resource efficiency     | Shared infrastructure, isolated workloads |
+| Sub-minute provisioning | Instant test/dev/ci environments          |
+<!-- new_lines: 1 -->
+> **vCluster** = Containerized Kubernetes inside a Pod!
