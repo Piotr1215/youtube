@@ -167,6 +167,8 @@ echo ""
 echo "$NGROK_URL"
 ```
 
+<!-- end_slide -->
+
 ## Upgrading Schedulers in Production
 
 ```mermaid +render
@@ -199,12 +201,12 @@ EOF
 
 ## GPU Scheduling: Risk Analysis
 
-| **Failure Mode** | **Impact** | **Recovery Time** | **Business Cost** |
-|---|---|---|---|
-| Scheduler bug | All pods pending | 2-4 hours | High |
-| CRD conflicts | Namespace corruption | 6+ hours | Critical |
-| Version mismatch | Random pod failures | 1-2 days | Very High |
-| Resource leak | GPU exhaustion | 4-8 hours | Critical |
+| **Failure Mode** | **Impact**           | **Recovery Time** | **Business Cost** |
+| ---------------- | -------------------- | ----------------- | ----------------- |
+| Scheduler bug    | All pods pending     | 2-4 hours         | High              |
+| CRD conflicts    | Namespace corruption | 6+ hours          | Critical          |
+| Version mismatch | Random pod failures  | 1-2 days          | Very High         |
+| Resource leak    | GPU exhaustion       | 4-8 hours         | Critical          |
 
 > **Industry Data:** Enterprise downtime costs $100k-1M+ per hour (New Relic 2024)
 
@@ -271,20 +273,19 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 
 > vCluster can swap out Kubernetes components like schedulers, providing isolated testing environments
 
-```bash +exec
-cat ./kai-vcluster.yaml
-# Create isolated vCluster with KAI-specific configuration
-vcluster create kai-isolated --values kai-vcluster.yaml --connect=false
+```bash +exec_replace
+ccze -A < ./kai-vcluster.yaml
+```
 
-# Connect to the vCluster
-vcluster connect kai-isolated
+```bash +exec
+vcluster create kai-isolated --values kai-vcluster.yaml
 ```
 
 <!-- end_slide -->
 ### Check Install Progress
 
 ```bash +exec +acquire_terminal
-k9s -c pods
+k9s -c pod
 ```
 
 <!-- end_slide -->
@@ -299,10 +300,10 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 > vCluster runs as a single pod with minimal overhead
 
 ```bash +exec_replace
-echo "━━━ VCLUSTER POD DETAILS ━━━"
+echo "━━━ Resources Utilization ━━━"
 kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o custom-columns=NAME:.metadata.name,CPU:.spec.containers[0].resources.requests.cpu,MEMORY:.spec.containers[0].resources.requests.memory
 echo ""
-echo "━━━ VCLUSTER CONTAINERS ━━━"
+echo "━━━ Containers ━━━"
 kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o jsonpath='INIT CONTAINERS:
 {range .items[0].spec.initContainers[*]}  {.name}: {.image}
 {end}
@@ -310,8 +311,7 @@ MAIN CONTAINERS:
 {range .items[0].spec.containers[*]}  {.name}: {.image}
 {end}'
 echo ""
-echo ""
-echo "━━━ VCLUSTER DATA STORAGE ━━━"
+echo "━━━ Data Storage ━━━"
 kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c syncer -- ls -lh /data/state.db 2>/dev/null || echo "  SQLite database: /data/state.db"
 ```
 
@@ -321,7 +321,7 @@ kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c
 
 ## Install KAI Inside vCluster
 
-> Same KAI installation but inside vCluster - production remains untouched
+> Same KAI installation but inside vCluster - host cluster remains untouched
 
 ```bash +exec_replace
 kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
@@ -342,7 +342,6 @@ helm upgrade -i kai-scheduler \
 kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
 ```
 
-
 <!-- end_slide -->
 
 ## KAI Scheduler Pods
@@ -350,19 +349,26 @@ kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
 > View KAI scheduler components 
 
 ```bash +exec +acquire_terminal
-k9s -c pods -n kai-scheduler
+k9s -c pod -n kai-scheduler
 ```
 
 <!-- end_slide -->
 
-
-## Deploy and Test GPU Workload in vCluster
+## GPU Workloads
 
 > GPU sharing works identically inside vCluster but with zero production risk
 
 ```bash +exec_replace
 kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 ```
+
+```bash +exec +acquire_terminal
+nvim -O gpu-demo-pod1.yaml gpu-demo-pod2.yaml
+```
+
+<!-- end_slide -->
+
+## Deploy and Test GPU Workload in vCluster
 
 ```bash +exec
 # Apply queues and deploy two pods with different GPU fractions
