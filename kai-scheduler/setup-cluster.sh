@@ -24,7 +24,7 @@ kubectl patch -n kube-system deployment metrics-server --type=json \
 # Create secret for OpenAI API (from environment variable)
 kubectl create secret generic openai-secret --from-literal=api-key=$OPENAI_API_KEY
 
-# Deploy KAI Scheduler
+# Deploy KAI Scheduler in host cluster (for initial demo)
 KAI_VERSION=v0.7.11
 helm upgrade -i kai-scheduler \
   oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
@@ -38,7 +38,7 @@ kubectl label node kai-demo-worker nvidia.com/gpu.present=true --overwrite
 # Install NVIDIA device plugin
 kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.16.2/deployments/static/nvidia-device-plugin.yml
 
-# Create RuntimeClass for NVIDIA containers
+# Create RuntimeClass for NVIDIA containers (in host cluster for vCluster sync)
 kubectl apply -f - <<EOF
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
