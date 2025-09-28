@@ -24,8 +24,8 @@ if ! kubectl get pod -n kai-scheduler -l app.kubernetes.io/name=kai-scheduler --
     exit 1
 fi
 
-# Delete existing pod if present
-kubectl delete pod gpu-pod --ignore-not-found=true --wait=false
+# Delete existing pod if present and wait for deletion
+kubectl delete pod gpu-pod --ignore-not-found=true --wait=true --timeout=10s
 
 # Deploy the app
 kubectl apply -f gpu-pod.yaml
@@ -33,40 +33,29 @@ kubectl apply -f gpu-service.yaml
 
 # Wait for pod to be scheduled
 echo "Waiting for pod to be scheduled..."
-TIMEOUT=30
-COUNT=0
-while [ $COUNT -lt $TIMEOUT ]; do
-    PHASE=$(kubectl get pod gpu-pod -o jsonpath='{.status.phase}' 2>/dev/null || echo "")
-    if [ "$PHASE" = "Running" ] || [ "$PHASE" = "Succeeded" ]; then
-        break
-    elif [ "$PHASE" = "Failed" ] || [ "$PHASE" = "Error" ]; then
-        echo "Pod failed to start" >&2
-        kubectl describe pod gpu-pod | tail -20
-        exit 1
-    elif [ "$PHASE" = "Pending" ]; then
-        # Check if it's stuck pending
-        if [ $COUNT -gt 10 ]; then
-            REASON=$(kubectl get pod gpu-pod -o jsonpath='{.status.conditions[?(@.type=="PodScheduled")].reason}' 2>/dev/null || echo "")
-            if [ -n "$REASON" ]; then
-                echo "Pod stuck pending: $REASON" >&2
-                kubectl describe pod gpu-pod | tail -20
-                exit 1
-            fi
-        fi
-    fi
-    COUNT=$((COUNT + 1))
-    sleep 1
-done
-
-if [ $COUNT -eq $TIMEOUT ]; then
-    echo "Timeout waiting for pod to start" >&2
-    kubectl get pod gpu-pod -o yaml | grep -A 10 status:
+if ! kubectl wait --for=condition=PodScheduled pod/gpu-pod --timeout=30s; then
+    echo "Pod failed to be scheduled within 30s" >&2
+    kubectl describe pod gpu-pod | tail -20
     exit 1
 fi
 
-# Wait for pod to be ready
-if ! kubectl wait --for=condition=ready pod gpu-pod --timeout=30s; then
-    echo "Pod not ready" >&2
+# Wait for pod to reach Running phase
+echo "Waiting for pod to start running..."
+if ! kubectl wait --for=jsonpath='{.status.phase}'=Running pod/gpu-pod --timeout=30s; then
+    echo "Pod failed to reach Running phase within 30s" >&2
+    PHASE=$(kubectl get pod gpu-pod -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    echo "Current phase: $PHASE" >&2
+    if [ "$PHASE" = "Failed" ] || [ "$PHASE" = "Error" ]; then
+        kubectl logs gpu-pod --tail=20 2>/dev/null || true
+    fi
+    kubectl describe pod gpu-pod | tail -20
+    exit 1
+fi
+
+# Wait for pod to be ready (containers started and healthy)
+echo "Waiting for pod to be ready..."
+if ! kubectl wait --for=condition=Ready pod/gpu-pod --timeout=30s; then
+    echo "Pod not ready within 30s" >&2
     kubectl logs gpu-pod --tail=20
     exit 1
 fi
