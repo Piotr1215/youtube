@@ -295,7 +295,7 @@ EOF
 
 ```bash +exec_replace
 echo "━━━ Resources Utilization ━━━"
-kubectl --context kind-kai-demo get pod -n vcluster-kai-isolated -l app=vcluster -o custom-columns=NAME:.metadata.name,CPU:.spec.containers[0].resources.requests.cpu,MEMORY:.spec.containers[0].resources.requests.memory
+kubectl --context kind-kai-demo top pod -n vcluster-kai-isolated -l app=vcluster --no-headers 2>/dev/null || echo "  Metrics not available (requires metrics-server)"
 echo ""
 echo "━━━ Data Storage ━━━"
 kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c syncer -- ls -lh /data/state.db 2>/dev/null || echo "  SQLite database: /data/state.db (10-50MB typical)"
