@@ -36,7 +36,7 @@ helm upgrade -i kai-scheduler \
 kubectl label node kai-demo-worker nvidia.com/gpu.present=true --overwrite
 
 # Install NVIDIA device plugin
-kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.16.2/deployments/static/nvidia-device-plugin.yml
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.17.4/deployments/static/nvidia-device-plugin.yml
 
 # Create RuntimeClass for NVIDIA containers (in host cluster for vCluster sync)
 kubectl apply -f - <<EOF
@@ -49,7 +49,7 @@ EOF
 
 # Wait for device plugin
 kubectl wait --for=condition=ready pod -n kube-system \
-  -l name=nvidia-device-plugin-ds --timeout=60s
+  -l name=nvidia-device-plugin-ds --timeout=300s
 
 # Wait for KAI scheduler to be ready
 kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
