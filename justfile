@@ -58,8 +58,8 @@ digraph diagram:
 
 
 # run the presentation
-present: 
-  @cd {{invocation_directory()}}; presenterm -Xx presentation.md
+present:
+  @cd {{invocation_directory()}}; KUBECONFIG=/home/decoder/dev/homelab/kubeconfig presenterm -Xx presentation.md
 
 # show freetext
 freetext *free_text:
