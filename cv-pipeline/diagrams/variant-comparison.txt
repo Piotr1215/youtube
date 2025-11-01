@@ -1,0 +1,14 @@
+┌─────────────────────┐               ┌────────────────────┐              ┌─────────────────────────┐
+│ Engineering Manager │  Filter:      │     YAML Data      │  Filter:     │    Platform Engineer    │
+│     (Navy Blue)     │  leadership   │  (Single Source)   │  technical   │      (Steel Blue)       │
+│  Authority & Trust  │ ◀──────────── │                    │ ───────────▶ │ Reliability & Precision │
+└─────────────────────┘               └────────────────────┘              └─────────────────────────┘
+                                        │
+                                        │ Filter:
+                                        │ community
+                                        ▼
+                                      ┌────────────────────┐
+                                      │ Developer Advocate │
+                                      │      (Orange)      │
+                                      │ Energy & Community │
+                                      └────────────────────┘
