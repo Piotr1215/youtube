@@ -1,0 +1,179 @@
+[default]
+extend-ignore-re = [
+    # URLs and paths
+    "https?://\\S+",
+    "file://\\S+",
+    # Git commit hashes
+    "[0-9a-f]{7,40}",
+    # Environment variables in caps
+    "[A-Z_]{3,}=[^\\s]*",
+]
+
+[files]
+# Ignore directories with generated or binary content
+extend-exclude = [
+    "diagrams/rendered/",
+    "**/diagrams/rendered/",
+    "diagrams/*.svg",
+    "diagrams/*.png",
+    "diagrams/*.jpg",
+    "diagrams/*.utxt",
+    "diagrams/*.txt",
+    ".git/",
+    "*.jpg",
+    "*.png",
+    "*.svg",
+    "*.pdf",
+]
+
+[default.extend-words]
+# DevOps Tools
+kubernetes = "kubernetes"
+kubectl = "kubectl"
+k8s = "k8s"
+kubelet = "kubelet"
+kubeconfig = "kubeconfig"
+kubeadm = "kubeadm"
+kubectx = "kubectx"
+kubens = "kubens"
+kustomize = "kustomize"
+kubectl's = "kubectl's"
+
+# Container Technologies
+containerization = "containerization"
+podman = "podman"
+dockerized = "dockerized"
+dockerfile = "dockerfile"
+dockerfiles = "dockerfiles"
+incus = "incus"
+
+# Orchestration & Configuration
+terraform = "terraform"
+ansible = "ansible"
+crossplane = "crossplane"
+vcluster = "vcluster"
+vclusters = "vclusters"
+argocd = "argocd"
+gitops = "gitops"
+
+# Terminal & Editors
+nvim = "nvim"
+neovim = "neovim"
+tmux = "tmux"
+tmuxinator = "tmuxinator"
+zsh = "zsh"
+direnv = "direnv"
+alacritty = "alacritty"
+
+# Vim/Neovim specific
+luasnip = "luasnip"
+nvchad = "nvchad"
+lazyvim = "lazyvim"
+treesitter = "treesitter"
+cmp = "cmp"
+lspconfig = "lspconfig"
+nvim's = "nvim's"
+vimrc = "vimrc"
+nvimrc = "nvimrc"
+
+# Configuration Formats
+yaml = "yaml"
+yamls = "yamls"
+yml = "yml"
+toml = "toml"
+kubernetes's = "kubernetes's"
+
+# Cloud & Infrastructure
+homelab = "homelab"
+homelabs = "homelabs"
+cicd = "cicd"
+devops = "devops"
+multitenancy = "multitenancy"
+multitenant = "multitenant"
+
+# CLI Tools
+fzf = "fzf"
+ripgrep = "ripgrep"
+jq = "jq"
+yq = "yq"
+figlet = "figlet"
+taskwarrior = "taskwarrior"
+
+# Programming & Scripting
+envs = "envs"
+vars = "vars"
+namespace = "namespace"
+namespaces = "namespaces"
+configs = "configs"
+dotfiles = "dotfiles"
+repo = "repo"
+repos = "repos"
+
+# Technical Terms
+executables = "executables"
+runtime = "runtime"
+runtimes = "runtimes"
+filesystem = "filesystem"
+filesystems = "filesystems"
+untracked = "untracked"
+prebuilt = "prebuilt"
+builtin = "builtin"
+builtins = "builtins"
+symlink = "symlink"
+symlinks = "symlinks"
+hardcoded = "hardcoded"
+autocomplete = "autocomplete"
+autocompletion = "autocompletion"
+autocommands = "autocommands"
+
+# Project specific
+presenterm = "presenterm"
+runbook = "runbook"
+runbooks = "runbooks"
+oneliners = "oneliners"
+
+# Common abbreviations/tech terms
+api = "api"
+apis = "apis"
+cli = "cli"
+clis = "clis"
+cpu = "cpu"
+gpu = "gpu"
+gpus = "gpus"
+http = "http"
+https = "https"
+json = "json"
+url = "url"
+urls = "urls"
+uri = "uri"
+uris = "uris"
+uuid = "uuid"
+uuids = "uuids"
+
+# Kubernetes resources
+statefulset = "statefulset"
+statefulsets = "statefulsets"
+daemonset = "daemonset"
+daemonsets = "daemonsets"
+configmap = "configmap"
+configmaps = "configmaps"
+cronjob = "cronjob"
+cronjobs = "cronjobs"
+
+# Network/Security
+localhost = "localhost"
+subnet = "subnet"
+subnets = "subnets"
+cidr = "cidr"
+tls = "tls"
+ssl = "ssl"
+
+# File types to check
+[type.markdown]
+extend-glob = ["*.md"]
+
+[type.code]
+extend-glob = ["*.sh", "*.bash", "*.py", "*.js", "*.go", "*.rs"]
+
+[type.config]
+extend-glob = ["*.yaml", "*.yml", "*.toml", "*.json"]

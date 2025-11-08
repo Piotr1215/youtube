@@ -1,0 +1,118 @@
+# Kubernetes Architecture - Cloud Native Application Stack
+
+direction: right
+
+# User Layer
+users: Users {
+  shape: person
+  style.multiple: true
+}
+
+# Ingress Layer
+ingress: Ingress Controller {
+  shape: hexagon
+  style.fill: "#4A90E2"
+
+  nginx: NGINX
+  cert-manager: cert-manager {
+    style.fill: "#50C878"
+  }
+}
+
+# Application Layer
+apps: Application Services {
+  style.fill: "#FFD93D"
+
+  frontend: Frontend {
+    shape: cylinder
+    replicas: "3 pods" {
+      shape: image
+    }
+  }
+
+  api: API Service {
+    shape: cylinder
+    replicas: "5 pods" {
+      shape: image
+    }
+  }
+
+  worker: Background Workers {
+    shape: cylinder
+    replicas: "2 pods" {
+      shape: image
+    }
+  }
+}
+
+# Data Layer
+data: Data Layer {
+  style.fill: "#E89E68"
+
+  postgres: PostgreSQL {
+    shape: stored_data
+    style.fill: "#336791"
+  }
+
+  redis: Redis Cache {
+    shape: stored_data
+    style.fill: "#DC382D"
+  }
+
+  s3: Object Storage {
+    shape: stored_data
+    style.fill: "#569A31"
+  }
+}
+
+# Observability Stack
+observability: Observability {
+  style.fill: "#B19CD9"
+
+  prometheus: Prometheus {
+    shape: step
+  }
+
+  grafana: Grafana {
+    shape: step
+  }
+
+  loki: Loki {
+    shape: step
+  }
+}
+
+# Service Mesh
+mesh: Service Mesh {
+  style.fill: "#95E1D3"
+
+  istio: Istio
+  envoy: Envoy Proxy
+}
+
+# Connections
+users -> ingress: HTTPS
+ingress -> apps.frontend: Route /
+ingress -> apps.api: Route /api
+
+apps.frontend -> apps.api: REST API
+apps.api -> data.postgres: Read/Write
+apps.api -> data.redis: Cache
+apps.api -> data.s3: Upload/Download
+
+apps.worker -> data.postgres: Process Jobs
+apps.worker -> data.redis: Queue
+
+mesh.envoy -> apps.frontend: Sidecar
+mesh.envoy -> apps.api: Sidecar
+mesh.istio -> mesh.envoy: Control Plane
+
+observability.prometheus -> apps: Scrape Metrics
+observability.prometheus -> data: Scrape Metrics
+observability.grafana -> observability.prometheus: Query
+observability.loki -> apps: Collect Logs
+
+# Annotations
+apps.frontend.note: "React/Vue SPA\nNginx served"
+apps.api.note: "Go/Python\nStateless design"
+data.postgres.note: "Primary DB\nHA with replicas"

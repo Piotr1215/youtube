@@ -1,0 +1,100 @@
+================================================================================
+YOUTUBE VIDEO METADATA
+================================================================================
+
+TITLE:
+[Your video title - max 100 characters]
+(0/100 characters)
+
+DESCRIPTION:
+In this video, we cover:
+• [Topic 1]
+• [Topic 2]
+• [Topic 3]
+
+Links & Resources:
+• [URL 1]
+• [URL 2]
+• [URL 3]
+
+(0/5000 characters)
+
+TAGS:
+[tag1], [tag2], [tag3], [tag4], [tag5]
+(0 tags, 0 characters)
+
+TIMESTAMPS (YouTube Chapters):
+Copy and paste into video description:
+
+00:00 - Intro - [Video Title]
+02:30 - [Section 1]
+05:00 - [Section 2]
+07:30 - [Section 3]
+10:00 - [Section 4]
+
+================================================================================
+USAGE INSTRUCTIONS:
+================================================================================
+
+1. TITLE:
+   - Copy the title (max 100 characters)
+   - Paste into YouTube video title field
+   - Make it engaging and keyword-rich
+
+2. DESCRIPTION:
+   - Copy the entire description section
+   - Paste into YouTube video description
+   - YouTube Chapters will auto-activate if first timestamp is 00:00
+   - Include links and resources at the end
+
+3. TAGS:
+   - Copy individual tags (without commas for YouTube interface)
+   - Or use the comma-separated format for bulk upload
+   - Max 500 characters total across all tags
+
+4. TIMESTAMPS:
+   - Copy the timestamp lines
+   - Paste into video description
+   - Ensure first timestamp is 00:00 for chapters to work
+   - YouTube will automatically create clickable chapters
+
+================================================================================
+YOUTUBE BEST PRACTICES:
+================================================================================
+
+TITLE:
+✓ Include main keywords at the beginning
+✓ Make it compelling and clear
+✓ Use title case for better readability
+✗ Avoid clickbait or misleading titles
+✗ Don't use ALL CAPS (except for acronyms)
+
+DESCRIPTION:
+✓ Front-load important information
+✓ Include relevant keywords naturally
+✓ Add timestamps for chapters
+✓ Include calls-to-action (like, subscribe, etc.)
+✓ Add social media links
+✗ Don't keyword stuff
+✗ Avoid overly promotional language
+
+TAGS:
+✓ Use specific tags related to content
+✓ Include variations of main keywords
+✓ Mix broad and specific tags
+✓ Use multi-word phrases when relevant
+✗ Don't use misleading tags
+✗ Avoid using tags unrelated to content
+
+TIMESTAMPS/CHAPTERS:
+✓ First timestamp must be 00:00
+✓ Minimum 3 chapters required
+✓ Each chapter must be 10+ seconds
+✓ Use clear, descriptive chapter titles
+✗ Don't make chapters too granular (too many)
+✗ Avoid generic chapter names like "Section 1"
+
+================================================================================
+Generated: [YYYY-MM-DD HH:MM:SS]
+Source: [path/to/presentation.md]
+================================================================================

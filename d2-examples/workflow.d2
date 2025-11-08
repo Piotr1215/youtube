@@ -1,0 +1,118 @@
+# CI/CD Pipeline Workflow
+
+direction: down
+
+# Development
+dev: Developer {
+  shape: person
+  style.fill: "#4A90E2"
+}
+
+# Source Control
+git: Git Repository {
+  shape: stored_data
+  style.fill: "#F05032"
+}
+
+# CI Pipeline
+ci: CI Pipeline {
+  style.fill: "#FFD93D"
+
+  build: Build {
+    shape: step
+    compile: Compile Code
+    test: Run Tests
+    scan: Security Scan
+  }
+
+  package: Package {
+    shape: step
+    docker: Build Docker Image
+    push: Push to Registry
+  }
+}
+
+# Container Registry
+registry: Container Registry {
+  shape: cylinder
+  style.fill: "#2496ED"
+  label: Docker Registry
+}
+
+# CD Pipeline
+cd: CD Pipeline {
+  style.fill: "#95E1D3"
+
+  deploy-staging: Deploy to Staging {
+    shape: step
+    style.fill: "#FFA500"
+  }
+
+  integration-tests: Integration Tests {
+    shape: step
+  }
+
+  approval: Manual Approval {
+    shape: diamond
+    style.fill: "#FF6B6B"
+  }
+
+  deploy-prod: Deploy to Production {
+    shape: step
+    style.fill: "#50C878"
+  }
+}
+
+# Environments
+staging: Staging Cluster {
+  shape: cloud
+  style.fill: "#FFA500"
+}
+
+production: Production Cluster {
+  shape: cloud
+  style.fill: "#50C878"
+}
+
+# Notifications
+notify: Slack/Email {
+  shape: page
+  style.fill: "#B19CD9"
+}
+
+# Flow
+dev -> git: git push
+git -> ci.build: Webhook trigger
+ci.build.compile -> ci.build.test: On success
+ci.build.test -> ci.build.scan: On pass
+ci.build.scan -> ci.package: On pass
+
+ci.package.docker -> ci.package.push: Tag with SHA
+ci.package.push -> registry: Upload
+
+registry -> cd.deploy-staging: Pull image
+cd.deploy-staging -> staging: kubectl apply
+staging -> cd.integration-tests: Run tests
+
+cd.integration-tests -> cd.approval: On success
+cd.approval -> cd.deploy-prod: Approved {
+  style.stroke: "#50C878"
+  style.stroke-width: 3
+}
+cd.approval -> notify: Rejected {
+  style.stroke: "#FF6B6B"
+  style.stroke-dash: 3
+}
+
+cd.deploy-prod -> production: kubectl apply
+production -> notify: Deployment complete
+
+# Error paths
+ci.build.test -> notify: Tests fail {
+  style.stroke: "#FF6B6B"
+  style.stroke-dash: 3
+}
+cd.integration-tests -> notify: Tests fail {
+  style.stroke: "#FF6B6B"
+  style.stroke-dash: 3
+}

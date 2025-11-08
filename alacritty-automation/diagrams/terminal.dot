@@ -5,3 +5,4 @@
 [ User Interface ] { label: "Prompt\n- Command input indicator\n- Customizable display" }
 # Main flow
 [ Hardware ] -> [ OS Interface ]  ->  [ Software ] -> [ Command Layer ] => [ User Interface ]
+# Test modification to trigger hook

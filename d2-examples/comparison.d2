@@ -1,0 +1,142 @@
+# Before and After: Monolith to Microservices Migration
+
+direction: right
+
+# Before - Monolith
+before: BEFORE - Monolithic Architecture {
+  style.fill: "#FFE5E5"
+  style.stroke: "#FF6B6B"
+
+  lb: Load Balancer {
+    shape: hexagon
+    style.fill: "#FFA500"
+  }
+
+  monolith: Monolithic Application {
+    shape: rectangle
+    style.fill: "#FF6B6B"
+    style.stroke-width: 3
+
+    code: Single Codebase {
+      ui: UI Layer
+      business: Business Logic
+      data: Data Access
+    }
+
+    issues: Issues {
+      shape: text
+      label: |md
+        **Problems:**
+        - Single point of failure
+        - Tight coupling
+        - Slow deployments
+        - Hard to scale
+        - Tech stack lock-in
+      |
+    }
+  }
+
+  db: Single Database {
+    shape: cylinder
+    style.fill: "#DC143C"
+  }
+
+  lb -> monolith: All traffic
+  monolith -> db: All queries
+}
+
+# After - Microservices
+after: AFTER - Microservices Architecture {
+  style.fill: "#E5FFE5"
+  style.stroke: "#50C878"
+
+  api-gateway: API Gateway {
+    shape: hexagon
+    style.fill: "#4A90E2"
+  }
+
+  services: Microservices {
+    style.fill: "#D4EDDA"
+
+    user-svc: User Service {
+      shape: rectangle
+      style.fill: "#50C878"
+      tech: "Go"
+      db-user: User DB {
+        shape: cylinder
+      }
+    }
+
+    order-svc: Order Service {
+      shape: rectangle
+      style.fill: "#50C878"
+      tech: "Python"
+      db-order: Order DB {
+        shape: cylinder
+      }
+    }
+
+    inventory-svc: Inventory Service {
+      shape: rectangle
+      style.fill: "#50C878"
+      tech: "Java"
+      db-inventory: Inventory DB {
+        shape: cylinder
+      }
+    }
+
+    notification-svc: Notification Service {
+      shape: rectangle
+      style.fill: "#50C878"
+      tech: "Node.js"
+      queue: Message Queue {
+        shape: queue
+      }
+    }
+  }
+
+  benefits: Benefits {
+    shape: text
+    label: |md
+      **Improvements:**
+      - Independent scaling
+      - Tech flexibility
+      - Fault isolation
+      - Fast deployments
+      - Team autonomy
+    |
+  }
+
+  # Service connections
+  api-gateway -> services.user-svc: /users/*
+  api-gateway -> services.order-svc: /orders/*
+  api-gateway -> services.inventory-svc: /inventory/*
+
+  services.user-svc -> services.user-svc.db-user: CRUD
+  services.order-svc -> services.order-svc.db-order: CRUD
+  services.inventory-svc -> services.inventory-svc.db-inventory: CRUD
+
+  services.order-svc -> services.notification-svc: Event
+  services.notification-svc -> services.notification-svc.queue: Publish
+}
+
+# Comparison arrow
+before -> after: Migration Journey {
+  style.stroke: "#4A90E2"
+  style.stroke-width: 4
+  style.animated: true
+}
+
+# Key metrics comparison
+metrics: Migration Metrics {
+  style.fill: "#FFF9E5"
+
+  table: |md
+    | Metric | Before | After |
+    |--------|--------|-------|
+    | Deploy Time | 2 hours | 15 min |
+    | Uptime | 99.0% | 99.9% |
+    | Scale Time | 30 min | 2 min |
+    | Teams | 1 | 4 |
+  |
+}
