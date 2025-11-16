@@ -208,33 +208,31 @@ browse:
   #!/usr/bin/env bash
   set -euo pipefail
 
-  base_dir="{{invocation_directory()}}"
-
   # Find all video directories (depth 1, exclude hidden and current dir)
-  selected=$(fd -t d -d 1 . "$base_dir" | \
+  selected=$(fd -t d -d 1 . {{invocation_directory()}} | \
     sed 's|^./||' | \
     grep -v '^\.$' | \
     sort | \
     fzf --ansi \
-      --preview "bash -c '
-        folder=\"$base_dir/{}\"
-        if [ -f \"\$folder/presentation.md\" ]; then
-          glow \"\$folder/presentation.md\" --style dark
-        elif [ -f \"\$folder/slides.md\" ]; then
-          glow \"\$folder/slides.md\" --style dark
+      --preview 'bash -c '\''
+        folder="{{invocation_directory()}}/{}"
+        if [ -f "$folder/presentation.md" ]; then
+          glow "$folder/presentation.md" --style dark
+        elif [ -f "$folder/slides.md" ]; then
+          glow "$folder/slides.md" --style dark
         else
-          echo \"No presentation file found\"
+          echo "No presentation file found"
         fi
-      '" \
+      '\'' ' \
       --preview-window='right:70%:wrap' \
-      --bind "ctrl-e:execute(\$EDITOR $base_dir/{}/presentation.md $base_dir/{}/slides.md 2>/dev/null || \$EDITOR $base_dir/{})" \
-      --bind "ctrl-p:execute(cd $base_dir/{} && just present)+abort" \
-      --header 'Browse Presentations | Enter: view | Ctrl-E: edit | Ctrl-P: present' \
+      --bind 'ctrl-e:execute($EDITOR {{invocation_directory()}}/{}/presentation.md {{invocation_directory()}}/{}/slides.md 2>/dev/null || $EDITOR {{invocation_directory()}}/{})' \
+      --bind 'ctrl-p:execute(cd {{invocation_directory()}/{} && just present)+abort' \
+      --header '📚 Browse Presentations | Enter: view | Ctrl-E: edit | Ctrl-P: present' \
       --border rounded \
-      --prompt 'Select video: ')
+      --prompt '🔍 Select video: ')
 
   if [ -n "$selected" ]; then
-    folder="$base_dir/$selected"
+    folder="{{invocation_directory()}}/$selected"
     if [ -f "$folder/presentation.md" ]; then
       glow -p "$folder/presentation.md" --style dark
     elif [ -f "$folder/slides.md" ]; then
@@ -551,35 +549,66 @@ record tape_name:
 record-demo folder:
   #!/usr/bin/env bash
   if ! command -v vhs &>/dev/null; then
-    echo "Error: VHS is not installed"
+    echo "❌ Error: VHS is not installed"
     echo "Install with: go install github.com/charmbracelet/vhs@latest"
+    echo "Or on macOS: brew install vhs"
     exit 1
   fi
+
   demo_script="{{folder}}/demo.sh"
+
   if [ ! -f "$demo_script" ]; then
-    echo "Error: Demo script not found at $demo_script"
+    echo "❌ Error: Demo script not found at $demo_script"
     exit 1
   fi
+
+  # Create temporary VHS tape file
   temp_tape=$(mktemp --suffix=.tape)
   output_file="{{folder}}/demo.gif"
-  folder_name="{{folder}}"
-  cat > "$temp_tape" << 'VHSEOF'
-  Output demo.gif
-  Set Width 1200
-  Set Height 675
-  Hide
-  Type "clear"
-  Enter
-  Show
-  Sleep 500ms
-  Type "./demo.sh"
-  Enter
-  Sleep 30s
-  VHSEOF
-  sed -i "1s|demo.gif|$output_file|" "$temp_tape"
-  echo "Recording demo from {{folder}}..."
-  cd "{{folder}}" && vhs "$temp_tape"
-  echo "Complete! Output: $output_file"
+
+  cat > "$temp_tape" << EOF
+# Auto-generated VHS tape for {{folder}}/demo.sh
+Output $output_file
+
+Set Width 1200
+Set Height 675
+Set FontSize 18
+Set Theme "Catppuccin Mocha"
+Set Padding 20
+Set TypingSpeed 50ms
+Set PlaybackSpeed 1.0
+
+Hide
+Type "clear"
+Enter
+Show
+
+Sleep 500ms
+
+Type "# Running demo from {{folder}}"
+Enter
+Sleep 1s
+
+Type "cd {{folder}}"
+Enter
+Sleep 500ms
+
+Type "./demo.sh"
+Enter
+
+# Wait for demo to complete (adjust timing as needed)
+Sleep 30s
+
+EOF
+
+  echo "🎬 Recording demo from {{folder}}..."
+  echo "📝 Generated tape file: $temp_tape"
+  vhs "$temp_tape"
+
+  echo "✅ Recording complete!"
+  echo "📁 Output saved to: $output_file"
+
+  # Clean up temp file
   rm "$temp_tape"
 # render all diagrams in the entire repository
 render-all:
