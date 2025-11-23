@@ -18,11 +18,11 @@ start folder_name:
   #!/usr/bin/env bash
   mkdir -p "{{folder_name}}/diagrams"
   
-  cp slides_template.md "{{folder_name}}/slides.md"
-  chmod +x "{{folder_name}}/slides.md"
+  cp slides_template.md "{{folder_name}}/presentation.md"
+  chmod +x "{{folder_name}}/presentation.md"
   
   echo "Created new folder structure in: {{folder_name}}"
-  cd "{{folder_name}}" && nvim slides.md
+  cd "{{folder_name}}" && nvim presentation.md
 
 # run plantuml diagram
 plantuml diagram:
@@ -50,7 +50,7 @@ digraph diagram:
 
 # run the presentation
 present: 
-  @cd {{invocation_directory()}}; slides slides.md
+  @cd {{invocation_directory()}}; presenterm -Xx presentation.md
 
 # show freetext
 freetext *free_text:
