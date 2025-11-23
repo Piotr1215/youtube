@@ -23,9 +23,6 @@ graph TB
     SYNC <--> PODS
     SYNC <--> SVCS
     SYNC <--> PVC
-
-    style API fill:#4dabf7,color:#fff
-    style SYNC fill:#51cf66,color:#fff
 ```
 <!-- new_lines: 1 -->
 | **Component** | **Purpose** | **Resource Usage** |

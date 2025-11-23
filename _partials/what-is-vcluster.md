@@ -1,7 +1,6 @@
 ## What is vCluster?
 <!-- new_lines: 1 -->
 ```mermaid +render
-%%{init: {'flowchart' : {'curve' : 'linear'}}}%%
 flowchart TB
     subgraph host["Host Kubernetes Cluster"]
         subgraph vclusters[" "]
@@ -27,14 +26,6 @@ flowchart TB
 
     W1 --> Shared
     W3 --> Shared
-
-    classDef cluster fill:#495057,stroke:#fff,stroke-width:2px,color:#fff
-    classDef workload fill:#6c757d,stroke:#fff,stroke-width:2px,color:#fff
-    classDef service fill:#343a40,stroke:#fff,stroke-width:2px,color:#fff
-
-    class vc1,vc2,vc3 cluster
-    class W1,W2,W3 workload
-    class Shared,CertManager2,Ingress2 service
 ```
 <!-- new_lines: 1 -->
 | **Feature**             | **Benefit**                               |
