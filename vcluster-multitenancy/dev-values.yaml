@@ -1,26 +1,11 @@
 # Development Team vCluster - Resource Controls
+# Note: Host-level quotas conflict with vCluster pod itself
+# Use Platform features or namespace quotas inside the vCluster instead
 policies:
-  # Resource quota for the entire vCluster
   resourceQuota:
-    enabled: true
-    quota:
-      cpu: "2"
-      memory: 4Gi
-      pods: "10"
-      requests.storage: 5Gi
-  
-  # Automatic resource limits for all containers
+    enabled: false
   limitRange:
-    enabled: true
-    default:
-      cpu: 500m
-      memory: 512Mi
-    defaultRequest:
-      cpu: 100m
-      memory: 128Mi
-    max:
-      cpu: "2"
-      memory: 2Gi
+    enabled: false
 
 # Network isolation
 sync:

@@ -1,18 +1,6 @@
----
-title: Flexible Multi-Tenancy with vCluster
-author: Piotr | vCluster Labs
-date: 2025-01-31
----
-
-<!--
-Note: Commands marked with +exec can be run with Ctrl+E
-For better output display, use the spane script in a separate terminal
--->
-
 # Flexible Multi-Tenancy with vCluster
 
-> Adapt Kubernetes isolation to your exact needs
-
+<!--jump_to_middle-->
 ![vCluster Logo](./vcluster-logo-main.png)
 
 ```bash +exec_replace
@@ -20,6 +8,7 @@ echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 ```
 
 <!-- end_slide -->
+
 
 ## Namespace Tenancy
 
@@ -29,6 +18,7 @@ echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 
 <!-- end_slide -->
 
+
 ## vCluster Tenancy
 
 ![vcluster](./vcluster.png) 
@@ -36,6 +26,7 @@ echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 > Your own cluster shared infra
 
 <!-- end_slide -->
+
 
 ## vCluster Advanced Tenancy
 
@@ -45,9 +36,11 @@ echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 
 <!-- end_slide -->
 
+
 <!-- include: ../_partials/what-is-vcluster.md -->
 
 <!-- end_slide -->
+
 
 
 ## Deploy Kubernetes Cluster
@@ -57,7 +50,9 @@ kind create cluster --name vcluster-multitenancy --config kind-multitenancy.yaml
 ```
 
 > **Note**: vCluster can run on any Kubernetes cluster (managed, on prem)
+
 <!-- end_slide -->
+
 
 ## Flexible Multi-Tenancy Models
 
@@ -93,7 +88,12 @@ graph LR
 <!-- end_slide -->
 
 
+
 ## Check nodes
+
+```bash +exec_replace
+kubectl config current-context
+```
 
 ```bash +exec
 kubectl get nodes -o wide
@@ -104,7 +104,12 @@ kubectl label node vcluster-multitenancy-worker team=shared --overwrite
 
 <!-- end_slide -->
 
+
 ## Install Shared Services: Ingress Controller
+
+```bash +exec_replace
+kubectl config current-context
+```
 
 ```bash +exec
 # Install NGINX Ingress Controller in host cluster
@@ -120,6 +125,7 @@ kubectl wait --namespace ingress-nginx \
 > **Shared Service**: All vClusters can use the same ingress controller
 
 <!-- end_slide -->
+
 
 ## Multi-Tenancy Challenges in Kubernetes
 
@@ -150,22 +156,12 @@ graph TD
 <!-- end_slide -->
 
 
-
-## Why vCluster for Multi-Tenancy?
-
-| **Team** | **Requirements** | **vCluster Solution** |
-|---|---|---|
-| Development | Dev/Test environments | ✅ Full admin access, isolated CRDs |
-| Production | Stable, isolated workloads | ✅ Resource quotas, ingress sync |
-| Data Science | GPU access, custom tools | ✅ Node selectors, custom schedulers |
-| Partners | Limited access, compliance | ✅ Security policies, filtered sync |
-
-
-> **Multi-Tenancy**: Complete Kubernetes API compatibility with true isolation
-
-<!-- end_slide -->
-
 ## Demo 1: Development Team vCluster
+
+```bash +exec_replace
+kind export kubeconfig --name vcluster-multitenancy 2>/dev/null
+kubectl config current-context
+```
 
 > Create a resource-limited vCluster for development team
 
@@ -186,6 +182,24 @@ kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-dev-team --ti
 
 <!-- end_slide -->
 
+
+
+
+## Why vCluster for Multi-Tenancy?
+
+| **Team** | **Requirements** | **vCluster Solution** |
+|---|---|---|
+| Development | Dev/Test environments | ✅ Full admin access, isolated CRDs |
+| Production | Stable, isolated workloads | ✅ Resource quotas, ingress sync |
+| Data Science | GPU access, custom tools | ✅ Node selectors, custom schedulers |
+| Partners | Limited access, compliance | ✅ Security policies, filtered sync |
+
+
+> **Multi-Tenancy**: Complete Kubernetes API compatibility with true isolation
+
+<!-- end_slide -->
+
+
 ## Connect to Development vCluster
 
 ```bash +exec
@@ -196,6 +210,7 @@ vcluster connect dev-team
 > **Note**: Each team gets their own kubeconfig context
 
 <!-- end_slide -->
+
 
 ## vCluster Architecture: What's Inside?
 
@@ -214,6 +229,7 @@ kubectl --context kind-vcluster-multitenancy get pod -n vcluster-dev-team -l app
 
 <!-- end_slide -->
 
+
 ## vCluster Data Storage: SQLite Inside!
 
 
@@ -229,6 +245,7 @@ kubectl --context kind-vcluster-multitenancy exec -n vcluster-dev-team dev-team-
 
 <!-- end_slide -->
 
+
 ## Dev Team: Deploy Applications  
 
 > Development team deploys applications with automatic resource limits
@@ -243,6 +260,7 @@ kubectl get pod -l app=web-app -o jsonpath='{.items[0].spec.containers[0].resour
 
 <!-- end_slide -->
 
+
 ### Web Page
 
 ```bash +exec
@@ -253,6 +271,7 @@ curl http://localhost:8081/
 ```
 
 <!-- end_slide -->
+
 
 
 ## vCluster State Management
@@ -272,13 +291,16 @@ vcluster snapshot dev-team "oci://ttl.sh/vcluster-dev-team:1h"
 
 <!-- end_slide -->
 
+
 ### Create a new kind cluster
 
 ```bash +exec
 kind create cluster --name host2
 ```
         
+
 <!-- end_slide -->
+
 
 > Restore our virtual cluster onto it!
 
@@ -287,6 +309,7 @@ vcluster create dev-team --restore "oci://ttl.sh/vcluster-dev-team:1h"
 ```
 
 <!-- end_slide -->
+
 
 ### Web Page
 
@@ -300,6 +323,7 @@ curl http://localhost:8081/
 <!-- end_slide -->
 
 
+
 ### Cleanup kind cluster
 
 ```bash +exec 
@@ -307,6 +331,7 @@ kind delete cluster --name host2
 ```
 
 <!-- end_slide -->
+
 
 ## Demo 2: Production Team with Advanced Networking
 
@@ -328,6 +353,7 @@ kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-prod-team --t
 
 <!-- end_slide -->
 
+
 ## Connect to Production vCluster
 
 ```bash +exec
@@ -336,6 +362,7 @@ vcluster connect prod-team
 ```
 
 <!-- end_slide -->
+
 
 ## Production Team: Deploy with Cross-vCluster DNS
 
@@ -360,6 +387,7 @@ kubectl run dns-test --image=busybox:1.28 --rm -it --restart=Never -- nslookup k
 <!-- end_slide -->
 
 
+
 ## Demo 3: Partner Team with Pre-populated Resources
 
 > Create a vCluster with platform credentials pre-installed
@@ -377,6 +405,7 @@ cat partner-values.yaml
 
 <!-- end_slide -->
 
+
 ## Create Partner vCluster
 
 ```bash +exec
@@ -388,6 +417,7 @@ kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-partner-team 
 ```
 
 <!-- end_slide -->
+
 
 ## Partner Team: Limited Node View
 
@@ -406,6 +436,7 @@ kubectl get pods -A
 
 <!-- end_slide -->
 
+
 ## Flexible Resource Syncing
 
 > Choose exactly what syncs between virtual and host clusters
@@ -423,6 +454,7 @@ kubectl get pods -A
 
 <!-- end_slide -->
 
+
 ## Compare vCluster Configurations
 
 > Each team's unique capabilities:
@@ -437,6 +469,7 @@ vcluster list
 
 <!-- end_slide -->
 
+
 ## vCluster: The Complete Multi-Tenancy Solution
 
 | **Use Case** | → | **How vCluster Solves It** |
@@ -450,6 +483,7 @@ vcluster list
 > **Today's demo proved**: Three teams, three schedulers, one host cluster!
 
 <!-- end_slide -->
+
 
 ## That's All Folks!
 
