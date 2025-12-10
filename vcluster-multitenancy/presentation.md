@@ -10,6 +10,27 @@ echo "Flexible Multi-Tenancy" | figlet -f small -c -w 90
 <!-- end_slide -->
 
 
+## About Me
+
+```bash +exec_replace
+echo "Piotr Zaniewski" | figlet -f small -w 90
+```
+
+> **Head of Engineering Enablement** @ vCluster
+
+```bash +exec_replace
+printf "  Expertise  │  Platform teams, Kubernetes, GitOps, SRE, CNCF\n  Speaking   │  Workshops, presentations, live demos\n  Content    │  YouTube, Medium, Killercoda\n  Projects   │  Neovim, CLI tools, MCP servers, K8s operators" | ccze -A
+```
+
+```bash +exec_replace
+qrencode -t UTF8 -m 2 "https://cloudrumble.net"
+```
+
+> cloudrumble.net  ·  github.com/Piotr1215  ·  @cloud-native-corner
+
+<!-- end_slide -->
+
+
 ## Namespace Tenancy
 
 ![namespae](./namespaces.png) 
@@ -489,6 +510,7 @@ vcluster list
 
 > Questions?
 
+<!--jump_to_middle-->
 ![vCluster Logo](./vcluster-logo-main.png)
 
 ```bash +exec_replace
