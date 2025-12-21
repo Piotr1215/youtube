@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam backgroundColor transparent
+skinparam defaultFontName monospace
+
+actor Developer as dev
+participant "Git Repo" as git
+participant "ArgoCD" as argo
+participant "Kubernetes" as k8s
+participant "Homepage" as hp
+database "Bitwarden" as bw
+
+dev -> git: Push ConfigMap changes
+git -> argo: Webhook trigger
+argo -> k8s: Sync Application
+k8s -> k8s: Update ConfigMap
+k8s -> hp: Restart pod
+bw -> k8s: ESO syncs secrets
+k8s -> hp: Inject env vars
+hp -> hp: Load config
+@enduml
