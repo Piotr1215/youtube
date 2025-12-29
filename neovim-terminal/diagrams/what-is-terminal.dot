@@ -1,0 +1,11 @@
+digraph neovim_terminal {
+    rankdir=LR
+    node [shape=box, style=rounded]
+
+    shell [label="Shell"]
+    term [label="Terminal Buffer"]
+    nvim [label="Neovim"]
+
+    shell -> term [label="PTY"]
+    term -> nvim [label="buffer"]
+}

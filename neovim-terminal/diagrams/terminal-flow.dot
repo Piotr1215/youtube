@@ -1,0 +1,15 @@
+digraph terminal_flow {
+    rankdir=LR
+    node [shape=box, style=rounded]
+
+    nvim [label="nvim\nsplit"]
+    term [label=":terminal\nbuffer"]
+    tmux [label="tmux\npane"]
+
+    nvim -> term [label="C-h/j/k/l"]
+    term -> nvim [label="C-h/j/k/l"]
+    nvim -> tmux [label="C-h/j/k/l"]
+    tmux -> nvim [label="C-h/j/k/l"]
+
+    {rank=same; nvim; term}
+}
