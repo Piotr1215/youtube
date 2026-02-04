@@ -1,0 +1,11 @@
+experimental:
+  docker:
+    nodes:
+    - name: "worker-1"
+
+privateNodes:
+  enabled: true
+  vpn:
+    enabled: true
+    nodeToNode:
+      enabled: true

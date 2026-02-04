@@ -1,0 +1,12 @@
+digraph vind {
+    rankdir=LR
+
+    cp [label="Control Plane\n(API, etcd, scheduler)"]
+    worker [label="Worker Node\n(kubelet, containerd)"]
+    proxy [label="Registry Proxy"]
+    host [label="Host Docker\nCache"]
+
+    cp -> worker [label="schedule pods"]
+    worker -> proxy [label="pull image"]
+    proxy -> host [label="from cache"]
+}

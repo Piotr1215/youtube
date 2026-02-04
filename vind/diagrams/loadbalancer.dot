@@ -1,0 +1,11 @@
+digraph lb {
+    rankdir=TB
+
+    expose [label="kubectl expose\n--type=LoadBalancer"]
+    controller [label="vind LB Controller"]
+    allocate [label="Allocate IP\nfrom docker network"]
+    route [label="Configure\niptables routing"]
+    ready [label="Service gets\nEXTERNAL-IP"]
+
+    expose -> controller -> allocate -> route -> ready
+}
