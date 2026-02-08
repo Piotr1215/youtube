@@ -1,0 +1,17 @@
+digraph G {
+    rankdir=LR;
+    node [shape=box, fontname="monospace"];
+
+    keystroke [label="Keystroke"];
+    keymap [label="Keymap\nemacs/viins"];
+    widget [label="Widget"];
+    buffer [label="BUFFER\nLBUFFER|RBUFFER\nCURSOR"];
+    display [label="Display"];
+    execute [label="Execute"];
+
+    keystroke -> keymap [label="lookup"];
+    keymap -> widget [label="invoke"];
+    widget -> buffer [label="modify"];
+    buffer -> display [label="redisplay"];
+    widget -> execute [label="accept-line"];
+}
