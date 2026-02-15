@@ -6,6 +6,10 @@
 echo "Batch Commands" | figlet -f small -w 90
 ```
 
+```bash +exec_replace
+cp testfiles-origin/* testfiles/
+```
+
 <!-- end_slide -->
 
 # The "Do" Family
