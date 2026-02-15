@@ -2,17 +2,9 @@ digraph G {
     rankdir=LR;
     node [shape=box, fontname="monospace"];
 
-    subgraph cluster_argdo {
-        label="argdo workflow";
-        args [label=":args **/*.js"];
-        argdo [label=":argdo cmd"];
-        files [label="file1\nfile2\nfile3"];
-        args -> argdo -> files;
-    }
-
     subgraph cluster_cfdo {
-        label="cfdo workflow";
-        grep [label=":grep pattern"];
+        label="quickfix workflow";
+        grep [label=":vimgrep pattern"];
         qf [label="quickfix list"];
         cfdo [label=":cfdo cmd"];
         grep -> qf -> cfdo;

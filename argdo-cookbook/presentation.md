@@ -34,7 +34,7 @@ printf '\e[33m%s\e[0m %s\n\n' "WHY:" "Batch operations without external tools"
 printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Rename function across 50 files?" "argdo"
 printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Fix all linter errors?" "cfdo"
 printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Set options in all windows?" "windo"
-printf '  \e[35m•\e[0m %s\n' "No sed, no find -exec, no scripts"
+printf '  \e[35m•\e[0m %s\n' "Pure Vim — replace sed, find -exec, and shell scripts"
 ```
 
 <!-- end_slide -->
@@ -68,8 +68,7 @@ printf '\e[33m%s\e[0m %s\n' "WHY:" "Rename variables, functions, imports in one 
 ```
 
 ```vim
-:args **/*.js
-:argdo %s/oldFunction/newFunction/ge | update
+:argdo[!] {cmd}    Execute {cmd} for each file in the argument list
 ```
 
 | Flag | Meaning |
@@ -92,15 +91,10 @@ printf '\e[33m%s\e[0m %s\n' "WHY:" "Add license, copyright, or boilerplate"
 ```
 
 ```vim
-:args **/*.sh
-:argdo 0r ~/templates/license.txt | update
+:0put ='text'    Put expression result before first line
+:0r {file}       Read file contents before first line
+:$r {file}       Read file contents after last line
 ```
-
-| Variant | Command |
-|---------|---------|
-| Add shebang | `:argdo 0put ='#!/usr/bin/env bash' \| update` |
-| Add 'use strict' | `:argdo 0put =\"'use strict';\" \| update` |
-| Append footer | `:argdo $r ~/footer.txt \| update` |
 
 ```bash +acquire_terminal
 nvim demo-header.md
@@ -116,15 +110,7 @@ printf '\e[33m%s\e[0m %s\n' "WHY:" "Complex edits that substitution can't handle
 ```
 
 ```vim
-" Record macro in register q first
-:args **/*.md
-:argdo normal @q | update
-```
-
-```bash +exec_replace
-printf '\e[33m%s\e[0m\n\n' "Example: Wrap first heading in brackets"
-printf '  \e[32m%s\e[0m %s\n' "1. Record:" "qq 0i[ \$a ] q"
-printf '  \e[32m%s\e[0m %s\n' "2. Apply:" ":argdo normal @q | update"
+:argdo normal @{reg}    Execute macro {reg} in each argument file
 ```
 
 ```bash +acquire_terminal
@@ -136,8 +122,14 @@ nvim demo-macro.md
 # The Quickfix Workflow
 
 ```bash +exec_replace
-printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "cdo/cfdo operate on grep/make results"
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "cdo/cfdo operate on vimgrep/make results"
 printf '\e[33m%s\e[0m %s\n' "WHY:" "Review matches BEFORE changing them"
+```
+
+```vim
+:vimgrep[!] /{pattern}/ {file}    Search for pattern, populate quickfix
+:cdo[!] {cmd}                     Execute {cmd} on each quickfix entry
+:cfdo[!] {cmd}                    Execute {cmd} on each quickfix file
 ```
 
 ```bash +exec_replace
@@ -151,23 +143,22 @@ cd /home/decoder/dev/youtube/argdo-cookbook && just digraph workflow
 
 <!-- end_slide -->
 
-# Recipe 4: grep → replace
+# Recipe 4: vimgrep → replace
 
 ```bash +exec_replace
-printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Find all matches, review, then replace"
-printf '\e[33m%s\e[0m %s\n' "WHY:" "Safer than blind argdo — matches visible first"
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Populate quickfix with vimgrep, then act on each file"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Targeted changes — only files that matched the pattern"
 ```
 
 ```vim
-:grep 'deprecated_api' **/*.py
-:copen                          " review the matches
-:cfdo %s/deprecated_api/new_api/gc | update
+:cfdo[!] {cmd}    Execute {cmd} in each file in the quickfix list
 ```
 
-```bash +exec_replace
-printf '\e[33m%s\e[0m\n' "The 'c' flag = confirm each replacement"
-printf '%s\n' "Skip with n, accept with y, all with a"
-```
+| Confirm flag | Effect |
+|--------------|--------|
+| `y` | Replace this match |
+| `n` | Skip this match |
+| `a` | Replace all remaining |
 
 ```bash +acquire_terminal
 nvim demo-grep.md
@@ -183,16 +174,16 @@ printf '\e[33m%s\e[0m %s\n' "WHY:" "Systematic fix of all reported issues"
 ```
 
 ```vim
-:make                           " or :lmake for location list
-:copen                          " see all errors
-:cdo s/errro/error/g | update   " fix typo in all locations
+:compiler {name}    Set 'makeprg' and 'errorformat' for {name}
+:make [args]        Run makeprg, parse output into quickfix list
+:cdo[!] {cmd}       Execute {cmd} in each valid quickfix entry
 ```
 
-| Quickfix navigation | Effect |
-|---------------------|--------|
-| `:cnext` / `:cprev` | Jump to next/prev error |
-| `:cfirst` / `:clast` | Jump to first/last |
-| `:cc 5` | Jump to error #5 |
+| Step | What happens |
+|------|-------------|
+| `:compiler eslint` | Sets makeprg=eslint, errorformat to parse eslint output |
+| `:make *.js` | Runs eslint, errors populate quickfix list |
+| `:cdo {fix}` | Applies fix at each error location |
 
 ```bash +acquire_terminal
 nvim demo-linter.md
@@ -207,16 +198,18 @@ printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute command in all loaded buffers"
 printf '\e[33m%s\e[0m %s\n' "WHY:" "Affect everything currently open"
 ```
 
+```vim
+:bufdo[!] {cmd}    Execute {cmd} in each buffer in the buffer list
+```
+
 | Recipe | Command |
 |--------|---------|
 | Save all | `:bufdo update` |
 | Reload all | `:bufdo e!` |
 | Set option | `:bufdo set expandtab` |
-| Close matching | `:bufdo if match(bufname('%'), 'test') >= 0 \| bd \| endif` |
 
-```bash +exec_replace
-printf '\e[33m%s\e[0m %s\n' "Tip:" "'update' saves only if modified"
-printf '     %s\n' "'write' saves unconditionally"
+```bash +acquire_terminal
+nvim testfiles/demo-bufdo.md
 ```
 
 <!-- end_slide -->
@@ -228,13 +221,16 @@ printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute command in all visible windows"
 printf '\e[33m%s\e[0m %s\n' "WHY:" "Sync settings across the current layout"
 ```
 
+```vim
+:windo[!] {cmd}    Execute {cmd} in each window in the current tab
+```
+
 | Recipe | Command |
 |--------|---------|
 | Sync to top | `:windo normal gg` |
 | Toggle numbers | `:windo set nu!` |
 | Set width | `:windo vertical resize 80` |
 | Disable wrap | `:windo set nowrap` |
-| Same cursor | `:windo normal 10G` |
 
 ```bash +acquire_terminal
 nvim demo-windo.md
@@ -277,5 +273,5 @@ printf '     \e[36m→\e[0m %s\n' ":silent argdo %%s/a/b/ge | update"
 <!-- new_lines: 3 -->
 
 ```bash +exec_replace
-echo "Thanks!" | figlet -f small -w 90
+echo "That's All Folks!" | figlet -f small -w 90
 ```
