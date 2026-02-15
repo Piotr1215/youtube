@@ -48,6 +48,16 @@ digraph diagram:
   fi
 
 
+# run ansi box diagram from json spec
+boxart diagram:
+  #!/usr/bin/env bash
+  spec_file="{{diagrams}}/{{diagram}}.json"
+  if [ -f "$spec_file" ]; then
+    ARGS_JSON=$(cat "$spec_file") python3 ~/.claude/mcp-servers/code-execution/skills/talks/ansi-box-diagram.py | jq -r '.printf_lines[]' | bash
+  else
+    echo "No spec file: $spec_file"
+  fi
+
 # run the presentation
 present: 
   @cd {{invocation_directory()}}; presenterm -Xx presentation.md

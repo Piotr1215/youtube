@@ -94,15 +94,7 @@ just digraph architecture
 > Images pulled from host Docker cache - no "kind load" needed
 
 ```bash +exec_replace
-printf '\e[36m┌──────────────┐     ┌──────────────┐\e[0m\n'
-printf '\e[36m│\e[0m  \e[1;33mHost       \e[0m \e[36m│\e[0m     \e[36m│\e[0m  \e[1;32mvind Node \e[0m \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m              \e[36m│\e[0m     \e[36m│\e[0m              \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m docker pull  \e[36m│\e[0m\e[33m────▶\e[0m\e[36m│\e[0m registry     \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m nginx:alpine \e[36m│\e[0m     \e[36m│\e[0m proxy        \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m              \e[36m│\e[0m     \e[36m│\e[0m              \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m Image cache  \e[36m│\e[0m\e[33m◀────\e[0m\e[36m│\e[0m pulls from   \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m              \e[36m│\e[0m     \e[36m│\e[0m host daemon  \e[36m│\e[0m\n'
-printf '\e[36m└──────────────┘     └──────────────┘\e[0m\n'
+just boxart registry-proxy
 ```
 
 <!-- end_slide -->
@@ -189,31 +181,6 @@ gcloud compute instances create vind-node \
 
 <!-- end_slide -->
 
-## Platform Free Tier
-
-> Web UI, team access, no credit card needed
-
-```bash +exec_replace
-printf '\e[1;36m┌─────────────────────────────────────────────────────┐\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[1;33mFREE TIER INCLUDES:                               \e[0m \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m                                                     \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[32mInfrastructure       \e[0m \e[35mCollaboration             \e[0m \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[36m─────────────────\e[0m    \e[36m─────────────────\e[0m          \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • 64 vCPU cores      • Unlimited users          \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • 32 GPUs            • Invite teammates         \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Unlimited clusters • Share kubeconfigs        \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Embedded etcd      • RBAC & permissions       \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m                                                     \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[32mFeatures             \e[0m \e[35mSelf-Service              \e[0m \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[36m─────────────────\e[0m    \e[36m─────────────────\e[0m          \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • CRD Sync           • Templates                \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Sync Patches       • One-click clusters       \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Private Nodes      • Sleep/Resume             \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Auto Nodes         • Platform UI              \e[1;36m│\e[0m\n'
-printf '\e[1;36m└─────────────────────────────────────────────────────┘\e[0m\n'
-```
-
-<!-- end_slide -->
 
 ## Private Nodes
 
@@ -250,16 +217,7 @@ gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a
 ## VPN Architecture
 
 ```bash +exec_replace
-printf '\e[36m┌─────────────────┐\e[0m         \e[36m┌─────────────────┐\e[0m\n'
-printf '\e[36m│\e[0m   \e[1;33mLocal Host  \e[0m \e[36m│\e[0m         \e[36m│\e[0m    \e[1;32mCloud VM    \e[0m \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m                 \e[36m│\e[0m   \e[35mVPN\e[0m   \e[36m│\e[0m                 \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m┌───────────┐\e[0m  \e[36m│\e[0m\e[35m◀───────▶\e[0m\e[36m│\e[0m  \e[36m┌───────────┐\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m│\e[0m   \e[1;33mvind   \e[0m \e[36m│\e[0m  \e[36m│\e[0m \e[35mtunnel\e[0m  \e[36m│\e[0m  \e[36m│\e[0m   \e[1;32mnode   \e[0m \e[36m│\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m│\e[0m  \e[1;33mcluster\e[0m \e[36m│\e[0m  \e[36m│\e[0m         \e[36m│\e[0m  \e[36m│\e[0m  \e[1;32m(kubelet)\e[0m\e[36m│\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m└───────────┘\e[0m  \e[36m│\e[0m         \e[36m│\e[0m  \e[36m└───────────┘\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m└─────────────────┘\e[0m         \e[36m└─────────────────┘\e[0m\n'
-printf '\n'
-printf '\e[37mPods scheduled on either side - VPN handles routing\e[0m\n'
+just boxart vpn-architecture
 ```
 
 <!-- end_slide -->

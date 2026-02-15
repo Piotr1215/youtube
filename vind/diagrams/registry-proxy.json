@@ -1,0 +1,8 @@
+{
+  "boxes": [
+    {"title": "Host", "color": "yellow", "lines": ["docker pull", "nginx:alpine", "", "Image cache"]},
+    {"title": "vind Node", "color": "green", "lines": ["registry", "proxy", "", "pulls from", "host daemon"]}
+  ],
+  "arrows": [{"row": 0, "dir": "right"}, {"row": 3, "dir": "left"}],
+  "gap": 5
+}

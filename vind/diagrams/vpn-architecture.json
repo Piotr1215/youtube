@@ -1,0 +1,16 @@
+{
+  "boxes": [
+    {
+      "title": "Local Host",
+      "color": "yellow",
+      "inner": ["vind", "cluster"]
+    },
+    {
+      "title": "Cloud VM",
+      "color": "green",
+      "inner": ["node", "(kubelet)"]
+    }
+  ],
+  "connector": {"top": "VPN", "bottom": "tunnel", "arrows": true},
+  "footer": "Pods scheduled on either side - VPN handles routing"
+}
