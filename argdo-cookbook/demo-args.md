@@ -1,30 +1,23 @@
-# Understanding :args
+# :args
 
-Try these commands:
-
-## Check current argument list
+## Check current list
 :args
 
-## Set argument list (REPLACES existing)
-:args testfiles/*.md      " replaces args with testfiles .md files
-:args testfiles/*.js      " replaces args with all JS files
+## Set argument list
+:args testfiles/*.md
+:args testfiles/*.js
 
-## Add to argument list (NON-DESTRUCTIVE)
-:argadd testfiles/*.md    " adds testfiles .md to existing args
-:argadd %           " adds current file to args
+## Add to argument list
+:argadd testfiles/*.md
+:argadd %
 
-## Navigate the list
+## Navigate
 :next
 :prev
 :first
 :last
 
-## Clear/remove from argument list
-:argdelete %        " remove current file
-:argdelete *.md     " remove matching files
-:%argdelete         " clear entire list
-:argdelete *        " also clears entire list
-
-## The argument list is SEPARATE from buffers!
-## bufdo = all buffers
-## argdo = only files in :args
+## Remove
+:argdelete %
+:argdelete *.md
+:%argdelete

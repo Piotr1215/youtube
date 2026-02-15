@@ -1,15 +1,13 @@
-# windo Demo
+# windo
 
-## Setup: Open multiple windows
+## Setup: open multiple windows
 :vsp testfiles/file2.md
 :sp testfiles/file3.md
 
-## Now you have 3 windows visible
-
-## Sync all to top of file
+## Sync all to top
 :windo normal gg
 
-## Toggle line numbers everywhere
+## Toggle line numbers
 :windo set nu!
 
 ## Set same width
@@ -18,15 +16,9 @@
 ## Jump to line 10 in all
 :windo normal 10G
 
-## Disable wrap in all
+## Disable wrap
 :windo set nowrap
 
-## Enable relative numbers
-:windo set relativenumber
-
-## Sync scrolling across all windows
+## Sync scrolling
 :windo set scrollbind
-" Now scrolling in any window scrolls all of them
-
-## Disable scroll sync
 :windo set noscrollbind

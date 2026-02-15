@@ -11,16 +11,13 @@ echo "Batch Commands" | figlet -f small -w 90
 # The "Do" Family
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-Commands that execute operations across MULTIPLE targets
-
-• argdo  → each file in argument list
-• bufdo  → each loaded buffer
-• windo  → each visible window
-• tabdo  → each tab page
-• cdo    → each quickfix ENTRY
-• cfdo   → each quickfix FILE
-EOF
+printf '\e[33m%s\e[0m\n\n' "Commands that execute operations across MULTIPLE targets"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "argdo" "each file in argument list"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "bufdo" "each loaded buffer"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "windo" "each visible window"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "tabdo" "each tab page"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "cdo" "each quickfix ENTRY"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "cfdo" "each quickfix FILE"
 ```
 
 <!-- end_slide -->
@@ -28,16 +25,12 @@ EOF
 # Why Use These?
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Execute any Ex command across multiple targets
-
-WHY: Batch operations without external tools
-
-• Rename function across 50 files? argdo
-• Fix all linter errors? cfdo
-• Set options in all windows? windo
-• No sed, no find -exec, no scripts
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute any Ex command across multiple targets"
+printf '\e[33m%s\e[0m %s\n\n' "WHY:" "Batch operations without external tools"
+printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Rename function across 50 files?" "argdo"
+printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Fix all linter errors?" "cfdo"
+printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Set options in all windows?" "windo"
+printf '  \e[35m•\e[0m %s\n' "No sed, no find -exec, no scripts"
 ```
 
 <!-- end_slide -->
@@ -45,11 +38,8 @@ EOF
 # Foundation: The Argument List
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Files passed to vim or set with :args
-
-WHY: argdo operates on THIS list, not buffers
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Files passed to vim or set with :args"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "argdo operates on THIS list, not buffers"
 ```
 
 | Command | Effect |
@@ -69,11 +59,8 @@ nvim demo-args.md
 # Recipe 1: Project-Wide Search/Replace
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Replace text across all project files
-
-WHY: Rename variables, functions, imports in one command
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Replace text across all project files"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Rename variables, functions, imports in one command"
 ```
 
 ```vim
@@ -96,11 +83,8 @@ nvim demo-replace.md
 # Recipe 2: Add Header to All Files
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Insert content at top of every file
-
-WHY: Add license, copyright, or boilerplate
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Insert content at top of every file"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Add license, copyright, or boilerplate"
 ```
 
 ```vim
@@ -123,11 +107,8 @@ nvim demo-header.md
 # Recipe 3: Run Macro on All Files
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Apply recorded macro to every file
-
-WHY: Complex edits that substitution can't handle
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Apply recorded macro to every file"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Complex edits that substitution can't handle"
 ```
 
 ```vim
@@ -137,11 +118,9 @@ EOF
 ```
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-Example: Wrap first heading in brackets
-1. Record: qq 0i[ $a ] q
-2. Apply:  :argdo normal @q | update
-EOF
+printf '\e[33m%s\e[0m\n\n' "Example: Wrap first heading in brackets"
+printf '  \e[32m%s\e[0m %s\n' "1. Record:" "qq 0i[ \$a ] q"
+printf '  \e[32m%s\e[0m %s\n' "2. Apply:" ":argdo normal @q | update"
 ```
 
 ```bash +acquire_terminal
@@ -153,11 +132,8 @@ nvim demo-macro.md
 # The Quickfix Workflow
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: cdo/cfdo operate on grep/make results
-
-WHY: Review matches BEFORE changing them
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "cdo/cfdo operate on grep/make results"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Review matches BEFORE changing them"
 ```
 
 ```bash +exec_replace
@@ -174,11 +150,8 @@ cd /home/decoder/dev/youtube/argdo-cookbook && just digraph workflow
 # Recipe 4: grep → replace
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Find all matches, review, then replace
-
-WHY: Safer than blind argdo - you see matches first
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Find all matches, review, then replace"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Safer than blind argdo — matches visible first"
 ```
 
 ```vim
@@ -188,10 +161,8 @@ EOF
 ```
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-The 'c' flag = confirm each replacement
-Skip with n, accept with y, all with a
-EOF
+printf '\e[33m%s\e[0m\n' "The 'c' flag = confirm each replacement"
+printf '%s\n' "Skip with n, accept with y, all with a"
 ```
 
 ```bash +acquire_terminal
@@ -203,11 +174,8 @@ nvim demo-grep.md
 # Recipe 5: Fix Linter Errors
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Process each error from :make or linter
-
-WHY: Systematic fix of all reported issues
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Process each error from :make or linter"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Systematic fix of all reported issues"
 ```
 
 ```vim
@@ -231,11 +199,8 @@ nvim demo-linter.md
 # Recipe 6: bufdo Quick Wins
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Execute command in all loaded buffers
-
-WHY: Affect everything currently open
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute command in all loaded buffers"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Affect everything currently open"
 ```
 
 | Recipe | Command |
@@ -246,10 +211,8 @@ EOF
 | Close matching | `:bufdo if match(bufname('%'), 'test') >= 0 \| bd \| endif` |
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-Tip: 'update' saves only if modified
-     'write' saves unconditionally
-EOF
+printf '\e[33m%s\e[0m %s\n' "Tip:" "'update' saves only if modified"
+printf '     %s\n' "'write' saves unconditionally"
 ```
 
 <!-- end_slide -->
@@ -257,11 +220,8 @@ EOF
 # Recipe 7: windo for Windows
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-WHAT: Execute command in all visible windows
-
-WHY: Sync settings across your current layout
-EOF
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute command in all visible windows"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Sync settings across the current layout"
 ```
 
 | Recipe | Command |
@@ -281,22 +241,16 @@ nvim demo-windo.md
 # Pro Tips
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-1. Set 'hidden' option first
-   → :set hidden (allows unsaved buffer switching)
-
-2. Always use | update (not | w)
-   → Only saves if buffer was modified
-
-3. Use 'e' flag in substitutions
-   → No error when pattern not found
-
-4. Preview with :argdo without | update
-   → See changes before committing
-
-5. Combine with :silent for clean output
-   → :silent argdo %s/a/b/ge | update
-EOF
+printf '  \e[32m%s\e[0m %s\n' "1." "Set 'hidden' option first"
+printf '     \e[36m→\e[0m %s\n\n' ":set hidden (allows unsaved buffer switching)"
+printf '  \e[32m%s\e[0m %s\n' "2." "Always use | update (not | w)"
+printf '     \e[36m→\e[0m %s\n\n' "Only saves if buffer was modified"
+printf '  \e[32m%s\e[0m %s\n' "3." "Use 'e' flag in substitutions"
+printf '     \e[36m→\e[0m %s\n\n' "No error when pattern not found"
+printf '  \e[32m%s\e[0m %s\n' "4." "Preview with :argdo without | update"
+printf '     \e[36m→\e[0m %s\n\n' "See changes before committing"
+printf '  \e[32m%s\e[0m %s\n' "5." "Combine with :silent for clean output"
+printf '     \e[36m→\e[0m %s\n' ":silent argdo %%s/a/b/ge | update"
 ```
 
 <!-- end_slide -->
