@@ -16,25 +16,38 @@ cp testfiles-origin/* testfiles/
 
 ```bash +exec_replace
 printf '\e[33m%s\e[0m\n\n' "Commands that execute operations across MULTIPLE targets"
-printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "argdo" "each file in argument list"
-printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "bufdo" "each loaded buffer"
-printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "windo" "each visible window"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "argdo" "selected set of files (:args)"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "bufdo" "all loaded buffers"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "windo" "all visible windows in current tab"
 printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "tabdo" "each tab page"
-printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "cdo" "each quickfix ENTRY"
-printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "cfdo" "each quickfix FILE"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "cdo" "each quickfix entry (multiple per file)"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "cfdo" "each quickfix file (once per file)"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "ldo" "each location list entry (per split)"
+printf '  \e[35m•\e[0m \e[32m%-8s\e[0m → %s\n' "lfdo" "each location list file (per split)"
 ```
 
 <!-- end_slide -->
 
-# Why Use These?
+# Neovim Anatomy
 
 ```bash +exec_replace
-printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute any Ex command across multiple targets"
-printf '\e[33m%s\e[0m %s\n\n' "WHY:" "Batch operations without external tools"
-printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Rename function across 50 files?" "argdo"
-printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Fix all linter errors?" "cfdo"
-printf '  \e[35m•\e[0m %s \e[36m%s\e[0m\n' "Set options in all windows?" "windo"
-printf '  \e[35m•\e[0m %s\n' "Pure Vim — replace sed, find -exec, and shell scripts"
+printf '\e[33m%s\e[0m\n\n' "Buffers, windows, and tabs"
+printf ' \e[1;36mNeovim Instance\e[0m\n'
+printf ' \e[36m├─\e[0m \e[32mTab 1\e[0m \e[2m(window layout)\e[0m\n'
+printf ' \e[36m│\e[0m  \e[32m├─\e[0m \e[35mWindow\e[0m ← showing \e[1;36mapp.js\e[0m\n'
+printf ' \e[36m│\e[0m  \e[32m├─\e[0m \e[35mWindow\e[0m ← showing \e[1;36mutil.js\e[0m\n'
+printf ' \e[36m│\e[0m  \e[32m└─\e[0m \e[35mWindow\e[0m ← showing \e[1;36mserver.py\e[0m\n'
+printf ' \e[36m├─\e[0m \e[32mTab 2\e[0m \e[2m(window layout)\e[0m\n'
+printf ' \e[36m│\e[0m  \e[32m└─\e[0m \e[35mWindow\e[0m ← showing \e[1;36mapp.js\e[0m  \e[2m(same buffer!)\e[0m\n'
+printf ' \e[36m│\e[0m\n'
+printf ' \e[36m└─\e[0m \e[33mAll buffers\e[0m\n'
+printf '    \e[1;36mapp.js\e[0m  \e[1;36mutil.js\e[0m  \e[1;36mserver.py\e[0m  \e[2mreadme.md  config.yaml  test.py\e[0m\n'
+printf '    \e[37m───────── visible ─────────  ──── hidden (loaded) ────\e[0m\n'
+printf '\n'
+printf ' \e[33mBuffer:\e[0m  in-memory text (may not be visible)\n'
+printf ' \e[33mWindow:\e[0m  viewport into a buffer\n'
+printf ' \e[33mTab:\e[0m     a window arrangement (not a file!)\n'
+printf ' \e[33mArgs:\e[0m    chosen subset of buffers for batch ops\n'
 ```
 
 <!-- end_slide -->
@@ -43,7 +56,7 @@ printf '  \e[35m•\e[0m %s\n' "Pure Vim — replace sed, find -exec, and shell 
 
 ```bash +exec_replace
 printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Files passed to vim or set with :args"
-printf '\e[33m%s\e[0m %s\n' "WHY:" "argdo operates on THIS list, not buffers"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Control exactly which files get modified"
 ```
 
 | Command | Effect |
@@ -169,8 +182,10 @@ nvim demo-grep.md
 # Recipe 5: Fix Linter Errors
 
 ```bash +exec_replace
-printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Process each error from :make or linter"
-printf '\e[33m%s\e[0m %s\n' "WHY:" "Systematic fix of all reported issues"
+printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Run any tool and batch-fix results"
+printf '\e[33m%s\e[0m %s\n\n' "WHY:" "Fix linter/compiler errors without leaving the editor"
+printf '  \e[36m%s\e[0m\n' "Neovim ships 100+ compiler definitions: eslint, pylint, shellcheck, tsc, ..."
+printf '  \e[36m%s\e[0m\n' "Plugins like Trouble use the same quickfix/loclist system under the hood"
 ```
 
 ```vim
@@ -195,7 +210,7 @@ nvim demo-linter.md
 
 ```bash +exec_replace
 printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Execute command in all loaded buffers"
-printf '\e[33m%s\e[0m %s\n' "WHY:" "Affect everything currently open"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Apply the same change to all open files at once"
 ```
 
 ```vim
@@ -255,16 +270,15 @@ printf '     \e[36m→\e[0m %s\n' ":silent argdo %%s/a/b/ge | update"
 
 <!-- end_slide -->
 
-# Recap
+# Why Not Just Let AI Do It?
 
-| Command | Target | Best For |
-|---------|--------|----------|
-| `argdo` | Argument list | Project-wide refactoring |
-| `bufdo` | All buffers | Currently open files |
-| `windo` | All windows | Layout-wide settings |
-| `tabdo` | All tabs | Tab-specific operations |
-| `cdo` | QF entries | Per-match operations |
-| `cfdo` | QF files | Per-file from grep |
+```bash +exec_replace
+printf '  \e[35m•\e[0m %s\n\n' "AI is great at helping compose the glob and command"
+printf '  \e[35m•\e[0m %s\n\n' "A small local model can suggest the command — no need for expensive models editing files"
+printf '  \e[35m•\e[0m %s\n\n' "Atomic operations: each change is revertable, repeatable, automatable"
+printf '  \e[35m•\e[0m %s\n\n' "Deterministic — same command, same result, every time"
+printf '  \e[35m•\e[0m %s\n' "Composable with other Vim primitives (macros, registers, marks)"
+```
 
 <!-- end_slide -->
 
