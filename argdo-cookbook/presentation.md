@@ -77,7 +77,7 @@ nvim demo-args.md
 
 ```bash +exec_replace
 printf '\e[33m%s\e[0m %s\n\n' "WHAT:" "Replace text across all project files"
-printf '\e[33m%s\e[0m %s\n' "WHY:" "Rename variables, functions, imports in one command"
+printf '\e[33m%s\e[0m %s\n' "WHY:" "Structural changes LSP rename cannot handle"
 ```
 
 ```vim

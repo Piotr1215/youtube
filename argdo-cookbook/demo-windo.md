@@ -5,7 +5,7 @@
 :sp testfiles/file3.md
 
 ## Sync all to top
-:windo normal gg
+:windo norm! gg
 
 ## Toggle line numbers
 :windo set nu!
