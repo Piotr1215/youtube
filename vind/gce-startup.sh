@@ -10,4 +10,3 @@ EOF
 systemctl daemon-reload
 systemctl enable --now ollama
 until curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; do sleep 1; done
-ollama pull llama3.2:1b

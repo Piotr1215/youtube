@@ -5,8 +5,7 @@ echo "=== Ensuring bridge kernel module ==="
 sudo modprobe br_netfilter
 sudo sysctl -q -w net.bridge.bridge-nf-call-iptables=1
 
-echo "=== Fixing Docker IPv6 + restarting ==="
-sudo sysctl -q -w net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.default.disable_ipv6=1
+echo "=== Restarting Docker ==="
 sudo systemctl restart docker
 
 echo "=== Setting docker driver ==="

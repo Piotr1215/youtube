@@ -78,16 +78,6 @@ kubectl create deployment web --image=nginx:alpine && \
 
 <!-- end_slide -->
 
-## Curl the IP
-
-> IP is routable from host - no port-forward needed
-
-```bash +exec
-EXTERNAL_IP=$(kubectl get svc web -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-curl -s $EXTERNAL_IP | grep -oP '(?<=<h1>).*(?=</h1>)'
-```
-
-<!-- end_slide -->
 
 ## What Just Happened?
 
@@ -117,45 +107,6 @@ printf '\e[36m└──────────────┘     └───�
 
 <!-- end_slide -->
 
-## Platform Free Tier
-
-> Web UI, team access, no credit card needed
-
-```bash +exec_replace
-printf '\e[1;36m┌─────────────────────────────────────────────────────┐\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[1;33mFREE TIER INCLUDES:                               \e[0m \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m                                                     \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[32mInfrastructure       \e[0m \e[35mCollaboration             \e[0m \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[36m─────────────────\e[0m    \e[36m─────────────────\e[0m          \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • 64 vCPU cores      • Unlimited users          \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • 32 GPUs            • Invite teammates         \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Unlimited clusters • Share kubeconfigs        \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Embedded etcd      • RBAC & permissions       \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m                                                     \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[32mFeatures             \e[0m \e[35mSelf-Service              \e[0m \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  \e[36m─────────────────\e[0m    \e[36m─────────────────\e[0m          \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • CRD Sync           • Templates                \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Sync Patches       • One-click clusters       \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Private Nodes      • Sleep/Resume             \e[1;36m│\e[0m\n'
-printf '\e[1;36m│\e[0m  • Auto Nodes         • Platform UI              \e[1;36m│\e[0m\n'
-printf '\e[1;36m└─────────────────────────────────────────────────────┘\e[0m\n'
-```
-
-<!-- end_slide -->
-
-## Private Nodes
-
-> Add any Linux machine to the cluster - local or cloud
-
-```bash +exec_replace
-printf '\e[1;36m%s\e[0m\n\n' "How private nodes work:"
-printf '\e[35m•\e[0m %s\n' "VPN tunnel connects external machines to the cluster"
-printf '\e[35m•\e[0m %s\n' "One curl command to join - installs kubelet automatically"
-printf '\e[35m•\e[0m %s\n' "Works with: KVM, cloud VMs, bare metal, Raspberry Pi"
-```
-
-<!-- end_slide -->
-
 ## VPN Config
 
 > Two additions to vcluster.yaml - that's it
@@ -170,23 +121,6 @@ bat --color=always --style=plain vpn-cluster/vcluster.yaml
 
 ```bash +exec
 vcluster create vpn-cluster --values vpn-cluster/vcluster.yaml
-```
-
-<!-- end_slide -->
-
-## VPN Architecture
-
-```bash +exec_replace
-printf '\e[36m┌─────────────────┐\e[0m         \e[36m┌─────────────────┐\e[0m\n'
-printf '\e[36m│\e[0m   \e[1;33mLocal Host  \e[0m \e[36m│\e[0m         \e[36m│\e[0m    \e[1;32mCloud VM    \e[0m \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m                 \e[36m│\e[0m   \e[35mVPN\e[0m   \e[36m│\e[0m                 \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m┌───────────┐\e[0m  \e[36m│\e[0m\e[35m◀───────▶\e[0m\e[36m│\e[0m  \e[36m┌───────────┐\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m│\e[0m   \e[1;33mvind   \e[0m \e[36m│\e[0m  \e[36m│\e[0m \e[35mtunnel\e[0m  \e[36m│\e[0m  \e[36m│\e[0m   \e[1;32mnode   \e[0m \e[36m│\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m│\e[0m  \e[1;33mcluster\e[0m \e[36m│\e[0m  \e[36m│\e[0m         \e[36m│\e[0m  \e[36m│\e[0m  \e[1;32m(kubelet)\e[0m\e[36m│\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m│\e[0m  \e[36m└───────────┘\e[0m  \e[36m│\e[0m         \e[36m│\e[0m  \e[36m└───────────┘\e[0m  \e[36m│\e[0m\n'
-printf '\e[36m└─────────────────┘\e[0m         \e[36m└─────────────────┘\e[0m\n'
-printf '\n'
-printf '\e[37mPods scheduled on either side - VPN handles routing\e[0m\n'
 ```
 
 <!-- end_slide -->
@@ -255,23 +189,45 @@ gcloud compute instances create vind-node \
 
 <!-- end_slide -->
 
-## Startup Script
+## Platform Free Tier
 
-> While the VM boots - here's what the startup script does
+> Web UI, team access, no credit card needed
 
 ```bash +exec_replace
-printf '\e[1;36m%s\e[0m\n\n' "gce-startup.sh"
-printf '  \e[33m%s\e[0m\n' "1. Configure NVIDIA container runtime"
-printf '  \e[37m%s\e[0m\n\n' "   nvidia-ctk → containerd integration"
-printf '  \e[33m%s\e[0m\n' "2. Install ollama"
-printf '  \e[37m%s\e[0m\n\n' "   LLM inference server on the host"
-printf '  \e[33m%s\e[0m\n' "3. Bind to 0.0.0.0"
-printf '  \e[37m%s\e[0m\n\n' "   Pods reach ollama via node IP (not localhost)"
-printf '  \e[33m%s\e[0m\n' "4. Pull llama3.2:1b"
-printf '  \e[37m%s\e[0m\n' "   Small model, fast inference on T4 GPU"
+printf '\e[1;36m┌─────────────────────────────────────────────────────┐\e[0m\n'
+printf '\e[1;36m│\e[0m  \e[1;33mFREE TIER INCLUDES:                               \e[0m \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m                                                     \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  \e[32mInfrastructure       \e[0m \e[35mCollaboration             \e[0m \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  \e[36m─────────────────\e[0m    \e[36m─────────────────\e[0m          \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • 64 vCPU cores      • Unlimited users          \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • 32 GPUs            • Invite teammates         \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • Unlimited clusters • Share kubeconfigs        \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • Embedded etcd      • RBAC & permissions       \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m                                                     \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  \e[32mFeatures             \e[0m \e[35mSelf-Service              \e[0m \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  \e[36m─────────────────\e[0m    \e[36m─────────────────\e[0m          \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • CRD Sync           • Templates                \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • Sync Patches       • One-click clusters       \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • Private Nodes      • Sleep/Resume             \e[1;36m│\e[0m\n'
+printf '\e[1;36m│\e[0m  • Auto Nodes         • Platform UI              \e[1;36m│\e[0m\n'
+printf '\e[1;36m└─────────────────────────────────────────────────────┘\e[0m\n'
 ```
 
 <!-- end_slide -->
+
+## Private Nodes
+
+> Add any Linux machine to the cluster - local or cloud
+
+```bash +exec_replace
+printf '\e[1;36m%s\e[0m\n\n' "How private nodes work:"
+printf '\e[35m•\e[0m %s\n' "VPN tunnel connects external machines to the cluster"
+printf '\e[35m•\e[0m %s\n' "One curl command to join - installs kubelet automatically"
+printf '\e[35m•\e[0m %s\n' "Works with: KVM, cloud VMs, bare metal, Raspberry Pi"
+```
+
+<!-- end_slide -->
+
 
 ## Cloud Join Token
 
@@ -287,6 +243,31 @@ vcluster token create --expires=1h
 
 ```bash +acquire_terminal
 gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a
+```
+
+<!-- end_slide -->
+
+## VPN Architecture
+
+```bash +exec_replace
+printf '\e[36m┌─────────────────┐\e[0m         \e[36m┌─────────────────┐\e[0m\n'
+printf '\e[36m│\e[0m   \e[1;33mLocal Host  \e[0m \e[36m│\e[0m         \e[36m│\e[0m    \e[1;32mCloud VM    \e[0m \e[36m│\e[0m\n'
+printf '\e[36m│\e[0m                 \e[36m│\e[0m   \e[35mVPN\e[0m   \e[36m│\e[0m                 \e[36m│\e[0m\n'
+printf '\e[36m│\e[0m  \e[36m┌───────────┐\e[0m  \e[36m│\e[0m\e[35m◀───────▶\e[0m\e[36m│\e[0m  \e[36m┌───────────┐\e[0m  \e[36m│\e[0m\n'
+printf '\e[36m│\e[0m  \e[36m│\e[0m   \e[1;33mvind   \e[0m \e[36m│\e[0m  \e[36m│\e[0m \e[35mtunnel\e[0m  \e[36m│\e[0m  \e[36m│\e[0m   \e[1;32mnode   \e[0m \e[36m│\e[0m  \e[36m│\e[0m\n'
+printf '\e[36m│\e[0m  \e[36m│\e[0m  \e[1;33mcluster\e[0m \e[36m│\e[0m  \e[36m│\e[0m         \e[36m│\e[0m  \e[36m│\e[0m  \e[1;32m(kubelet)\e[0m\e[36m│\e[0m  \e[36m│\e[0m\n'
+printf '\e[36m│\e[0m  \e[36m└───────────┘\e[0m  \e[36m│\e[0m         \e[36m│\e[0m  \e[36m└───────────┘\e[0m  \e[36m│\e[0m\n'
+printf '\e[36m└─────────────────┘\e[0m         \e[36m└─────────────────┘\e[0m\n'
+printf '\n'
+printf '\e[37mPods scheduled on either side - VPN handles routing\e[0m\n'
+```
+
+<!-- end_slide -->
+
+## Pull Model on GPU Node
+
+```bash +exec
+gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --command="ollama pull llama3.2:1b"
 ```
 
 <!-- end_slide -->
@@ -328,9 +309,9 @@ kubectl apply -f sre-demo-app/deployment.yaml && \
 
 ```bash +exec
 SRE_IP=$(kubectl get svc sre-haiku -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-echo "http://$SRE_IP:5000"
+echo "http://$SRE_IP"
 echo ""
-echo "http://$SRE_IP:5000" | qrencode -t UTF8 -s 1 -m 2
+echo "http://$SRE_IP" | qrencode -t UTF8 -s 1 -m 2
 ```
 
 <!-- end_slide -->
