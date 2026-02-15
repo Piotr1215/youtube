@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-haiku
+  labels:
+    app: sre-haiku
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sre-haiku
+  template:
+    metadata:
+      labels:
+        app: sre-haiku
+    spec:
+      nodeSelector:
+        role: gpu-node
+      containers:
+      - name: sre-haiku
+        image: piotrzan/sre-haiku-generator:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: LLM_URL
+          value: "http://$(NODE_IP):11434"
+        - name: LLM_MODEL
+          value: "llama3.2:1b"
+        - name: UI_BADGE_TEXT
+          value: "Powered by vind + Private Node"
+        - name: UI_SUBTITLE
+          value: "Running on a vind cluster with ollama on a private node"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sre-haiku
+spec:
+  selector:
+    app: sre-haiku
+  ports:
+  - port: 5000
+    targetPort: 5000
+  type: LoadBalancer
