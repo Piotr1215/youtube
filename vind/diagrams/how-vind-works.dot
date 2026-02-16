@@ -1,0 +1,19 @@
+digraph vind_overview {
+    rankdir=TB
+    node [shape=box]
+
+    platform [label="vCluster Platform\n(UI + management)"]
+    cp [label="Control Plane\n(API, etcd, scheduler)"]
+    worker [label="Worker Node\n(kubelet, containerd)"]
+    lb [label="Load Balancer\n(haproxy)"]
+    proxy [label="Registry Proxy"]
+    cache [label="Host Docker Cache"]
+    ext [label="External Node\n(cloud VM, GPU)"]
+
+    platform -> cp [label="manage"]
+    cp -> worker [label="schedule"]
+    worker -> lb [label="expose svc"]
+    worker -> proxy [label="pull image"]
+    proxy -> cache [label="from cache"]
+    ext -> cp [label="join via VPN"]
+}

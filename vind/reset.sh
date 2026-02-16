@@ -50,11 +50,13 @@ for i in $(seq 1 15); do
   sleep 2
 done
 
-echo "=== Cleaning up GCE VM ==="
-if gcloud compute instances describe vind-node --project=eng-sandbox-02 --zone=us-central1-a &>/dev/null; then
-  gcloud compute instances delete vind-node --project=eng-sandbox-02 --zone=us-central1-a --quiet
-else
-  echo "No vind-node VM found"
+if [[ "${1:-}" == "--clean-gcp" ]]; then
+  echo "=== Cleaning up GCE VM ==="
+  if gcloud compute instances describe vind-node --project=eng-sandbox-02 --zone=us-central1-a &>/dev/null; then
+    gcloud compute instances delete vind-node --project=eng-sandbox-02 --zone=us-central1-a --quiet
+  else
+    echo "No vind-node VM found"
+  fi
 fi
 
 echo "=== Done ==="

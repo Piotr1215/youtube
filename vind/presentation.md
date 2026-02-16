@@ -10,6 +10,16 @@ done < vind-logo-ascii.txt
 
 <!-- end_slide -->
 
+## How vind Works
+
+> All components run as Docker containers on the host
+
+```bash +exec_replace
+just digraph how-vind-works
+```
+
+<!-- end_slide -->
+
 ## Set the Driver
 
 ```bash +exec
@@ -66,7 +76,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 ## Deploy + LoadBalancer
 
-> Deploy nginx and expose with a real IP - no MetalLB, no port-forward
+> Works with LoadBalancer out of the box
 
 ```bash +exec
 kubectl create deployment web --image=nginx:alpine && \
@@ -78,16 +88,6 @@ kubectl create deployment web --image=nginx:alpine && \
 
 <!-- end_slide -->
 
-
-## What Just Happened?
-
-> vCluster in Docker - full K8s, no host cluster needed
-
-```bash +exec_replace
-just digraph architecture
-```
-
-<!-- end_slide -->
 
 ## Registry Proxy
 
@@ -101,7 +101,7 @@ just boxart registry-proxy
 
 ## VPN Config
 
-> Two additions to vcluster.yaml - that's it
+> VPN flat network allows for adding arbitrary nodes
 
 ```bash +exec_replace
 bat --color=always --style=plain vpn-cluster/vcluster.yaml
@@ -126,7 +126,7 @@ vcluster connect vpn-cluster && \
   echo "Waiting for node to register..." && \
   until kubectl get nodes --no-headers 2>/dev/null | grep -q Ready; do sleep 2; done && \
   kubectl get nodes && \
-  vcluster token create --expires=1h
+  vcluster token create --expires=1h | xclip -selection clipboard && echo "Token copied to clipboard"
 ```
 
 <!-- end_slide -->
@@ -199,7 +199,7 @@ printf '\e[35m•\e[0m %s\n' "Works with: KVM, cloud VMs, bare metal, Raspberry 
 ## Cloud Join Token
 
 ```bash +exec
-vcluster token create --expires=1h
+vcluster token create --expires=1h | xclip -selection clipboard && echo "Token copied to clipboard"
 ```
 
 <!-- end_slide -->
@@ -222,13 +222,6 @@ just boxart vpn-architecture
 
 <!-- end_slide -->
 
-## Pull Model on GPU Node
-
-```bash +exec
-gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --command="ollama pull llama3.2:1b"
-```
-
-<!-- end_slide -->
 
 ## All Nodes
 
@@ -250,7 +243,7 @@ GCE_NODE=$(kubectl get nodes -o name | grep vind-node) && \
 
 <!-- end_slide -->
 
-## SRE Haiku Generator
+## GPU Demo App
 
 > Flask app talking to ollama on the private node
 
@@ -282,10 +275,6 @@ echo "http://$SRE_IP" | qrencode -t UTF8 -s 1 -m 2
 vcluster pause my-cluster
 ```
 
-```bash +exec
-docker ps --format "table {{.Names}}\t{{.Status}}"
-```
-
 <!-- end_slide -->
 
 ## Resume Cluster
@@ -294,7 +283,6 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 ```bash +exec
 vcluster resume my-cluster && \
-  sleep 5 && \
   kubectl get pods -A
 ```
 
@@ -305,7 +293,7 @@ vcluster resume my-cluster && \
 ```bash +exec_replace
 printf '\e[1;36m%-25s\e[0m \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Feature" "vind" "kind"
 printf '\e[36m%-25s\e[0m \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "─────────────────────────" "────────────────────" "────────────────────"
-printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Built-in UI" "via vCluster Platform" "none"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Built-in UI" "vCluster Platform" "none"
 printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Sleep/Wake" "native" "delete & recreate"
 printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Load Balancers" "automatic" "manual setup"
 printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Image Caching" "via Docker cache" "external registries"
