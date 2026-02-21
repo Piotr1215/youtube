@@ -1,8 +1,8 @@
-var { multiply } = require('./utils');
+const { multiply } = require('./utils');
 
-var main = function() {
+const main = function() {
   let result = multiply(42);
-  if (result == 84) {
+  if (result === 84) {
     console.log('Result:', result);
   }
 }

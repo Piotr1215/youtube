@@ -3,6 +3,6 @@ class User:
         self.name = name
         self.email = email
 
-    # TODO: add validation for email format
+    # DONE: add validation for email format
     def save(self):
         print(f"saving {self.name}")

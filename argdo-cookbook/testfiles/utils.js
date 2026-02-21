@@ -1,10 +1,10 @@
-var multiply = function(x) {
+const multiply = function(x) {
   return x * 2;
 }
 
-var helper = function() {
+const helper = function() {
   let val = multiply(10);
-  if (val == 20) {
+  if (val === 20) {
     console.log(val);
   }
 }

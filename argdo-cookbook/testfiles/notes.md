@@ -1,7 +1,7 @@
-# Project Notes
+# [Project Notes]
 
 Some notes about the project.
 
-## Architecture
+## [Architecture]
 
 The system uses a simple client-server model.

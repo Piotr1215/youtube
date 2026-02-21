@@ -63,7 +63,6 @@ printf '\e[33m%s\e[0m %s\n' "WHY:" "Control exactly which files get modified"
 |---------|--------|
 | `:args` | Show current argument list |
 | `:args **/*.js` | Set args to all JS files |
-| `:args `find . -name "*.py"`` | Set args from shell |
 | `:argadd %` | Add current file to args |
 | `:next` / `:prev` | Navigate argument list |
 
@@ -242,7 +241,7 @@ printf '\e[33m%s\e[0m %s\n' "WHY:" "Sync settings across the current layout"
 
 | Recipe | Command |
 |--------|---------|
-| Sync to top | `:windo normal gg` |
+| Sync to top | `:windo norm! gg` |
 | Toggle numbers | `:windo set nu!` |
 | Set width | `:windo vertical resize 80` |
 | Disable wrap | `:windo set nowrap` |

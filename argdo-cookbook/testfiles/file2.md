@@ -1,33 +1,33 @@
-# Server Configuration
+# [Server Configuration]
 
-## Database Settings
+## [Database Settings]
 host = localhost
 port = 5432
 name = myapp_prod
 pool_size = 10
 
-## Cache Settings
+## [Cache Settings]
 driver = redis
 ttl = 3600
 prefix = app_cache
 
-## Logging
+## [Logging]
 level = info
 format = json
 output = stdout
 
-## API Settings
+## [API Settings]
 rate_limit = 100
 timeout = 30
 retry_count = 3
 base_url = /api/v1
 
-## Security
+## [Security]
 cors_enabled = true
 csrf_protection = true
 session_timeout = 1800
 
-## Feature Flags
+## [Feature Flags]
 dark_mode = true
 beta_features = false
 analytics = true
