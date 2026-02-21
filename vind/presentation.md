@@ -10,15 +10,6 @@ done < vind-logo-ascii.txt
 
 <!-- end_slide -->
 
-## How vind Works
-
-> All components run as Docker containers on the host
-
-```bash +exec_replace
-just digraph how-vind-works
-```
-
-<!-- end_slide -->
 
 ## Set the Driver
 
@@ -31,7 +22,7 @@ vcluster use driver docker
 ## Start Platform
 
 ```bash +exec
-vcluster platform start
+docker rm -f vcluster-platform 2>/dev/null; vcluster platform start
 ```
 
 <!-- end_slide -->
@@ -47,7 +38,7 @@ bat --color=always --style=plain vcluster.yaml
 ## Create the Cluster
 
 ```bash +exec
-vcluster create my-cluster --values vcluster.yaml
+vcluster delete my-cluster 2>/dev/null; vcluster create my-cluster --values vcluster.yaml
 ```
 
 <!-- end_slide -->
@@ -182,6 +173,7 @@ gcloud compute instances create vind-node \
 <!-- end_slide -->
 
 
+
 ## Private Nodes
 
 > Add any Linux machine to the cluster - local or cloud
@@ -196,6 +188,13 @@ printf '\e[35m•\e[0m %s\n' "Works with: KVM, cloud VMs, bare metal, Raspberry 
 <!-- end_slide -->
 
 
+## Pull Ollama Model
+
+```bash +exec
+gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --command="ollama pull llama3.2:1b"
+```
+
+<!-- end_slide -->
 ## Cloud Join Token
 
 ```bash +exec
@@ -214,13 +213,6 @@ gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a
 
 <!-- end_slide -->
 
-## VPN Architecture
-
-```bash +exec_replace
-just boxart vpn-architecture
-```
-
-<!-- end_slide -->
 
 
 ## All Nodes
@@ -243,6 +235,13 @@ GCE_NODE=$(kubectl get nodes -o name | grep vind-node) && \
 
 <!-- end_slide -->
 
+## VPN Architecture
+
+```bash +exec_replace
+just boxart vpn-architecture
+```
+
+<!-- end_slide -->
 ## GPU Demo App
 
 > Flask app talking to ollama on the private node

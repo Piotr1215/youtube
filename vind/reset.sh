@@ -5,9 +5,6 @@ echo "=== Ensuring bridge kernel module ==="
 sudo modprobe br_netfilter
 sudo sysctl -q -w net.bridge.bridge-nf-call-iptables=1
 
-echo "=== Restarting Docker ==="
-sudo systemctl restart docker
-
 echo "=== Setting docker driver ==="
 vcluster use driver docker
 
@@ -43,6 +40,7 @@ sudo virt-install \
   --network network=default \
   --noautoconsole \
   --import
+sudo virsh start cloud-node 2>/dev/null || true
 echo "Waiting for VM to boot..."
 for i in $(seq 1 15); do
   VM_IP=$(sudo virsh domifaddr cloud-node 2>/dev/null | awk '/ipv4/ {print $4}' | cut -d/ -f1)
