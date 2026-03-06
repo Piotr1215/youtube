@@ -255,13 +255,21 @@ kubectl apply -f sre-demo-app/deployment.yaml && \
 
 ## Demo App Live
 
-> LoadBalancer gives a real IP - no port-forward, no ngrok
+> ngrok tunnel exposes the Docker LB IP to the internet
 
 ```bash +exec
 SRE_IP=$(kubectl get svc sre-haiku -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-echo "http://$SRE_IP"
+echo "LoadBalancer IP: $SRE_IP (Docker bridge - host only)"
+pkill -f "ngrok" 2>/dev/null || true
+pkill -f "port-forward svc/sre-haiku" 2>/dev/null || true
+kubectl port-forward svc/sre-haiku 8080:80 &>/dev/null &
+sleep 1
+ngrok http 8080 --log=stdout &>/dev/null &
+sleep 2
+PUBLIC_URL=$(curl -s localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+echo "Public URL: $PUBLIC_URL"
 echo ""
-echo "http://$SRE_IP" | qrencode -t UTF8 -s 1 -m 2
+echo "$PUBLIC_URL" | qrencode -t UTF8 -s 1 -m 2
 ```
 
 <!-- end_slide -->

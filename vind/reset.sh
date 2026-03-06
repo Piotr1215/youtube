@@ -8,6 +8,10 @@ sudo sysctl -q -w net.bridge.bridge-nf-call-iptables=1
 echo "=== Setting docker driver ==="
 vcluster use driver docker
 
+echo "=== Killing port-forwards and tunnels ==="
+pkill -f "ngrok" 2>/dev/null || true
+pkill -f "port-forward svc/sre-haiku" 2>/dev/null || true
+
 echo "=== Deleting all vclusters ==="
 for vc in $(vcluster list --output name 2>/dev/null); do
   vcluster delete "$vc" 2>/dev/null || true
