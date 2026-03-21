@@ -1,0 +1,12 @@
+# Namespace Sync + Sync Patches
+sync:
+  toHost:
+    namespaces:
+      enabled: true
+      mappings:
+        byName:
+          production: production
+    pods:
+      patches:
+        - path: metadata.labels
+          expression: 'value["managed-by"]="vcluster-platform";value["tenant"]="sync-demo";value'

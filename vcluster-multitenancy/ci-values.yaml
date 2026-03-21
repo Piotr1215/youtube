@@ -1,0 +1,6 @@
+# CI Team - syncs platform DatabaseClaim CRD from host
+sync:
+  toHost:
+    customResources:
+      databaseclaims.platform.example.io:
+        enabled: true

@@ -1,0 +1,4 @@
+experimental:
+  docker:
+    nodes:
+    - name: "worker-1"
