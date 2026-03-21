@@ -65,6 +65,26 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 
 <!-- end_slide -->
 
+## Inspect Cluster
+
+> First-class CLI tooling for Docker clusters
+
+```bash +exec
+vcluster describe my-cluster
+```
+
+<!-- end_slide -->
+
+## Network Isolation
+
+> Each cluster gets its own Docker network
+
+```bash +exec
+docker network ls --filter name=vcluster --format "table {{.Name}}\t{{.Driver}}\t{{.Scope}}"
+```
+
+<!-- end_slide -->
+
 ## Deploy + LoadBalancer
 
 > Works with LoadBalancer out of the box
@@ -117,7 +137,7 @@ vcluster connect vpn-cluster && \
   echo "Waiting for node to register..." && \
   until kubectl get nodes --no-headers 2>/dev/null | grep -q Ready; do sleep 2; done && \
   kubectl get nodes && \
-  vcluster token create --expires=1h | xclip -selection clipboard && echo "Token copied to clipboard"
+  TOKEN=$(vcluster token create --expires=1h) && echo "$TOKEN" | xclip -selection clipboard && echo "$TOKEN" && echo "Token copied to clipboard"
 ```
 
 <!-- end_slide -->
@@ -198,7 +218,7 @@ gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --com
 ## Cloud Join Token
 
 ```bash +exec
-vcluster token create --expires=1h | xclip -selection clipboard && echo "Token copied to clipboard"
+TOKEN=$(vcluster token create --expires=1h) && echo "$TOKEN" | xclip -selection clipboard && echo "$TOKEN" && echo "Token copied to clipboard"
 ```
 
 <!-- end_slide -->
@@ -214,6 +234,16 @@ gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a
 <!-- end_slide -->
 
 
+
+## VPN Tunnel Status
+
+> WireGuard tunnel connecting external nodes to the cluster
+
+```bash +exec
+gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --command="sudo tailscale status"
+```
+
+<!-- end_slide -->
 
 ## All Nodes
 
@@ -235,6 +265,17 @@ GCE_NODE=$(kubectl get nodes -o name | grep vind-node) && \
 
 <!-- end_slide -->
 
+## GPU on the Node
+
+> T4 visible as a schedulable Kubernetes resource
+
+```bash +exec
+GCE_NODE=$(kubectl get nodes -o name | grep vind-node) && \
+  kubectl describe $GCE_NODE | grep -A5 "Capacity\|Allocatable"
+```
+
+<!-- end_slide -->
+
 ## VPN Architecture
 
 ```bash +exec_replace
@@ -249,6 +290,16 @@ just boxart vpn-architecture
 ```bash +exec
 kubectl apply -f sre-demo-app/deployment.yaml && \
   kubectl rollout status deployment/sre-haiku --timeout=120s
+```
+
+<!-- end_slide -->
+
+## Under the Hood: GCE Node
+
+> Containerd containers running on the cloud VM
+
+```bash +exec
+gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --command="sudo crictl ps --output table"
 ```
 
 <!-- end_slide -->
