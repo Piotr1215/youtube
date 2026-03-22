@@ -14,7 +14,7 @@ done < vind-logo-ascii.txt
 ## Set the Driver
 
 ```bash +exec
-vcluster use driver docker
+vcluster-032 use driver docker
 ```
 
 <!-- end_slide -->
@@ -22,7 +22,7 @@ vcluster use driver docker
 ## Start Platform
 
 ```bash +exec
-docker rm -f vcluster-platform 2>/dev/null; vcluster platform start
+docker rm -f vcluster-platform 2>/dev/null; vcluster-032 platform start
 ```
 
 <!-- end_slide -->
@@ -38,7 +38,7 @@ bat --color=always --style=plain vcluster.yaml
 ## Create the Cluster
 
 ```bash +exec
-vcluster delete my-cluster 2>/dev/null; vcluster create my-cluster --values vcluster.yaml
+vcluster-032 create my-cluster --values vcluster.yaml
 ```
 
 <!-- end_slide -->
@@ -46,7 +46,7 @@ vcluster delete my-cluster 2>/dev/null; vcluster create my-cluster --values vclu
 ## Connect to Cluster
 
 ```bash +exec
-vcluster connect my-cluster && \
+vcluster-032 connect my-cluster && \
   echo "Waiting for node to register..." && \
   until kubectl get nodes 2>/dev/null | grep -q worker; do sleep 2; done && \
   kubectl wait --for=condition=Ready node --all --timeout=120s && \
@@ -70,7 +70,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 > First-class CLI tooling for Docker clusters
 
 ```bash +exec
-vcluster describe my-cluster
+vcluster-032 describe my-cluster
 ```
 
 <!-- end_slide -->
@@ -90,9 +90,9 @@ docker network ls --filter name=vcluster --format "table {{.Name}}\t{{.Driver}}\
 > Works with LoadBalancer out of the box
 
 ```bash +exec
-kubectl create deployment web --image=nginx:alpine && \
+kubectl create deployment web --image=nginx:alpine 2>/dev/null || true && \
   kubectl rollout status deployment/web --timeout=60s && \
-  kubectl expose deployment web --port=80 --type=LoadBalancer && \
+  kubectl expose deployment web --port=80 --type=LoadBalancer 2>/dev/null || true && \
   sleep 3 && \
   kubectl get svc web
 ```
@@ -123,7 +123,7 @@ bat --color=always --style=plain vpn-cluster/vcluster.yaml
 ## Create VPN Cluster
 
 ```bash +exec
-vcluster create vpn-cluster --values vpn-cluster/vcluster.yaml
+vcluster-032 create vpn-cluster --values vpn-cluster/vcluster.yaml
 ```
 
 <!-- end_slide -->
@@ -133,11 +133,11 @@ vcluster create vpn-cluster --values vpn-cluster/vcluster.yaml
 > Token outputs a curl command - paste it on any machine
 
 ```bash +exec
-vcluster connect vpn-cluster && \
+vcluster-032 connect vpn-cluster && \
   echo "Waiting for node to register..." && \
   until kubectl get nodes --no-headers 2>/dev/null | grep -q Ready; do sleep 2; done && \
   kubectl get nodes && \
-  TOKEN=$(vcluster token create --expires=1h) && echo "$TOKEN" | xclip -selection clipboard && echo "$TOKEN" && echo "Token copied to clipboard"
+  TOKEN=$(vcluster-032 token create --expires=1h) && echo "$TOKEN" | xclip -selection clipboard && echo "$TOKEN" && echo "Token copied to clipboard"
 ```
 
 <!-- end_slide -->
@@ -218,7 +218,8 @@ gcloud compute ssh vind-node --project=eng-sandbox-02 --zone=us-central1-a --com
 ## Cloud Join Token
 
 ```bash +exec
-TOKEN=$(vcluster token create --expires=1h) && echo "$TOKEN" | xclip -selection clipboard && echo "$TOKEN" && echo "Token copied to clipboard"
+TOKEN=$(vcluster-032 token create --expires=1h) && \
+  echo "$TOKEN" | xclip -selection clipboard && echo "$TOKEN" && echo "Token copied to clipboard"
 ```
 
 <!-- end_slide -->
@@ -330,7 +331,7 @@ echo "$PUBLIC_URL" | qrencode -t UTF8 -s 1 -m 2
 > Pause clusters to save resources, resume instantly
 
 ```bash +exec
-vcluster pause my-cluster
+vcluster-032 pause my-cluster
 ```
 
 <!-- end_slide -->
@@ -340,7 +341,7 @@ vcluster pause my-cluster
 > Picks up exactly where it left off
 
 ```bash +exec
-vcluster resume my-cluster && \
+vcluster-032 resume my-cluster && \
   kubectl get pods -A
 ```
 

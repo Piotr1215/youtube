@@ -18,10 +18,9 @@ SSH_KEY=$(cat ~/.ssh/id_ed25519.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/
 sudo tee "$IMG_DIR/cloud-init.yaml" > /dev/null << EOF
 #cloud-config
 hostname: cloud-node
+disable_root: false
 users:
-  - name: $USER
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
+  - name: root
     ssh_authorized_keys:
       - $SSH_KEY
 EOF

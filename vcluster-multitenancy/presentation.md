@@ -116,38 +116,6 @@ graph LR
 <!-- end_slide -->
 
 
-## Demo Architecture
-
-```mermaid +render
-graph TD
-    subgraph "Your Laptop - Docker"
-        Platform[vCluster Platform]
-        subgraph "multitenancy-host (Standalone)"
-            DEV[dev-team · Shared]
-            PROD[prod-team · Dedicated]
-            PARTNER[partner-team · Shared]
-            PRIVATE[private-team · Private]
-            SYNC[sync-demo · Shared]
-            CI[ci-team · Shared]
-        end
-        subgraph "multitenancy-host-2 (Standalone)"
-            DEV2[dev-team · Restored]
-        end
-    end
-    Platform --> DEV
-    Platform --> PROD
-    Platform --> PARTNER
-    Platform --> PRIVATE
-    Platform --> SYNC
-    Platform --> CI
-    Platform --> DEV2
-```
-
-> 8 clusters, 4 tenancy models, 2 hosts — all on Docker
-
-<!-- end_slide -->
-
-
 ## Check nodes
 
 ```bash +exec_replace
@@ -651,6 +619,38 @@ kubectl --context vcluster-docker_multitenancy-host get databaseclaims -n vclust
 > Standalone (Docker hosts) + Shared + Dedicated — Private Nodes available via VPN
 
 > **Key Point**: Fine-grained control over what crosses the boundary
+
+<!-- end_slide -->
+
+
+## Demo Architecture
+
+```mermaid +render
+graph TD
+    subgraph "Your Laptop - Docker"
+        Platform[vCluster Platform]
+        subgraph "multitenancy-host (Standalone)"
+            DEV[dev-team · Shared]
+            PROD[prod-team · Dedicated]
+            PARTNER[partner-team · Shared]
+            PRIVATE[private-team · Private]
+            SYNC[sync-demo · Shared]
+            CI[ci-team · Shared]
+        end
+        subgraph "multitenancy-host-2 (Standalone)"
+            DEV2[dev-team · Restored]
+        end
+    end
+    Platform --> DEV
+    Platform --> PROD
+    Platform --> PARTNER
+    Platform --> PRIVATE
+    Platform --> SYNC
+    Platform --> CI
+    Platform --> DEV2
+```
+
+> 8 clusters, 4 tenancy models, 2 hosts — all on Docker
 
 <!-- end_slide -->
 
