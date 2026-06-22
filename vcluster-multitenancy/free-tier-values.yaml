@@ -1,12 +1,40 @@
-# Namespace Sync + Sync Patches
 sync:
   toHost:
+    # Keep the namespace name on the host (GCP Workload Identity, NVIDIA Run:ai)
     namespaces:
       enabled: true
       mappings:
         byName:
           production: production
+    # Inject governance labels on every pod the platform sees
     pods:
       patches:
         - path: metadata.labels
           expression: 'value["managed-by"]="vcluster-platform";value["tenant"]="sync-demo";value'
+    # Shared CRD: tenant DatabaseClaims sync to the control plane
+    customResources:
+      databaseclaims.platform.example.io:
+        enabled: true
+
+# Pre-populate platform config and credentials inside the tenant
+experimental:
+  deploy:
+    vcluster:
+      manifests: |-
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: platform-config
+          namespace: default
+        data:
+          API_ENDPOINT: "https://api.platform.local"
+          ENVIRONMENT: "sync-demo"
+        ---
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: platform-credentials
+          namespace: default
+        type: Opaque
+        stringData:
+          token: "sync-demo-token"

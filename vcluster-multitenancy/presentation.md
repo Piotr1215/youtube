@@ -1,10 +1,15 @@
-# Flexible Multi-Tenancy with vCluster
-
-<!--jump_to_middle-->
-![vCluster Logo](./vcluster-logo-main.png)
+# Flexible Tenant Isolation with vCluster
 
 ```bash +exec_replace
-echo "Flexible Multi-Tenancy" | figlet -f small -w 90
+echo "Tenant Isolation" | figlet -f small -w 90
+```
+
+<!-- jump_to_middle -->
+
+```bash +exec_replace
+while IFS= read -r line; do
+    printf '\033[38;2;255;102;0m%s\033[0m\n' "$line"
+done < vcluster-logo-ascii.txt
 ```
 
 <!-- end_slide -->
@@ -33,7 +38,7 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 
 ## Namespace Tenancy
 
-![namespae](./namespaces.png) 
+![namespace](./namespaces.png)
 
 > Noisy neighbors
 
@@ -58,60 +63,54 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 <!-- end_slide -->
 
 
-<!-- include: ../_partials/what-is-vcluster.md -->
+## Levels of Tenancy
 
-<!-- end_slide -->
+> One platform, a spectrum of isolation. Each tenant cluster picks the level its workload needs.
 
-
-
-## Deploy Host Cluster
-
-```bash +exec
-vcluster use driver docker
-docker rm -f vcluster-platform 2>/dev/null; vcluster platform start
+```bash +exec_replace
+printf '\e[1;36m%s\e[0m\n\n' "ISOLATION SPECTRUM:  more sharing  →  full isolation"
+printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Shared nodes"          "█░░░" "own API + RBAC, shared worker nodes"
+printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Dedicated node pools"  "██░░" "exclusive node pool, shared platform services"
+printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes"         "███░" "dedicated nodes, own CNI + CSI, nothing shared"
+printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes + vNode" "████" "+ a runtime isolation boundary on top"
 ```
 
 <!-- end_slide -->
 
-## Create Host Cluster
+
+## Four Ways to Deploy
+
+> vCluster supports four deployment models. This talk focuses on the isolation levels: shared and private nodes.
+
+| Model | Best for |
+|---|---|
+| Shared Nodes | Internal platforms, CI/CD, dev |
+| Private Nodes | GPU, regulated, AI cloud |
+| vind | Local dev, offline CI, testing |
+| Standalone | Bare metal, edge, bootstrap |
+
+<!-- end_slide -->
+
+
+## Deploy the Platform
+
+> Set up the demo environment. We talk through what the platform does during the session.
+
+```bash +exec
+vcluster use driver docker
+vcluster platform start
+```
+
+<!-- end_slide -->
+
+
+## Create the Demo Environment
+
+> This just stands up the cluster we deploy onto. Think of it as our EKS for the session.
 
 ```bash +exec
 bash create-host.sh multitenancy-host --values vcluster.yaml
 ```
-
-<!-- end_slide -->
-
-
-## Flexible Multi-Tenancy Models
-
-```mermaid +render
-graph LR
-    subgraph "Host Cluster"
-        subgraph "Shared Services"
-            S[Monitoring, Logging, Ingress]
-        end
-        
-        subgraph "High Trust"
-            A[Team A vCluster]
-            B[Team B vCluster]
-        end
-        
-        subgraph "Partial Trust"
-            P[Partner vCluster<br/>+ Resource Quotas]
-        end
-        
-        subgraph "Zero Trust"
-            C[Client vCluster<br/>+ Dedicated Nodes]
-        end
-        
-        S ===|full access| A
-        S ===|full access| B
-        S ---|limited| P
-        S -.->|isolated| C
-    end
-```
-
-> **Flexibility**: Configure each vCluster for its trust level!
 
 <!-- end_slide -->
 
@@ -141,66 +140,58 @@ kubectl config current-context
 
 ```bash +exec
 # Ingress controller
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f ingress-nginx.yaml
 
 # Wait for ingress controller
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
+kubectl -n ingress-nginx rollout status deployment/ingress-nginx-controller --timeout=120s
 ```
 
-> **Shared Service**: All vClusters can use the same ingress controller
+> **Shared Service**: All tenant clusters can use the same ingress controller
 
 <!-- end_slide -->
 
 
-## Multi-Tenancy Challenges in Kubernetes
+<!-- include: ../_partials/what-is-vcluster.md -->
+
+<!-- end_slide -->
+
+
+## Shared Nodes
+
+> Tenant clusters share the host's worker nodes, and vCluster is highly configurable: one YAML tunes each one.
 
 ```mermaid +render
-graph TD
-    N1[Namespace A]
-    N2[Namespace B]
-    N3[Namespace C]
-    
-    SA[Shared API Server]
-    SC[Shared Control Plane]
-    SR[Shared Resources]
-    
-    N1 --> SA
-    N2 --> SA
-    N3 --> SA
-    
-    SA --> SC
-    SC --> SR
+graph TB
+    subgraph HOST["Host Cluster: shared node pool"]
+        CP["vCluster control plane (pod)"]
+        N1["node"]
+        N2["node"]
+        CP -->|tenant pods| N1
+        CP -->|tenant pods| N2
+    end
 ```
-
-> **Problems:**
-> - Limited isolation between tenants
-> - Shared control plane risks
-> - No CRD isolation
-> - Version lock-in
 
 <!-- end_slide -->
 
 
-## Demo 1: Development Team vCluster
+## Create the Dev Team Tenant Cluster
 
 ```bash +exec_replace
-vcluster connect multitenancy-host --driver docker 2>/dev/null
+vcluster connect multitenancy-host --driver docker >/dev/null 2>&1
 kubectl config current-context
 ```
 
-> Create a resource-limited vCluster for development team
+> A tenant cluster is its own Kubernetes API server, running as a pod on the shared nodes. The dev team gets full admin inside it.
 
 ```bash +exec +id:create_dev_vcluster
 # Show dev team configuration - resource quotas and limits
 cat dev-values.yaml
 
-# Create development team vCluster with resource controls
+# Create development team tenant cluster with resource controls
 vcluster create dev-team --driver helm --connect=false --values dev-values.yaml
 
-# Wait for it to be ready
+# Wait for it to be ready (poll until the pod object exists, then for readiness)
+until kubectl -n vcluster-dev-team get pod -l app=vcluster --no-headers 2>/dev/null | grep -q .; do sleep 2; done
 kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-dev-team --timeout=300s
 ```
 
@@ -211,27 +202,10 @@ kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-dev-team --ti
 <!-- end_slide -->
 
 
-
-
-## Why vCluster for Multi-Tenancy?
-
-| **Team** | **Requirements** | **vCluster Solution** |
-|---|---|---|
-| Development | Dev/Test environments | ✅ Full admin access, isolated CRDs |
-| Production | Stable, isolated workloads | ✅ Resource quotas, ingress sync |
-| Data Science | GPU access, custom tools | ✅ Node selectors, custom schedulers |
-| Partners | Limited access, compliance | ✅ Security policies, filtered sync |
-
-
-> **Multi-Tenancy**: Complete Kubernetes API compatibility with true isolation
-
-<!-- end_slide -->
-
-
-## Connect to Development vCluster
+## Connect to the Dev Tenant Cluster
 
 ```bash +exec
-# Connect to development team's vCluster
+# Connect to development team's tenant cluster
 vcluster connect dev-team --driver helm
 ```
 
@@ -240,11 +214,11 @@ vcluster connect dev-team --driver helm
 <!-- end_slide -->
 
 
-## vCluster Architecture: What's Inside?
+## What's Inside a Tenant Cluster?
 
 
 ```bash +exec
-# Show all containers in the vCluster pod
+# Show all containers in the tenant cluster pod
 kubectl --context vcluster-docker_multitenancy-host get pod -n vcluster-dev-team -l app=vcluster -o json | \
   jq -r '.items[0] | 
     "INIT CONTAINERS:\n" + 
@@ -253,23 +227,23 @@ kubectl --context vcluster-docker_multitenancy-host get pod -n vcluster-dev-team
     (.spec.containers[] | "  \(.name): \(.image)")'
 ```
 
-> **Architecture**: Init container prepares the environment, syncer synchronizes resources between host and virtual cluster!
+> **Architecture**: Init container delivers the Kubernetes binaries; the syncer container runs the virtual control plane and syncs resources to the host.
 
 <!-- end_slide -->
 
 
-## vCluster Data Storage: SQLite Inside!
+## Data Storage: SQLite Inside
 
 
 ```bash +exec
-# Check the SQLite database file inside vCluster pod
+# Check the SQLite database file inside the tenant cluster pod
 kubectl --context vcluster-docker_multitenancy-host exec -n vcluster-dev-team dev-team-0 -c syncer -- ls -lh /data/state.db
 
 # Also check for kine database (k3s uses kine as SQLite wrapper)
 kubectl --context vcluster-docker_multitenancy-host exec -n vcluster-dev-team dev-team-0 -c syncer -- ls -lh /data/
 ```
 
-> **Storage**: vCluster uses embedded SQLite - it's easy to configure external data store!
+> **Storage**: vCluster uses embedded SQLite - it's easy to configure an external data store!
 
 <!-- end_slide -->
 
@@ -281,6 +255,9 @@ kubectl --context vcluster-docker_multitenancy-host exec -n vcluster-dev-team de
 ```bash +exec
 # Create a web deployment
 kubectl apply -f web-app.yaml
+
+# Wait for the pod to exist before inspecting it
+kubectl rollout status deployment/web-app --timeout=60s
 
 # Show automatic resource limits applied to pod
 kubectl get pod -l app=web-app -o jsonpath='{.items[0].spec.containers[0].resources}' | jq . 
@@ -301,21 +278,256 @@ curl http://localhost:8081/
 <!-- end_slide -->
 
 
+## Namespace Isolation Is Useful, Until You Need More
 
-## vCluster State Management
+> Namespaces give you a boundary. Real platforms quickly need more than that.
 
-> vCluster stores all state in a single SQLite database
+```bash +exec_replace
+printf '\e[1;36m%s\e[0m\n\n' "A namespace alone cannot give you:"
+printf '\e[35m•\e[0m \e[33m%-24s\e[0m %s\n' "Real names on the host" "Workload Identity and Run:ai need them"
+printf '\e[35m•\e[0m \e[33m%-24s\e[0m %s\n' "Governance everywhere" "labels injected on every synced pod"
+printf '\e[35m•\e[0m \e[33m%-24s\e[0m %s\n' "Shared platform CRDs" "tenants consume them, install nothing"
+printf '\e[35m•\e[0m \e[33m%-24s\e[0m %s\n' "Seeded config + secrets" "every tenant starts pre-populated"
+printf '\n\e[32m%s\e[0m\n' "vCluster turns these on with one config file →"
+```
+
+<!-- end_slide -->
+
+
+## One vcluster.yaml, Your Rules
+
+```bash +exec_replace
+bat --color=always --style=plain free-tier-values.yaml
+```
 
 ```bash +exec
-# Snapshot to ephemeral docker image registry
-vcluster snapshot dev-team "oci://ttl.sh/vcluster-dev-team:1h"
+vcluster disconnect
+vcluster connect multitenancy-host --driver docker
+
+# Register the shared CRD on the control plane, then create the tenant cluster
+kubectl apply -f config-crd.yaml
+vcluster create sync-demo --driver helm --values free-tier-values.yaml
+```
+
+<!-- end_slide -->
+
+
+## The Config in Action
+
+> The same tenant cluster, now doing what a namespace cannot.
+
+```bash +exec
+# host context, so we can watch what crosses the boundary
+vcluster connect multitenancy-host --driver docker >/dev/null 2>&1
+HOST_CTX=$(kubectl config current-context)
+
+# tenant-side work
+vcluster connect sync-demo --driver helm >/dev/null 2>&1
+kubectl create namespace production 2>/dev/null || true
+kubectl create deployment demo --image=nginx:alpine 2>/dev/null || true
+kubectl rollout status deployment/demo --timeout=60s >/dev/null
+
+echo "=== 1:1 namespace on the host, not rewritten ==="
+kubectl --context "$HOST_CTX" get namespace production
+
+echo ""
+echo "=== governance labels injected on every synced pod ==="
+kubectl --context "$HOST_CTX" get pods -n vcluster-sync-demo -L managed-by,tenant
+
+echo ""
+echo "=== config + secret pre-populated inside the tenant ==="
+kubectl get configmap platform-config
+```
+
+<!-- end_slide -->
+
+
+## Private Nodes
+
+> Isolate a tenant's workloads onto dedicated nodes. Any Linux machine, bare metal or cloud VM, joins one tenant cluster over a VPN.
+
+```mermaid +render
+graph LR
+    subgraph HOST["Host Cluster"]
+        CP["vCluster control plane"]
+    end
+    subgraph PRIV["Dedicated nodes: tenant-only"]
+        N1["node"]
+        N2["node"]
+    end
+    CP <-->|VPN| N1
+    CP <-->|VPN| N2
+```
+
+<!-- end_slide -->
+
+
+## Create a Private-Nodes Tenant Cluster
+
+> Add a real machine to a tenant cluster: KVM, cloud VM, or bare metal
+
+```bash +exec_replace
+bat --color=always --style=plain private-values.yaml
+```
+
+```bash +exec
+vcluster disconnect
+vcluster connect multitenancy-host --driver docker
+vcluster create private-team --driver helm --connect=false --values private-values.yaml
+```
+
+<!-- end_slide -->
+
+
+### Generate a Join Token
+
+> Private nodes start empty. You bring your own machine and join it with one token.
+
+```bash +exec
+vcluster connect private-team --driver helm
+echo "=== No nodes until you join one ==="
+kubectl get nodes
+
+echo ""
+echo "=== Join token (paste the curl on any machine) ==="
+vcluster token create --expires=1h
+
+echo ""
+echo "=== A real VM waiting on the same host (KVM) ==="
+sudo virsh domifaddr cloud-node 2>/dev/null | grep ipv4
+```
+
+<!-- end_slide -->
+
+
+### Join the VM
+
+> SSH in, paste the curl command from the token
+
+```bash +acquire_terminal
+VM_IP=$(sudo virsh domifaddr cloud-node | awk '/ipv4/ {print $4}' | cut -d/ -f1) && ssh -o StrictHostKeyChecking=accept-new root@$VM_IP
+```
+
+<!-- end_slide -->
+
+
+### Verify the External Node
+
+> A Docker control plane plus a KVM worker, one cluster
+
+```bash +exec
+vcluster connect private-team --driver helm
+kubectl get nodes -o wide
+```
+
+<!-- end_slide -->
+
+
+### How Private Nodes Work
+
+```mermaid +render
+graph LR
+    subgraph EXT["External Machine: KVM, cloud, bare metal"]
+        KUBELET[kubelet]
+        WG[WireGuard]
+    end
+    subgraph PLAT["vCluster Platform"]
+        VPN[VPN router via Platform URL]
+    end
+    subgraph CP["Tenant Control Plane"]
+        API[API Server]
+    end
+    WG -->|outbound HTTPS only| VPN
+    VPN <-->|WireGuard tunnel| API
+    API -->|schedules pods| KUBELET
+```
+
+> The node needs only outbound HTTPS to the Platform. The control plane API is never exposed inbound.
+
+<!-- end_slide -->
+
+
+### vNode: Runtime Isolation
+
+> The fourth level: private nodes plus a hardened runtime boundary
+
+```bash +exec_replace
+printf '\e[1;36m%s\e[0m\n\n' "vNode adds runtime isolation on top of private nodes:"
+printf '\e[35m•\e[0m %s\n' "Linux user namespaces + seccomp - every container runs as non-root"
+printf '\e[35m•\e[0m %s\n' "Run privileged workloads safely: Docker-in-Docker, Kubernetes-in-Kubernetes"
+printf '\e[35m•\e[0m %s\n' "Turn on for a whole tenant: sync.toHost.pods.runtimeClassName: vnode"
+```
+
+<!-- end_slide -->
+
+
+### vNode: Same Privileged Pod, Sandboxed
+
+> A privileged hostPID pod. With vNode it still sees only its own processes.
+
+```bash +exec_replace
+printf '\e[33m%s\e[0m\n' "# ps -ef --forest    (inside the vNode-isolated pod)"
+printf '\e[37m%s\e[0m\n'   "root     1   0   vnode-init"
+printf '\e[37m%s\e[0m\n'   "root    53   1    \\_ vnode-containerd-shim"
+printf '\e[37m%s\e[0m\n'   "65535   75  53        \\_ /pause"
+printf '\e[37m%s\e[0m\n'   "root   185  53        \\_ tail -f /dev/null"
+printf '\e[37m%s\e[0m\n\n' "root   248  53        \\_ bash"
+printf '\e[1;32m%s\e[0m\n' "Without vNode, the same hostPID pod lists every process on the host."
+```
+
+<!-- end_slide -->
+
+
+## vind
+
+> Full Kubernetes in Docker. Snapshot a tenant cluster to an OCI artifact, restore it anywhere.
+
+```mermaid +render
+graph TB
+    subgraph DOCKER["Docker host: no external cluster"]
+        CP["vCluster control plane (container)"]
+        N1["worker node (container)"]
+        CP -->|local| N1
+    end
+```
+
+<!-- end_slide -->
+
+
+## vind: Kubernetes in Docker
+
+> It's just Docker containers. No VM, no kubeadm, a full cluster in under a minute.
+
+```bash +exec_replace
+printf '\e[1;36m%-25s\e[0m \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Feature" "vind" "kind"
+printf '\e[36m%-25s\e[0m \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "─────────────────────────" "────────────────────" "────────────────────"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Built-in UI" "vCluster Platform" "none"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Sleep/Wake" "native" "delete & recreate"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Load Balancers" "automatic" "manual setup"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Image Caching" "via Docker cache" "external registries"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "External Nodes" "supported (VPN)" "local only"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "CNI/CSI Options" "flexible" "limited"
+printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Snapshots" "to OCI / S3" "none"
+```
+
+<!-- end_slide -->
+
+
+## Snapshot the Tenant Cluster
+
+> One command captures the whole tenant cluster: state, config, and Helm release, into a single artifact.
+
+```bash +exec
+# Snapshot the tenant cluster to an ephemeral OCI registry (ttl.sh)
+vcluster disconnect
+vcluster connect multitenancy-host --driver docker
+vcluster snapshot create dev-team --driver helm "oci://ttl.sh/vcluster-dev-team:1h"
 ```
 
 > **Backup Options:**
-> - `vcluster snapshot` to OCI/S3/Container
-> - Direct SQLite backup
+> - `vcluster snapshot create` to OCI, S3, or a container path
+> - Works on any vCluster, not just Docker
 > - Platform API backups (Pro)
-> - Volume snapshots
 
 <!-- end_slide -->
 
@@ -334,7 +546,8 @@ crane manifest ttl.sh/vcluster-dev-team:1h | jq '{
 
 <!-- end_slide -->
 
-### Delete dev-team from host1
+
+### Delete dev-team from the first host
 
 ```bash +exec
 vcluster disconnect
@@ -344,7 +557,8 @@ vcluster delete dev-team --driver helm --delete-context
 
 <!-- end_slide -->
 
-### Create a second host cluster
+
+### Create a second control plane cluster
 
 ```bash +exec
 bash create-host.sh multitenancy-host-2 --values vcluster.yaml
@@ -353,7 +567,9 @@ bash create-host.sh multitenancy-host-2 --values vcluster.yaml
 <!-- end_slide -->
 
 
-> Restore our virtual cluster onto the new host
+### Restore onto the new host
+
+> Restore our tenant cluster onto the new control plane cluster
 
 ```bash +exec
 vcluster create dev-team --driver helm --restore "oci://ttl.sh/vcluster-dev-team:1h"
@@ -378,332 +594,73 @@ curl http://localhost:8081/
 <!-- end_slide -->
 
 
-## Demo 2: Production Team with Advanced Networking
+## The Tenant Isolation Spectrum
 
-> Create a production vCluster with DNS resolution and node syncing
-
-```bash +exec
-# Show production configuration - DNS and cross-vCluster communication
-vcluster connect multitenancy-host --driver docker
-cat prod-values.yaml
-
-# Create production vCluster
-vcluster create prod-team --driver helm --connect=false --values prod-values.yaml
-
-# Wait for ready
-kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-prod-team --timeout=300s
-```
-
-> **Advanced Features**: Real nodes, custom DNS, cross-vCluster service discovery!
-
-<!-- end_slide -->
-
-
-## Connect to Production vCluster
-
-```bash +exec
-# Connect to production team's vCluster
-vcluster connect prod-team --driver helm
-```
-
-<!-- end_slide -->
-
-
-## Production Team: Deploy with Cross-vCluster DNS
-
-> Production team can resolve services from other vClusters
-
-```bash +exec
-# Create production app
-kubectl apply -f web-app.yaml
-
-# Create a service alias for dev team to access
-kubectl expose deployment web-app --name=prod-api --port=80
-
-# Show real nodes synced from host with labels
-kubectl get nodes -L team
-
-# Test cross-namespace DNS resolution
-kubectl run dns-test --image=busybox:1.28 --rm -it --restart=Never -- nslookup kubernetes.default.svc.cluster.local
-```
-
-> **Flexibility**: Ingresses sync to host cluster while keeping workloads isolated!
-
-<!-- end_slide -->
-
-
-
-## Demo 3: Partner Team with Pre-populated Resources
-
-> Create a vCluster with platform credentials pre-installed
-
-```bash +exec
-# Disconnect from current context
-vcluster disconnect
-
-# Show partner configuration - pre-populated resources
-vcluster connect multitenancy-host --driver docker
-cat partner-values.yaml
-```
-
-> **Pre-populated**: Partners get platform configs and credentials automatically!
-
-<!-- end_slide -->
-
-
-## Create Partner vCluster
-
-```bash +exec
-# Create partner vCluster with restricted configuration
-vcluster create partner-team --driver helm --connect=false --values partner-values.yaml
-
-# Wait for it to be ready
-kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-partner-team --timeout=300s
-```
-
-<!-- end_slide -->
-
-
-## Partner Team: Limited Node View
-
-```bash +exec
-# Connect to partner vCluster
-vcluster connect partner-team --driver helm
-
-# Show pre-populated resources
-kubectl get configmap,secret -n default
-
-# Show pods in all namespaces
-kubectl get pods -A
-```
-
-> **Security**: Partners operate in a controlled sandbox
-
-<!-- end_slide -->
-
-
-## Private Nodes Team
-
-> GPU workloads, compliance, bare metal — pods run only on dedicated machines
+> Not a ranking, a spectrum. Each tenant cluster picks the level its workload needs, trading host integration for isolation.
 
 ```bash +exec_replace
-bat --color=always --style=plain private-values.yaml
-```
-
-```bash +exec
-vcluster disconnect
-vcluster connect multitenancy-host --driver docker
-vcluster create private-team --driver helm --values private-values.yaml
-```
-
-<!-- end_slide -->
-
-## Namespace Sync + Sync Patches
-
-```bash +exec_replace
-bat --color=always --style=plain free-tier-values.yaml
+printf '\e[38;5;208m%s\e[0m\n\n' "more sharing, lower overhead   ─────────▶   full isolation, higher overhead"
+printf '\e[1;33m%-20s%-20s%-20s%s\e[0m\n' "Namespace" "Shared Nodes" "Private Nodes" "Private + vNode"
+printf '\e[38;5;208m%s\e[0m\n' "░░░░                █░░░                ███░                ████"
+printf '\e[37m%-20s%-20s%-20s%s\e[0m\n' "soft limits only" "own API server" "dedicated nodes" "runtime sandbox"
+printf '\e[37m%-20s%-20s%-20s%s\e[0m\n\n' "the starting pain" "dev-team demo" "KVM node demo" "privileged-safe"
+printf '\e[32m%s\e[0m\n' "vind ran snapshot and restore: the same models, packaged in Docker."
 ```
 
 <!-- end_slide -->
 
-## Create vCluster with Sync Features
 
-```bash +exec
-vcluster disconnect
-vcluster connect multitenancy-host --driver docker
-vcluster create sync-demo --driver helm --values free-tier-values.yaml
-```
-
-<!-- end_slide -->
-
-## Namespace Sync
-
-> GCP Workload Identity, NVIDIA Run:ai — need real namespace names, not rewritten ones
-
-```bash +exec
-vcluster connect sync-demo --driver helm
-
-# Create namespace inside vCluster
-kubectl create namespace production
-
-# Verify it exists on the host cluster with the same name
-kubectl --context vcluster-docker_multitenancy-host get namespace production
-```
-
-<!-- end_slide -->
-
-## Sync Patches
-
-> Tenants deploy freely, platform team auto-injects governance labels on every synced pod
-
-```bash +exec
-# Deploy inside the vCluster - tenant sees no special labels
-kubectl create deployment patch-test --image=nginx:alpine 2>/dev/null || true
-kubectl rollout status deployment/patch-test --timeout=60s
-echo "=== Tenant view (inside vCluster) ==="
-kubectl get pod -l app=patch-test -o custom-columns=NAME:.metadata.name,LABELS:.metadata.labels
-
-echo ""
-echo "=== Host view (governance labels injected) ==="
-kubectl --context vcluster-docker_multitenancy-host get pods -n vcluster-sync-demo -l managed-by=vcluster-platform -o custom-columns=NAME:.metadata.name,MANAGED-BY:.metadata.labels.managed-by,TENANT:.metadata.labels.tenant
-```
-
-<!-- end_slide -->
-
-## CRD Sync: Platform CRD on Host
-
-> Platform team provides a DatabaseClaim CRD — like Crossplane but simpler
-
-```bash +exec
-vcluster disconnect
-vcluster connect multitenancy-host --driver docker
-kubectl apply -f platform-crd.yaml
-kubectl get crd databaseclaims.platform.example.io
-```
-
-<!-- end_slide -->
-
-## CRD Sync: CI Team
-
-```bash +exec_replace
-bat --color=always --style=plain ci-values.yaml
-```
-
-```bash +exec
-vcluster create ci-team --driver helm --values ci-values.yaml
-```
-
-<!-- end_slide -->
-
-## CRD Sync: Tenant Creates a DatabaseClaim
-
-> CRD synced from host — tenant uses it without installing anything
-
-```bash +exec
-echo "=== CRD available inside vCluster ==="
-kubectl get crd databaseclaims.platform.example.io
-
-echo ""
-echo "=== Tenant creates a database claim ==="
-kubectl apply -f - <<'EOF'
-apiVersion: platform.example.io/v1
-kind: DatabaseClaim
-metadata:
-  name: my-db
-spec:
-  engine: postgres
-  size: small
-EOF
-kubectl get databaseclaims
-
-echo ""
-echo "=== Synced to host cluster ==="
-kubectl --context vcluster-docker_multitenancy-host get databaseclaims -n vcluster-ci-team
-```
-
-<!-- end_slide -->
-
-## Flexible Resource Syncing
-
-> Choose exactly what syncs between virtual and host clusters
-
-| Resource | Dev | Prod | Partner | Private | Sync | CI |
-|---|---|---|---|---|---|---|
-| Pods | ✅ Quotas | ✅ All | ✅ Tolerations | ✅ | ✅ Patched | ✅ |
-| Namespaces | rewritten | rewritten | rewritten | rewritten | 1:1 mapped | rewritten |
-| Custom CRDs | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ DatabaseClaim |
-| Sync Patches | ❌ | ❌ | ❌ | ❌ | ✅ Labels | ❌ |
-| Pre-populated | ❌ | ❌ | ✅ Secrets | ❌ | ❌ | ❌ |
-| Tenancy | 🔵 Shared | 🟢 Dedicated | 🟡 Shared | 🔴 Private | 🔵 Shared | 🔵 Shared |
-
-> Standalone (Docker hosts) + Shared + Dedicated — Private Nodes available via VPN
-
-> **Key Point**: Fine-grained control over what crosses the boundary
-
-<!-- end_slide -->
-
-
-## Demo Architecture
-
-```mermaid +render
-graph TD
-    subgraph "Your Laptop - Docker"
-        Platform[vCluster Platform]
-        subgraph "multitenancy-host (Standalone)"
-            DEV[dev-team · Shared]
-            PROD[prod-team · Dedicated]
-            PARTNER[partner-team · Shared]
-            PRIVATE[private-team · Private]
-            SYNC[sync-demo · Shared]
-            CI[ci-team · Shared]
-        end
-        subgraph "multitenancy-host-2 (Standalone)"
-            DEV2[dev-team · Restored]
-        end
-    end
-    Platform --> DEV
-    Platform --> PROD
-    Platform --> PARTNER
-    Platform --> PRIVATE
-    Platform --> SYNC
-    Platform --> CI
-    Platform --> DEV2
-```
-
-> 8 clusters, 4 tenancy models, 2 hosts — all on Docker
-
-<!-- end_slide -->
-
-
-## Compare vCluster Configurations
-
-> Each team's unique capabilities:
-
-```bash +exec
-echo "=== Host clusters (Docker driver) ==="
-vcluster list --driver docker
-
-echo ""
-echo "=== vClusters on multitenancy-host ==="
-vcluster connect multitenancy-host --driver docker
-vcluster list --driver helm
-
-echo ""
-echo "=== vClusters on multitenancy-host-2 ==="
-vcluster disconnect
-vcluster connect multitenancy-host-2 --driver docker
-vcluster list --driver helm
-```
-
-> **Key Insight**: Same platform, different isolation levels per team!
-
-<!-- end_slide -->
-
-
-## vCluster: The Complete Multi-Tenancy Solution
+## vCluster: The Complete Tenant Isolation Solution
 
 | Use Case | → | How vCluster Solves It |
 |---|---|---|
-| Dev/Test environments | → | ✅ Provision clusters in seconds via Docker driver |
+| Dev/Test environments | → | ✅ Provision tenant clusters in seconds via Docker driver |
 | Tenant isolation | → | ✅ Full admin access with no noisy neighbors |
 | Snapshot portability | → | ✅ Small OCI image, restore on any host |
 | Platform governance | → | ✅ Sync patches inject labels transparently |
-| CRD sharing | → | ✅ Platform CRDs available in every vCluster |
+| CRD sharing | → | ✅ Platform CRDs available in every tenant cluster |
 | Namespace mapping | → | ✅ 1:1 sync for Workload Identity, Run:ai |
 | Security boundaries | → | ✅ Isolated control planes, resource quotas |
 
-> Six teams, four tenancy models, two hosts, eight clusters — all on Docker, all free tier
+> Tenant clusters at every isolation level, across two control plane clusters on the free tier
 
 <!-- end_slide -->
 
 
-## That's All Folks!
+## Where to Go From Here
 
-> Questions?
+```markdown
+Docs:
+  Deployment models:
+    vcluster.com/docs/vcluster/deploy/overview
 
-<!--jump_to_middle-->
-![vCluster Logo](./vcluster-logo-main.png)
+  Shared & Private Nodes quick starts:
+    vcluster.com/docs/vcluster/quick-start
+
+  vNode runtime isolation:
+    vnode.com
+
+  vCluster Platform (free tier):
+    vcluster.com/docs/platform
+```
+
+> Try it on the free tier: real isolation, no credit card.
+
+<!-- end_slide -->
+
+
+<!-- new_lines: 3 -->
 
 ```bash +exec_replace
-echo "Thank You!" | figlet -f small -w 90
+while IFS= read -r line; do
+    printf '\033[38;2;255;102;0m%s\033[0m\n' "$line"
+done < vcluster-logo-ascii.txt
+```
+
+<!-- new_lines: 5 -->
+
+<!-- jump_to_middle -->
+
+```bash +exec_replace
+echo "Questions?" | figlet -f small -w 90
 ```
