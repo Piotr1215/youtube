@@ -60,7 +60,7 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 
 ## Levels of Tenancy
 
-> One platform, a spectrum of isolation. Each tenant cluster picks the level its workload needs.
+> One platform, a spectrum of isolation. Each tenant cluster picks the level its workload needs; this talk drives shared and private nodes.
 
 ```bash +exec_replace
 printf '\e[1;36m%s\e[0m\n\n' "ISOLATION SPECTRUM:  more sharing  →  full isolation"
@@ -68,20 +68,9 @@ printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Shared nodes"          "█
 printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Dedicated node pools"  "██░░" "exclusive node pool, shared platform services"
 printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes"         "███░" "dedicated nodes, own CNI + CSI, nothing shared"
 printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes + vNode" "████" "+ a runtime isolation boundary on top"
+printf '\n\e[33m%s\e[0m\n' "vCluster ships four deployment models:"
+printf '  \e[37m%s\e[0m\n' "shared nodes  ·  private nodes  ·  vind (local dev, offline CI)  ·  standalone (bare metal, edge)"
 ```
-
-<!-- end_slide -->
-
-## Four Ways to Deploy
-
-> vCluster supports four deployment models. This talk focuses on the isolation levels: shared and private nodes.
-
-| Model | Best for |
-|---|---|
-| Shared Nodes | Internal platforms, CI/CD, dev |
-| Private Nodes | GPU, regulated, AI cloud |
-| vind | Local dev, offline CI, testing |
-| Standalone | Bare metal, edge, bootstrap |
 
 <!-- end_slide -->
 
@@ -149,6 +138,7 @@ kubectl -n ingress-nginx rollout status deployment/ingress-nginx-controller --ti
 > Tenant clusters share the host's worker nodes, and vCluster is highly configurable: one YAML tunes each one.
 
 ```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','secondaryColor':'#26303b','tertiaryColor':'#1b2129','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','edgeLabelBackground':'#161b22','fontSize':'18px'}}}%%
 graph TB
     subgraph HOST["Host Cluster: shared node pool"]
         CP["vCluster control plane (pod)"]
@@ -274,11 +264,17 @@ printf '\n\e[32m%s\e[0m\n' "vCluster turns these on with one config file →"
 
 <!-- end_slide -->
 
-## One vcluster.yaml, Your Rules
+## One vcluster.yaml
 
 ```bash +exec_replace
 bat --color=always --style=plain free-tier-values.yaml
 ```
+
+<!-- end_slide -->
+
+## Apply the Config
+
+> The whole tenant cluster comes from that one file.
 
 ```bash +exec
 vcluster disconnect
@@ -325,6 +321,7 @@ kubectl get configmap platform-config
 > Isolate a tenant's workloads onto dedicated nodes. Any Linux machine, bare metal or cloud VM, joins one tenant cluster over a VPN.
 
 ```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','secondaryColor':'#26303b','tertiaryColor':'#1b2129','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','edgeLabelBackground':'#161b22','fontSize':'18px'}}}%%
 graph LR
     subgraph HOST["Host Cluster"]
         CP["vCluster control plane"]
@@ -351,6 +348,11 @@ bat --color=always --style=plain private-values.yaml
 vcluster disconnect
 vcluster connect multitenancy-host --driver docker
 vcluster create private-team --driver helm --connect=false --values private-values.yaml
+
+# pre-warm the vNode runtime; the DaemonSet activates on the node once it joins
+vcluster connect private-team --driver helm
+helm upgrade --install vnode-runtime vnode-runtime \
+  --repo https://charts.loft.sh -n vnode-runtime --create-namespace
 ```
 
 <!-- end_slide -->
@@ -399,6 +401,7 @@ kubectl get nodes -o wide
 ### How Private Nodes Work
 
 ```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','secondaryColor':'#26303b','tertiaryColor':'#1b2129','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','edgeLabelBackground':'#161b22','fontSize':'18px'}}}%%
 graph LR
     subgraph EXT["External Machine: KVM, cloud, bare metal"]
         KUBELET[kubelet]
@@ -440,8 +443,8 @@ kubectl exec bad-boy -- ps -ef | grep -E 'kubelet|containerd|sshd|systemd' | gre
 
 ```bash +exec
 vcluster connect private-team --driver helm
-helm upgrade --install vnode-runtime vnode-runtime \
-  --repo https://charts.loft.sh -n vnode-runtime --create-namespace --wait --timeout=180s
+# runtime was pre-installed at tenant creation; confirm it is live on the node
+kubectl -n vnode-runtime wait --for=condition=Ready pod --all --timeout=180s
 kubectl delete pod bad-boy --ignore-not-found --wait
 kubectl apply -f bad-boy-vnode.yaml
 kubectl wait --for=condition=Ready pod/bad-boy --timeout=120s
@@ -459,6 +462,7 @@ echo "Same privileged pod. Its process view stops at the sandbox."
 > Full Kubernetes in Docker. Snapshot a tenant cluster to an OCI artifact, restore it anywhere.
 
 ```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','secondaryColor':'#26303b','tertiaryColor':'#1b2129','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','edgeLabelBackground':'#161b22','fontSize':'18px'}}}%%
 graph TB
     subgraph DOCKER["Docker host: no external cluster"]
         CP["vCluster control plane (container)"]
