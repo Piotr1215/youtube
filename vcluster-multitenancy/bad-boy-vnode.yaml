@@ -1,0 +1,17 @@
+# The same bad boy, with one line added: runtimeClassName: vnode.
+# vNode drops the pod into a virtual node, so hostPID and privileged
+# now stop at the sandbox. The dedicated node underneath stays untouched.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-boy
+spec:
+  runtimeClassName: vnode
+  hostPID: true
+  terminationGracePeriodSeconds: 1
+  containers:
+    - name: bad-boy
+      image: ubuntu:jammy
+      command: ["tail", "-f", "/dev/null"]
+      securityContext:
+        privileged: true

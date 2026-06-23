@@ -14,7 +14,6 @@ done < vcluster-logo-ascii.txt
 
 <!-- end_slide -->
 
-
 ## About Me
 
 ```bash +exec_replace
@@ -35,7 +34,6 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 
 <!-- end_slide -->
 
-
 ## Namespace Tenancy
 
 ![namespace](./namespaces.png)
@@ -43,7 +41,6 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 > Noisy neighbors
 
 <!-- end_slide -->
-
 
 ## vCluster Tenancy
 
@@ -53,7 +50,6 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 
 <!-- end_slide -->
 
-
 ## vCluster Advanced Tenancy
 
 ![advanced-tenancy](./vcluster-private.png) 
@@ -61,7 +57,6 @@ qrencode -t UTF8 -m 2 "https://cloudrumble.net"
 > Your own cluster and infra
 
 <!-- end_slide -->
-
 
 ## Levels of Tenancy
 
@@ -77,7 +72,6 @@ printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes + vNode" "█
 
 <!-- end_slide -->
 
-
 ## Four Ways to Deploy
 
 > vCluster supports four deployment models. This talk focuses on the isolation levels: shared and private nodes.
@@ -91,7 +85,6 @@ printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes + vNode" "█
 
 <!-- end_slide -->
 
-
 ## Deploy the Platform
 
 > Set up the demo environment. We talk through what the platform does during the session.
@@ -103,7 +96,6 @@ vcluster platform start
 
 <!-- end_slide -->
 
-
 ## Create the Demo Environment
 
 > This just stands up the cluster we deploy onto. Think of it as our EKS for the session.
@@ -113,7 +105,6 @@ bash create-host.sh multitenancy-host --values vcluster.yaml
 ```
 
 <!-- end_slide -->
-
 
 ## Check nodes
 
@@ -130,7 +121,6 @@ kubectl label $WORKER team=shared --overwrite
 ```
 
 <!-- end_slide -->
-
 
 ## Install Shared Services
 
@@ -150,11 +140,9 @@ kubectl -n ingress-nginx rollout status deployment/ingress-nginx-controller --ti
 
 <!-- end_slide -->
 
-
 <!-- include: ../_partials/what-is-vcluster.md -->
 
 <!-- end_slide -->
-
 
 ## Shared Nodes
 
@@ -172,7 +160,6 @@ graph TB
 ```
 
 <!-- end_slide -->
-
 
 ## Create the Dev Team Tenant Cluster
 
@@ -201,7 +188,6 @@ kubectl wait --for=condition=ready pod -l app=vcluster -n vcluster-dev-team --ti
 
 <!-- end_slide -->
 
-
 ## Connect to the Dev Tenant Cluster
 
 ```bash +exec
@@ -212,7 +198,6 @@ vcluster connect dev-team --driver helm
 > **Note**: Each team gets their own kubeconfig context
 
 <!-- end_slide -->
-
 
 ## What's Inside a Tenant Cluster?
 
@@ -231,7 +216,6 @@ kubectl --context vcluster-docker_multitenancy-host get pod -n vcluster-dev-team
 
 <!-- end_slide -->
 
-
 ## Data Storage: SQLite Inside
 
 
@@ -246,7 +230,6 @@ kubectl --context vcluster-docker_multitenancy-host exec -n vcluster-dev-team de
 > **Storage**: vCluster uses embedded SQLite - it's easy to configure an external data store!
 
 <!-- end_slide -->
-
 
 ## Dev Team: Deploy Applications  
 
@@ -265,7 +248,6 @@ kubectl get pod -l app=web-app -o jsonpath='{.items[0].spec.containers[0].resour
 
 <!-- end_slide -->
 
-
 ### Web Page
 
 ```bash +exec
@@ -276,7 +258,6 @@ curl http://localhost:8081/
 ```
 
 <!-- end_slide -->
-
 
 ## Namespace Isolation Is Useful, Until You Need More
 
@@ -292,7 +273,6 @@ printf '\n\e[32m%s\e[0m\n' "vCluster turns these on with one config file →"
 ```
 
 <!-- end_slide -->
-
 
 ## One vcluster.yaml, Your Rules
 
@@ -310,7 +290,6 @@ vcluster create sync-demo --driver helm --values free-tier-values.yaml
 ```
 
 <!-- end_slide -->
-
 
 ## The Config in Action
 
@@ -341,7 +320,6 @@ kubectl get configmap platform-config
 
 <!-- end_slide -->
 
-
 ## Private Nodes
 
 > Isolate a tenant's workloads onto dedicated nodes. Any Linux machine, bare metal or cloud VM, joins one tenant cluster over a VPN.
@@ -361,7 +339,6 @@ graph LR
 
 <!-- end_slide -->
 
-
 ## Create a Private-Nodes Tenant Cluster
 
 > Add a real machine to a tenant cluster: KVM, cloud VM, or bare metal
@@ -377,7 +354,6 @@ vcluster create private-team --driver helm --connect=false --values private-valu
 ```
 
 <!-- end_slide -->
-
 
 ### Generate a Join Token
 
@@ -399,7 +375,6 @@ sudo virsh domifaddr cloud-node 2>/dev/null | grep ipv4
 
 <!-- end_slide -->
 
-
 ### Join the VM
 
 > SSH in, paste the curl command from the token
@@ -409,7 +384,6 @@ VM_IP=$(sudo virsh domifaddr cloud-node | awk '/ipv4/ {print $4}' | cut -d/ -f1)
 ```
 
 <!-- end_slide -->
-
 
 ### Verify the External Node
 
@@ -421,7 +395,6 @@ kubectl get nodes -o wide
 ```
 
 <!-- end_slide -->
-
 
 ### How Private Nodes Work
 
@@ -446,37 +419,40 @@ graph LR
 
 <!-- end_slide -->
 
+### vNode: A Privileged Pod Owns the Node
 
-### vNode: Runtime Isolation
+> A dedicated KVM node still runs whatever the tenant schedules. A privileged hostPID pod owns the whole machine.
 
-> The fourth level: private nodes plus a hardened runtime boundary
-
-```bash +exec_replace
-printf '\e[1;36m%s\e[0m\n\n' "vNode adds runtime isolation on top of private nodes:"
-printf '\e[35m•\e[0m %s\n' "Linux user namespaces + seccomp - every container runs as non-root"
-printf '\e[35m•\e[0m %s\n' "Run privileged workloads safely: Docker-in-Docker, Kubernetes-in-Kubernetes"
-printf '\e[35m•\e[0m %s\n' "Turn on for a whole tenant: sync.toHost.pods.runtimeClassName: vnode"
+```bash +exec
+vcluster connect private-team --driver helm
+kubectl apply -f bad-boy.yaml
+kubectl wait --for=condition=Ready pod/bad-boy --timeout=90s
+echo ""
+echo "=== ps -ef inside the pod: the whole node is in reach ==="
+kubectl exec bad-boy -- ps -ef | grep -E 'kubelet|containerd|sshd|systemd' | grep -v grep | head
 ```
 
 <!-- end_slide -->
 
+### vNode: Same Pod, Contained
 
-### vNode: Same Privileged Pod, Sandboxed
+> One line, runtimeClassName: vnode, drops the same privileged pod into a virtual node. hostPID stops at the sandbox.
 
-> A privileged hostPID pod. With vNode it still sees only its own processes.
-
-```bash +exec_replace
-printf '\e[33m%s\e[0m\n' "# ps -ef --forest    (inside the vNode-isolated pod)"
-printf '\e[37m%s\e[0m\n'   "root     1   0   vnode-init"
-printf '\e[37m%s\e[0m\n'   "root    53   1    \\_ vnode-containerd-shim"
-printf '\e[37m%s\e[0m\n'   "65535   75  53        \\_ /pause"
-printf '\e[37m%s\e[0m\n'   "root   185  53        \\_ tail -f /dev/null"
-printf '\e[37m%s\e[0m\n\n' "root   248  53        \\_ bash"
-printf '\e[1;32m%s\e[0m\n' "Without vNode, the same hostPID pod lists every process on the host."
+```bash +exec
+vcluster connect private-team --driver helm
+helm upgrade --install vnode-runtime vnode-runtime \
+  --repo https://charts.loft.sh -n vnode-runtime --create-namespace --wait --timeout=180s
+kubectl delete pod bad-boy --ignore-not-found --wait
+kubectl apply -f bad-boy-vnode.yaml
+kubectl wait --for=condition=Ready pod/bad-boy --timeout=120s
+echo ""
+echo "=== ps -ef inside the same pod, now vnode-sandboxed ==="
+kubectl exec bad-boy -- ps -ef
+echo ""
+echo "Same privileged pod. Its process view stops at the sandbox."
 ```
 
 <!-- end_slide -->
-
 
 ## vind
 
@@ -492,7 +468,6 @@ graph TB
 ```
 
 <!-- end_slide -->
-
 
 ## vind: Kubernetes in Docker
 
@@ -512,7 +487,6 @@ printf '%-25s \e[32m%-20s\e[0m \e[33m%-20s\e[0m\n' "Snapshots" "to OCI / S3" "no
 
 <!-- end_slide -->
 
-
 ## Snapshot the Tenant Cluster
 
 > One command captures the whole tenant cluster: state, config, and Helm release, into a single artifact.
@@ -531,7 +505,6 @@ vcluster snapshot create dev-team --driver helm "oci://ttl.sh/vcluster-dev-team:
 
 <!-- end_slide -->
 
-
 ### Snapshot Artifact
 
 > OCI image on ttl.sh - expires in 1 hour
@@ -546,7 +519,6 @@ crane manifest ttl.sh/vcluster-dev-team:1h | jq '{
 
 <!-- end_slide -->
 
-
 ### Delete dev-team from the first host
 
 ```bash +exec
@@ -557,7 +529,6 @@ vcluster delete dev-team --driver helm --delete-context
 
 <!-- end_slide -->
 
-
 ### Create a second control plane cluster
 
 ```bash +exec
@@ -565,7 +536,6 @@ bash create-host.sh multitenancy-host-2 --values vcluster.yaml
 ```
 
 <!-- end_slide -->
-
 
 ### Restore onto the new host
 
@@ -576,7 +546,6 @@ vcluster create dev-team --driver helm --restore "oci://ttl.sh/vcluster-dev-team
 ```
 
 <!-- end_slide -->
-
 
 ### Web Page (restored cluster)
 
@@ -593,7 +562,6 @@ curl http://localhost:8081/
 
 <!-- end_slide -->
 
-
 ## The Tenant Isolation Spectrum
 
 > Not a ranking, a spectrum. Each tenant cluster picks the level its workload needs, trading host integration for isolation.
@@ -608,7 +576,6 @@ printf '\e[32m%s\e[0m\n' "vind ran snapshot and restore: the same models, packag
 ```
 
 <!-- end_slide -->
-
 
 ## vCluster: The Complete Tenant Isolation Solution
 
@@ -625,7 +592,6 @@ printf '\e[32m%s\e[0m\n' "vind ran snapshot and restore: the same models, packag
 > Tenant clusters at every isolation level, across two control plane clusters on the free tier
 
 <!-- end_slide -->
-
 
 ## Where to Go From Here
 
@@ -647,7 +613,6 @@ Docs:
 > Try it on the free tier: real isolation, no credit card.
 
 <!-- end_slide -->
-
 
 <!-- new_lines: 3 -->
 

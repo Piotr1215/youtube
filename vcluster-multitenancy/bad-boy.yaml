@@ -1,0 +1,16 @@
+# The "bad boy": a privileged pod with hostPID.
+# On a normal node it can see and signal every process on the machine.
+# That is full node ownership: one container breakout away from the host.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-boy
+spec:
+  hostPID: true
+  terminationGracePeriodSeconds: 1
+  containers:
+    - name: bad-boy
+      image: ubuntu:jammy
+      command: ["tail", "-f", "/dev/null"]
+      securityContext:
+        privileged: true
