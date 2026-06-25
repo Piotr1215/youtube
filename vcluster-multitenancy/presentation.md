@@ -68,8 +68,8 @@ printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Shared nodes"          "█
 printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Dedicated node pools"  "██░░" "exclusive node pool, shared platform services"
 printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes"         "███░" "dedicated nodes, own CNI + CSI, nothing shared"
 printf '%-22s \e[38;5;208m%s\e[0m  \e[37m%s\e[0m\n' "Private nodes + vNode" "████" "+ a runtime isolation boundary on top"
-printf '\n\e[33m%s\e[0m\n' "vCluster ships four deployment models:"
-printf '  \e[37m%s\e[0m\n' "shared nodes  ·  private nodes  ·  vind (local dev, offline CI)  ·  standalone (bare metal, edge)"
+printf '\n\e[33m%s\e[0m\n' "vCluster ships three deployment models:"
+printf '  \e[37m%s\e[0m\n' "shared nodes  ·  private nodes  ·  vind/standalone (local dev, CI, bare metal, edge)"
 ```
 
 <!-- end_slide -->
@@ -348,11 +348,6 @@ bat --color=always --style=plain private-values.yaml
 vcluster disconnect
 vcluster connect multitenancy-host --driver docker
 vcluster create private-team --driver helm --connect=false --values private-values.yaml
-
-# pre-warm the vNode runtime; the DaemonSet activates on the node once it joins
-vcluster connect private-team --driver helm
-helm upgrade --install vnode-runtime vnode-runtime \
-  --repo https://charts.loft.sh -n vnode-runtime --create-namespace
 ```
 
 <!-- end_slide -->
@@ -394,6 +389,14 @@ VM_IP=$(sudo virsh domifaddr cloud-node | awk '/ipv4/ {print $4}' | cut -d/ -f1)
 ```bash +exec
 vcluster connect private-team --driver helm
 kubectl get nodes -o wide
+
+heal() {
+  kubectl -n "$2" wait --for=condition=Ready pod -l "$3" --timeout=45s 2>/dev/null && return
+  kubectl -n "$2" delete pod -l "$3" --wait=false >/dev/null
+  kubectl -n "$2" rollout status "$1" --timeout=120s
+}
+heal deploy/konnectivity-agent kube-system   k8s-app=konnectivity-agent
+echo "Node ready: konnectivity tunnel up."
 ```
 
 <!-- end_slide -->
@@ -424,6 +427,8 @@ graph LR
 
 ### vNode: A Privileged Pod Owns the Node
 
+<!-- skip_slide -->
+
 > A dedicated KVM node still runs whatever the tenant schedules. A privileged hostPID pod owns the whole machine.
 
 ```bash +exec
@@ -438,6 +443,8 @@ kubectl exec bad-boy -- ps -ef | grep -E 'kubelet|containerd|sshd|systemd' | gre
 <!-- end_slide -->
 
 ### vNode: Same Pod, Contained
+
+<!-- skip_slide -->
 
 > One line, runtimeClassName: vnode, drops the same privileged pod into a virtual node. hostPID stops at the sandbox.
 
@@ -457,9 +464,9 @@ echo "Same privileged pod. Its process view stops at the sandbox."
 
 <!-- end_slide -->
 
-## vind
+## vind/standalone
 
-> Full Kubernetes in Docker. Snapshot a tenant cluster to an OCI artifact, restore it anywhere.
+> Same standalone binary, run in Docker (vind) or on bare metal. Snapshot a tenant cluster to an OCI artifact, restore it anywhere.
 
 ```mermaid +render
 %%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','secondaryColor':'#26303b','tertiaryColor':'#1b2129','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','edgeLabelBackground':'#161b22','fontSize':'18px'}}}%%
@@ -575,8 +582,8 @@ printf '\e[38;5;208m%s\e[0m\n\n' "more sharing, lower overhead   ─────
 printf '\e[1;33m%-20s%-20s%-20s%s\e[0m\n' "Namespace" "Shared Nodes" "Private Nodes" "Private + vNode"
 printf '\e[38;5;208m%s\e[0m\n' "░░░░                █░░░                ███░                ████"
 printf '\e[37m%-20s%-20s%-20s%s\e[0m\n' "soft limits only" "own API server" "dedicated nodes" "runtime sandbox"
-printf '\e[37m%-20s%-20s%-20s%s\e[0m\n\n' "the starting pain" "dev-team demo" "KVM node demo" "privileged-safe"
-printf '\e[32m%s\e[0m\n' "vind ran snapshot and restore: the same models, packaged in Docker."
+printf '\e[37m%-20s%-20s%-20s%s\e[0m\n\n' "the starting point" "dev-team demo" "KVM node demo" "privileged-safe"
+printf '\e[32m%s\e[0m\n' "vind/standalone ran snapshot and restore: the same models, packaged in Docker."
 ```
 
 <!-- end_slide -->

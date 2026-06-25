@@ -5,7 +5,10 @@ set -eo pipefail
 
 IMG_DIR="/var/lib/libvirt/images"
 VM_NAME="cloud-node"
-CLOUD_IMG="https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+# Ubuntu 24.04 (noble) ships kernel 6.8. vnode-runtime needs >= 6.1; jammy's 5.15
+# fails the vnode-manager kernel check and crash-loops, hanging the vNode demo.
+CLOUD_IMG_FILE="noble-server-cloudimg-amd64.img"
+CLOUD_IMG="https://cloud-images.ubuntu.com/noble/current/${CLOUD_IMG_FILE}"
 
 # Serialize runs: two concurrent invocations racing on the same qcow2 corrupt a live disk
 exec 9>"/tmp/create-cloud-vm-${VM_NAME}.lock"
@@ -15,9 +18,9 @@ if ! flock -n 9; then
 fi
 
 # Download cloud image if not present
-if [[ ! -f "$IMG_DIR/jammy-server-cloudimg-amd64.img" ]]; then
+if [[ ! -f "$IMG_DIR/$CLOUD_IMG_FILE" ]]; then
     echo "Downloading Ubuntu cloud image..."
-    sudo wget -q --show-progress -O "$IMG_DIR/jammy-server-cloudimg-amd64.img" "$CLOUD_IMG"
+    sudo wget -q --show-progress -O "$IMG_DIR/$CLOUD_IMG_FILE" "$CLOUD_IMG"
 fi
 
 # Create cloud-init config
@@ -38,7 +41,7 @@ sudo virsh destroy "$VM_NAME" 2>/dev/null || true
 sudo virsh undefine "$VM_NAME" 2>/dev/null || true
 
 # Copy and resize image
-sudo cp "$IMG_DIR/jammy-server-cloudimg-amd64.img" "$IMG_DIR/$VM_NAME.qcow2"
+sudo cp "$IMG_DIR/$CLOUD_IMG_FILE" "$IMG_DIR/$VM_NAME.qcow2"
 sudo qemu-img resize "$IMG_DIR/$VM_NAME.qcow2" 10G
 
 # Create VM
@@ -47,7 +50,7 @@ sudo virt-install \
   --ram 2048 \
   --vcpus 2 \
   --disk "path=$IMG_DIR/$VM_NAME.qcow2,format=qcow2" \
-  --os-variant ubuntu22.04 \
+  --os-variant ubuntu24.04 \
   --network network=default \
   --graphics none \
   --import \

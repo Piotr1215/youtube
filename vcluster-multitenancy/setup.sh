@@ -60,6 +60,15 @@ if [ -n "$VM_IP" ]; then
     joined=$(ssh $SSH_OPTS root@"$VM_IP" 'test -d /etc/kubernetes -o -e /etc/systemd/system/kubelet.service && echo yes || echo no' 2>/dev/null)
     [ "$joined" = "no" ] && ok "clean node (no prior cluster join)" || bad "node already joined (kubelet/etc present)"
 
+    # vnode-runtime needs kernel >= 6.1; jammy's 5.15 crash-loops and hangs the vNode demo.
+    kver=$(ssh $SSH_OPTS root@"$VM_IP" 'uname -r' 2>/dev/null)
+    kmaj=${kver%%.*}; krest=${kver#*.}; kmin=${krest%%.*}
+    if [ "${kmaj:-0}" -gt 6 ] || { [ "${kmaj:-0}" -eq 6 ] && [ "${kmin:-0}" -ge 1 ]; }; then
+        ok "kernel ${kver} (>= 6.1, vnode-runtime supported)"
+    else
+        bad "kernel ${kver} too old for vnode-runtime (needs >= 6.1)"
+    fi
+
     net="no"
     for _ in 1 2 3; do
         net=$(ssh $SSH_OPTS root@"$VM_IP" 'curl -fsS -m 8 -o /dev/null -w ok https://github.com 2>/dev/null || echo no' 2>/dev/null)
