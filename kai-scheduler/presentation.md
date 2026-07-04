@@ -41,7 +41,7 @@ echo "vCluster + KAI" | figlet -f small -w 90
 # Create secret for OpenAI API (from environment variable)
 # Deploy KAI Scheduler
 # Label worker node for GPU workloads
-# Install NVIDIA device plugin
+# Install NVIDIA device plugin (legacy path; DRA driver is the GA successor)
 # Create RuntimeClass for NVIDIA containers
 # Apply KAI queues configuration
 # Preload images into kind cluster for faster demo
@@ -64,11 +64,29 @@ graph LR
 | **Feature**               | **Benefit**                        |
 | ------------------------- | ---------------------------------- |
 | Fractional GPU allocation | Share single GPU between workloads |
+| DRA-aware scheduling      | Schedule NVIDIA/AMD ResourceClaims |
 | Queue-based scheduling    | Hierarchical resource management   |
 | Topology awareness        | Optimize for hardware layout       |
 | Fair sharing              | Prevent resource monopolization    |
 
 > **Open-sourced 2025:** Enterprise GPU management for the community
+
+<!-- end_slide -->
+
+## KAI + DRA: Two Layers, Composed
+
+> *DRA allocates the device. KAI schedules and shares it.*
+
+| **Layer**        | **Owns**                                           |
+| ---------------- | -------------------------------------------------- |
+| DRA (Kubernetes) | *Which* device + selection: CEL, MIG, time-slicing |
+| KAI (scheduler)  | Queues, fair-share, gang, fractional GPU sharing   |
+
+- DeviceClass:    *device category: full GPU / MIG / VFIO (like a StorageClass)*
+- ResourceClaim:  *a workload's request for a device*
+- ResourceSlice:  *driver-published inventory of devices per node*
+
+DRA is GA and enabled by default; NVIDIA donated the GPU DRA driver to CNCF.
 
 <!-- end_slide -->
 
