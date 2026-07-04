@@ -148,13 +148,26 @@ kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
 > vCluster syncer dynamically updates allocatable values as pods start/stop, preventing oversubscription
 <!-- end_slide -->
 
+## Publish the App to a Stable URL
+
+> cloudflared dials out from localhost:5000 and serves the app at a fixed public URL.
+
+```bash +exec
+# token is personal and gitignored; lives in ~/.config/haiku-tunnel/token
+cloudflared tunnel run \
+  --token "$(cat "${CF_TOKEN_FILE:-$HOME/.config/haiku-tunnel/token}")" &
+```
+
+<!-- end_slide -->
+
 ## Scan QR Code
 
+> Scan to generate a haiku on the GPU.
+
 ```bash +exec_replace
-NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-echo "$NGROK_URL" | qrencode -t UTF8 -s 1 -m 2
+qrencode -t UTF8 -s 1 -m 2 "https://haiku.cloudrumble.net"
 echo ""
-echo "$NGROK_URL"
+echo "https://haiku.cloudrumble.net"
 ```
 
 <!-- end_slide -->
@@ -578,8 +591,8 @@ k9s -c pod
 > Cleaning up the demo environment
 
 ```bash +exec
-# Kill ngrok process
-pkill -f ngrok || true
+# Stop cloudflared tunnel
+pkill -f cloudflared || true
 
 # Delete the Kind cluster
 kind delete cluster --name kai-demo
