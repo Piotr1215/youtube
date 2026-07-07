@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Pin the host context so the haiku app can never land on another cluster
+# (e.g. the homelab). Override with DEMO_CONTEXT if needed.
+kubectl config use-context "${DEMO_CONTEXT:-kind-kai-demo}" >/dev/null 2>&1 || true
+
 # Check prerequisites
 if ! kubectl get secret openai-secret >/dev/null 2>&1; then
     echo "Missing openai-secret. Run: kubectl create secret generic openai-secret --from-literal=api-key=\$OPENAI_API_KEY" >&2
@@ -60,41 +64,7 @@ if ! kubectl wait --for=condition=Ready pod/gpu-pod --timeout=30s; then
     exit 1
 fi
 
-# Kill any existing ngrok
-pkill -f "ngrok http 5000" 2>/dev/null || true
-
-# Start ngrok in background
-ngrok http 5000 --log-level=error &
-NGROK_PID=$!
-
-# Circuit breaker for ngrok API
-MAX_ATTEMPTS=50
-ATTEMPT=0
-while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    # Check if ngrok process is still running
-    if ! kill -0 $NGROK_PID 2>/dev/null; then
-        echo "ngrok process died" >&2
-        exit 1
-    fi
-
-    # Try to get tunnel info
-    if RESPONSE=$(curl -s --max-time 1 http://localhost:4040/api/tunnels 2>/dev/null); then
-        if [ -n "$RESPONSE" ] && echo "$RESPONSE" | jq -e '.tunnels[0].public_url' >/dev/null 2>&1; then
-            export NGROK_URL=$(echo "$RESPONSE" | jq -r '.tunnels[0].public_url')
-            break
-        fi
-    fi
-
-    ATTEMPT=$((ATTEMPT + 1))
-    sleep 0.2
-done
-
-if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-    echo "Timeout waiting for ngrok API" >&2
-    kill $NGROK_PID 2>/dev/null || true
-    exit 1
-fi
-
-# Display URLs
-echo "Local:  http://localhost:5000"
-echo "Public: $NGROK_URL"
+# The app is reachable on the host through the kind NodePort mapping
+# (nvkind maps container 30500 -> host 5000). The public URL is published
+# separately by the cloudflared slide, which dials this local port.
+echo "Local: http://localhost:5000"

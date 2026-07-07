@@ -5,6 +5,11 @@ echo "Setting up GPU-enabled Kind cluster with KAI Scheduler..."
 
 # Configure Docker for GPU pass-through
 sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
+# nvkind requests the GPU via a volume mount (/var/run/nvidia-container-devices/0
+# in nvkind-config.yaml). The toolkit ignores that trigger unless this is on, so
+# without it the driver never lands in the kind node and GPU pods fail with
+# "failed to initialize NVML: ERROR_LIBRARY_NOT_FOUND".
+sudo nvidia-ctk config --in-place --set accept-nvidia-visible-devices-as-volume-mounts=true
 sudo systemctl restart docker
 
 # Wait for Docker to be ready
@@ -59,6 +64,13 @@ kubectl apply -f queues.yaml
 
 # Preload images into kind cluster for faster demo
 ./preload-images.sh
+
+# Guarantee the host context exists and is current, named predictably. Every demo
+# slide resets to kind-kai-demo before any vcluster lifecycle command, so the real
+# homelab context (kubernetes-admin@cluster.local) is never hit by accident, and
+# connect/delete can always find the vcluster.
+kind export kubeconfig --name kai-demo
+kubectl config use-context kind-kai-demo
 
 echo "━━━ Cluster Setup Complete! ━━━"
 echo "KAI Scheduler and GPU support are ready."

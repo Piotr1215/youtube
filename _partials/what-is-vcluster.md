@@ -2,21 +2,21 @@
 <!-- new_lines: 1 -->
 ```mermaid +render
 flowchart TB
-    subgraph host["Host Kubernetes Cluster"]
+    subgraph host["Control Plane Cluster"]
         subgraph vclusters[" "]
             direction LR
-            subgraph vc1["vCluster 1"]
+            subgraph vc1["Tenant Cluster 1"]
                 W1["Team 1<br/>Workloads"]
             end
 
-            subgraph vc2["vCluster 2"]
+            subgraph vc2["Tenant Cluster 2"]
                 direction TB
                 W2["Team 2<br/>Workloads"]
                 Ingress2["• Ingress"]
                 CertManager2["• Cert Manager"]
             end
 
-            subgraph vc3["vCluster 3"]
+            subgraph vc3["Tenant Cluster 3"]
                 W3["Team 3<br/>Workloads"]
             end
         end

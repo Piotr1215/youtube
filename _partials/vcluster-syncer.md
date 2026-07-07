@@ -11,26 +11,9 @@ graph LR
 ```
 <!-- new_lines: 1 -->
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-SYNCER OPERATIONS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Watch vCluster API for resources
-2. Transform names: nginx → nginx-x-default-x-vcluster
-3. Rewrite namespace: default → vcluster-namespace
-4. Track references: ConfigMap:app-config → app-config-x-default-x-vcluster
-5. Apply to host cluster
-6. Sync status back: pod.Status → vCluster
-
-WHAT IT SYNCS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-→ TO HOST: Pods, Services, Secrets (selective), ConfigMaps (selective)
-← FROM HOST: Node status, Pod conditions, Service endpoints
-↔ BIDIRECTIONAL: Annotations, Labels, Pod status
-
-RECONCILIATION LOOP:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Watch(vClusterAPI) → Transform(resource) → Apply(hostAPI) → UpdateStatus(vClusterAPI)
-                                              ↑                         ↓
-                                              └─────────────────────────┘
-EOF
+printf '\e[1;36m%s\e[0m\n\n' "WHAT THE SYNCER DOES"
+printf '  \e[35m1\e[0m  watches the vCluster API for pods, services, configmaps\n'
+printf '  \e[35m2\e[0m  rewrites names:  \e[37m%s\e[0m\n' "nginx  →  nginx-x-default-x-vcluster"
+printf '  \e[35m3\e[0m  applies the translated object to the host cluster\n'
+printf '  \e[35m4\e[0m  reflects host status back into the vCluster\n'
 ```

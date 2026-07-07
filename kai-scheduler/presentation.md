@@ -4,18 +4,8 @@ For better output display, use +exec +acquire_terminal
 To colourize output, use +exec_replace with ccze -A
 
 MERMAID THEME REFERENCE:
-Base theme for all diagrams (dark theme with subtle blue accents):
-  theme: 'dark'
-  fontSize: '22px'
-  primaryColor: '#4263EB'      (soft indigo - main nodes)
-  secondaryColor: '#5C7CFA'    (light blue - accents)
-  tertiaryColor: '#748FFC'     (very light blue - highlights)
-  primaryTextColor: '#DEE2E6'  (soft white - readable)
-  lineColor: '#6C757D'         (medium gray - connections)
-
-Special diagram overrides:
-  vCluster diagram: clusterBorder: '#FF6600' (vCluster Blaze Orange)
-                    clusterBkg: '#050B24' (vCluster Black Pearl)
+New diagrams use a high-contrast init block (orange borders, white text) so they
+stay legible on the dark slide background. See the %%{init}%% lines below.
 -->
 
 # vCluster + NVIDIA KAI Scheduler
@@ -26,13 +16,38 @@ echo "vCluster + KAI" | figlet -f small -w 90
 ```
 
 <!-- jump_to_middle -->
-![vCluster Logo](./vcluster-logo-main.png)
+
+```bash +exec_replace
+while IFS= read -r line; do
+    printf '\033[38;2;255;102;0m%s\033[0m\n' "$line"
+done < vcluster-logo-ascii.txt
+```
+
+<!-- end_slide -->
+
+## About Me
+
+```bash +exec_replace
+echo "Piotr Zaniewski" | figlet -f small -w 90
+```
+
+> **Head of Engineering Enablement** @ vCluster
+
+```bash +exec_replace
+printf "  Expertise  │  Platform teams, Kubernetes, GitOps, SRE, CNCF\n  Speaking   │  Workshops, presentations, live demos\n  Content    │  YouTube, Medium, Killercoda\n  Projects   │  Neovim, CLI tools, MCP servers, K8s operators" | ccze -A
+```
+
+```bash +exec_replace
+qrencode -t UTF8 -m 2 "https://cloudrumble.net"
+```
+
+> cloudrumble.net  ·  github.com/Piotr1215  ·  @cloud-native-corner
 
 <!-- end_slide -->
 
 ## Setup Demo Environment
 
-> Running preflight setup for the demo
+> Kick this off first. It provisions in the background while we cover the why and the how.
 
 ```bash +exec
 # Configure Docker for GPU pass-through
@@ -46,138 +61,6 @@ echo "vCluster + KAI" | figlet -f small -w 90
 # Apply KAI queues configuration
 # Preload images into kind cluster for faster demo
 ./setup-cluster.sh
-```
-
-<!-- end_slide -->
-
-## What is NVIDIA KAI Scheduler?
-
-> **Advanced Kubernetes scheduler for GPU workload optimization**
-
-```mermaid +render
-graph LR
-    GPU[1 GPU] --> A[0.5 Training]
-    GPU --> B[0.25 Inference]
-    GPU --> C[0.25 Dev]
-```
-
-| **Feature**               | **Benefit**                        |
-| ------------------------- | ---------------------------------- |
-| Fractional GPU allocation | Share single GPU between workloads |
-| DRA-aware scheduling      | Schedule NVIDIA/AMD ResourceClaims |
-| Queue-based scheduling    | Hierarchical resource management   |
-| Topology awareness        | Optimize for hardware layout       |
-| Fair sharing              | Prevent resource monopolization    |
-
-> **Open-sourced 2025:** Enterprise GPU management for the community
-
-<!-- end_slide -->
-
-## KAI + DRA: Two Layers, Composed
-
-> *DRA allocates the device. KAI schedules and shares it.*
-
-| **Layer**        | **Owns**                                           |
-| ---------------- | -------------------------------------------------- |
-| DRA (Kubernetes) | *Which* device + selection: CEL, MIG, time-slicing |
-| KAI (scheduler)  | Queues, fair-share, gang, fractional GPU sharing   |
-
-- DeviceClass:    *device category: full GPU / MIG / VFIO (like a StorageClass)*
-- ResourceClaim:  *a workload's request for a device*
-- ResourceSlice:  *driver-published inventory of devices per node*
-
-DRA is GA and enabled by default; NVIDIA donated the GPU DRA driver to CNCF.
-
-<!-- end_slide -->
-
-## Verify GPU Access
-
-> Running nvidia-smi in a test pod to confirm GPU passthrough is working
-
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
-```
-
-```bash +exec
-# Test GPU accessibility
-kubectl run gpu-verify --image=nvidia/cuda:12.2.0-base-ubuntu20.04 \
-  --rm -it --restart=Never \
-  --overrides='{"spec":{"runtimeClassName":"nvidia","nodeSelector":{"nvidia.com/gpu.present":"true"}}}' \
-  -- nvidia-smi -L
-```
-
-<!-- end_slide -->
-
-<!-- include: ../_partials/what-is-vcluster.md -->
-
-<!-- end_slide -->
-
-<!-- include: ../_partials/vcluster-architecture.md -->
-
-<!-- end_slide -->
-
-<!-- include: ../_partials/vcluster-syncer.md -->
-
-<!-- end_slide -->
-
-## What Actually Runs on GPUs?
-
-> Understanding GPU workloads in modern infrastructure
-
-| **Workload**         | **Examples**                    | **GPU Usage**             |
-| -------------------- | ------------------------------- | ------------------------- |
-| Model Training       | Fine-tuning LLMs, Deep Learning | 100% for hours/days       |
-| Stable Diffusion     | Image generation                | ~50% GPU                  |
-| LLM Inference        | ChatGPT API, Claude API         | 25-75% depending on model |
-| Video Processing     | Transcoding, streaming          | Variable 20-80%           |
-| CUDA Development     | Jupyter notebooks, testing      | Often < 20%               |
-| Batch Processing     | Scientific computing            | Spikes to 100%            |
-
-<!-- end_slide -->
-
-## Deploy GPU Demo
-
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
-```
-
-```bash +exec
-./deploy-gpu-pod.sh
-```
-
-> vCluster syncer dynamically updates allocatable values as pods start/stop, preventing oversubscription
-<!-- end_slide -->
-
-## Publish the App to a Stable URL
-
-> cloudflared dials out from localhost:5000 and serves the app at a fixed public URL.
-
-```bash +exec
-# token is personal and gitignored; lives in ~/.config/haiku-tunnel/token
-cloudflared tunnel run \
-  --token "$(cat "${CF_TOKEN_FILE:-$HOME/.config/haiku-tunnel/token}")" &
-```
-
-<!-- end_slide -->
-
-## Scan QR Code
-
-> Scan to generate a haiku on the GPU.
-
-```bash +exec_replace
-qrencode -t UTF8 -s 1 -m 2 "https://haiku.cloudrumble.net"
-echo ""
-echo "https://haiku.cloudrumble.net"
-```
-
-<!-- end_slide -->
-
-## Audience Haikus
-
-> SRE Horror Haikus
-
-```bash +exec +acquire_terminal
-./show-haikus.sh
 ```
 
 <!-- end_slide -->
@@ -217,58 +100,169 @@ EOF
 | Version mismatch | Random pod failures  | 1-2 days          | Very High         |
 | Resource leak    | GPU exhaustion       | 4-8 hours         | Critical          |
 
-> **Industry Data:** Enterprise downtime costs $100k-1M+ per hour (New Relic 2024)
+Enterprise downtime runs $100k-1M+ per hour (New Relic 2024).
+
+> How do we test a new KAI version without risking production?
 
 <!-- end_slide -->
 
-## Solution: vCluster Isolation
+## What is NVIDIA KAI Scheduler?
+
+> **Advanced Kubernetes scheduler for GPU workload optimization**
 
 ```mermaid +render
 graph LR
-    subgraph "Production Cluster"
-        subgraph "vCluster Test"
-            TEST["Test Environment<br/>KAI v0.9.3"]
-        end
-
-        PROD["Production<br/>KAI v0.7 Stable"]
-
-        TEST -.->|"Isolated"| PROD
-    end
-
-    ROLLBACK["Failed?<br/>Delete vCluster<br/>30 seconds"]
-    SUCCESS["Success?<br/>Upgrade Production<br/>With Confidence"]
-
-    TEST --> ROLLBACK
-    TEST --> SUCCESS
+    GPU[1 GPU] --> A[0.5 Training]
+    GPU --> B[0.25 Inference]
+    GPU --> C[0.25 Dev]
 ```
 
-> **Key Point:** vCluster creates isolated Kubernetes inside your existing cluster - NOT new EKS/GKE!
+| **Feature**               | **Benefit**                        |
+| ------------------------- | ---------------------------------- |
+| Fractional GPU allocation | Share single GPU between workloads |
+| DRA-aware scheduling      | Schedule NVIDIA/AMD ResourceClaims |
+| Queue-based scheduling    | Hierarchical resource management   |
+| Topology awareness        | Optimize for hardware layout       |
+| Fair sharing              | Prevent resource monopolization    |
+
+> **Open-sourced 2025:** Enterprise GPU management for the community
 
 <!-- end_slide -->
 
-## Production Scheduler Risk
+## KAI + DRA: Two Layers, Composed
+
+> *DRA allocates the device. KAI schedules and shares it.*
+
+| **Layer**        | **Owns**                                           |
+| ---------------- | -------------------------------------------------- |
+| DRA (Kubernetes) | *Which* device + selection: CEL, MIG, time-slicing |
+| KAI (scheduler)  | Queues, fair-share, gang, fractional GPU sharing   |
+
+| **DRA object** | **What it is**                                               |
+| -------------- | ------------------------------------------------------------ |
+| DeviceClass    | device category: full GPU / MIG / VFIO (like a StorageClass) |
+| ResourceClaim  | a workload's request for a device                            |
+| ResourceSlice  | driver-published inventory of devices per node               |
+
+DRA is GA and enabled by default; NVIDIA donated the GPU DRA driver to CNCF.
+
+<!-- end_slide -->
+
+## Isolate KAI in a Tenant Cluster
+
+> A tenant cluster is a full Kubernetes API of its own, running as a pod on the control plane cluster.
+
+```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','fontSize':'20px'}}}%%
+graph LR
+    subgraph CP["Control Plane Cluster"]
+        subgraph TEN["Tenant Cluster (test)"]
+            TEST["KAI v0.9.3"]
+        end
+        PROD["Control plane scheduler<br/>untouched"]
+        TEST -.->|"isolated"| PROD
+    end
+    ROLLBACK["Break it?<br/>Delete the tenant cluster<br/>in seconds"]
+    TEST --> ROLLBACK
+```
 
 ```bash +exec_replace
-cat << 'EOF'
-Host-cluster scheduler:
-• Single scheduler controls entire cluster
-• Any changes affect all workloads
-• No isolation between teams
-
-Impact:
-• Blocked innovation due to risk
-• Slow adoption of new features
-• Teams waiting on scheduler upgrades
-EOF
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Own API server, own CRDs, own RBAC, own scheduler"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The control plane cluster is invisible from inside the tenant"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "No lateral path to production workloads or their scheduler"
 ```
-
-> **Question:** How can we test KAI scheduler without risking production?
 
 <!-- end_slide -->
 
-## Deploy KAI in vCluster: Virtual Scheduler Configuration
+<!-- include: ../_partials/what-is-vcluster.md -->
 
-> Using virtual scheduler for true KAI isolation per team
+<!-- end_slide -->
+
+<!-- include: ../_partials/vcluster-architecture.md -->
+
+<!-- end_slide -->
+
+## Verify GPU Access
+
+> Running nvidia-smi in a test pod to confirm GPU passthrough is working
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Runs a throwaway pod with the nvidia runtime class"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "nvidia-smi -L lists the physical GPU the pod can see"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Confirms the device plugin and runtime class are wired up"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The rest of the demo runs on this same GPU"
+```
+
+```bash +exec
+# Clear any leftover verify pod, then test GPU accessibility (rerun-safe)
+kubectl delete pod gpu-verify --ignore-not-found --now
+kubectl run gpu-verify --image=nvidia/cuda:12.2.0-base-ubuntu20.04 \
+  --rm -it --restart=Never \
+  --overrides='{"spec":{"runtimeClassName":"nvidia","nodeSelector":{"nvidia.com/gpu.present":"true"}}}' \
+  -- nvidia-smi -L
+```
+
+<!-- end_slide -->
+
+## What Actually Runs on GPUs?
+
+> Understanding GPU workloads in modern infrastructure
+
+| **Workload**         | **Examples**                    | **GPU Usage**             |
+| -------------------- | ------------------------------- | ------------------------- |
+| Model Training       | Fine-tuning LLMs, Deep Learning | 100% for hours/days       |
+| Stable Diffusion     | Image generation                | ~50% GPU                  |
+| LLM Inference        | ChatGPT API, Claude API         | 25-75% depending on model |
+| Video Processing     | Transcoding, streaming          | Variable 20-80%           |
+| CUDA Development     | Jupyter notebooks, testing      | Often < 20%               |
+| Batch Processing     | Scientific computing            | Spikes to 100%            |
+
+<!-- end_slide -->
+
+## Deploy the GPU Demo App
+
+> A live web app served from one physical GPU. KAI gives each request a fraction of the card instead of a whole GPU.
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "A real GPU workload: an LLM-backed web app"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "KAI schedules it on the GPU with fractional sharing turned on"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Many requests share one GPU at once"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "End-to-end GPU path test"
+```
+
+```bash +exec
+# Deploy the haiku app on the GPU, then publish it at a stable URL
+./deploy-gpu-pod.sh
+./expose-app.sh
+```
+
+<!-- end_slide -->
+
+## Scan to Generate a Haiku
+
+> The app is live on the GPU. Scan to generate a haiku: each request is generated on the card and scheduled by KAI.
+
+```bash +exec_replace
+qrencode -t UTF8 -s 1 -m 2 "https://haiku.cloudrumble.net"
+echo ""
+echo "https://haiku.cloudrumble.net"
+```
+
+<!-- end_slide -->
+
+## Audience Haikus
+
+> SRE Horror Haikus
+
+```bash +exec +acquire_terminal
+./show-haikus.sh
+```
+
+<!-- end_slide -->
+
+## Deploy KAI in a Tenant Cluster: Configuration
+
+> One YAML turns on the virtual scheduler and syncs just what KAI needs from the control plane cluster.
 
 ```yaml
 experimental:
@@ -278,14 +272,14 @@ experimental:
 controlPlane:
   advanced:
     virtualScheduler:
-      enabled: true   # Runs scheduler iside a virtual cluster
+      enabled: true   # Runs the scheduler inside the tenant cluster
 
 sync:
   fromHost:
     nodes:
-      enabled: true   # Syncs host nodes for labels detection
+      enabled: true   # Sync control plane cluster nodes for label detection
     runtimeClasses:
-      enabled: true   # Syncs NVIDIA runtime
+      enabled: true   # Sync the NVIDIA runtime
     # Auto-enabled with virtual scheduler:
     csiDrivers: auto
     csiNodes: auto
@@ -295,12 +289,40 @@ sync:
 | **Virtual Scheduler Benefits** | **Impact**                                |
 | ------------------------------ | ----------------------------------------- |
 | Independent KAI versions       | Each team runs v0.7.11, v0.9.2, or v0.9.3 |
-| Complete scheduler isolation   | KAI decisions stay within vCluster        |
+| Complete scheduler isolation   | KAI decisions stay within the tenant cluster |
 | True scheduling autonomy       | No cross-team interference                |
-| Verified working               | Pods scheduled by vCluster's KAI          |
+
+<!-- end_slide -->
+
+## How the Tenant Cluster Runs Its Own Scheduler
+
+> By default a tenant cluster reuses the control plane cluster's scheduler. One setting gives it a scheduler of its own.
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "virtualScheduler.enabled: a scheduler runs inside the tenant, not the control plane cluster's"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Nodes, runtime classes and CSI sync in, so the tenant sees the real GPU nodes"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Pods are scheduled inside the tenant, then the syncer makes them real pods on those nodes"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Label or taint tenant nodes without touching the control plane cluster"
+```
+
+<!-- end_slide -->
+
+## Create the Isolated Tenant Cluster
+
+> This creates kai-isolated, an empty tenant cluster with its own API server and scheduler. Nothing runs inside it yet.
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "One command builds a full Kubernetes control plane, running as a pod"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "It has its own API server, scheduler and data store"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Isolated: the control plane cluster does not see inside it"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Throwaway by design: deleting it leaves the control plane cluster untouched"
+```
 
 ```bash +exec
-vcluster create kai-isolated --values kai-vcluster.yaml
+vcluster create kai-isolated --values kai-vcluster.yaml --driver helm --connect=false
+# Connect right away so kai-isolated shows up in the k9s :ctx menu and stays
+# reachable across slides (vcluster leaves a background proxy). Swap to it live.
+vcluster connect kai-isolated --driver helm
 ```
 
 <!-- end_slide -->
@@ -313,56 +335,20 @@ k9s -c pod
 
 <!-- end_slide -->
 
-## vCluster Resource Footprint & Internals
+## Install KAI Inside the Tenant Cluster
+
+> KAI installs into kai-isolated, the tenant cluster created a moment ago. The control plane cluster's own scheduler is left alone.
 
 ```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
-```
-
-> Understanding what runs inside a vCluster pod
-
-```bash +exec_replace
-cat << 'EOF' | ccze -A
-━━━ vCluster Components ━━━
-CONTROL PLANE:
-  • API Server (k8s): Handles all K8s API calls
-  • Syncer: Bi-directional resource sync with host
-  • SQLite/etcd: Complete state isolation
-  • Scheduler (optional): Independent scheduling decisions
-EOF
-```
-
-```bash +exec_replace
-echo "━━━ Resources Utilization ━━━"
-kubectl --context kind-kai-demo top pod -n vcluster-kai-isolated -l app=vcluster --no-headers 2>/dev/null || echo "  Metrics not available (requires metrics-server)"
-echo ""
-echo "━━━ Data Storage ━━━"
-kubectl --context kind-kai-demo exec -n vcluster-kai-isolated -l app=vcluster -c syncer -- ls -lh /data/state.db 2>/dev/null || echo "  SQLite database: /data/state.db (10-50MB typical)"
-```
-
-<!-- end_slide -->
-
-## Install KAI Inside vCluster
-
-> Installing KAI scheduler that will make independent scheduling decisions
-
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "KAI becomes the scheduler for this one tenant cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "One helm install into the tenant cluster, pinned to KAI v0.7.11"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Its PodGroup CRDs and its queues live inside the tenant cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "setOwner:false lets KAI's pod-grouper group the pods it schedules"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The control plane cluster keeps its own scheduler, untouched"
 ```
 
 ```bash +exec
-# Connect to vCluster first
-vcluster connect kai-isolated
-
-# Install KAI - it will be THE scheduler for this vCluster
-KAI_VERSION=v0.7.11
-helm upgrade -i kai-scheduler \
-  oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
-  -n kai-scheduler --create-namespace \
-  --version $KAI_VERSION \
-  --set "global.gpuSharing=true"
-
-kubectl wait --for=condition=ready pod -n kai-scheduler --all --timeout=120s
+./install-kai.sh
 ```
 
 <!-- end_slide -->
@@ -379,61 +365,58 @@ k9s -c pod -n kai-scheduler
 
 ## GPU Workloads
 
-> KAI inside vCluster schedules pods independently with GPU sharing
+> Two identical pod specs. Each requests a different GPU fraction.
 
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
-```
-
-```bash +exec_replace
-cat << 'EOF' | ccze -A
-SCHEDULING FLOW:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Pod submitted with schedulerName: kai-scheduler
-2. vCluster's virtual scheduler sees pod
-3. KAI scheduler (inside vCluster) makes decision
-4. Pod scheduled to synced node
-5. Syncer translates to host cluster
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EOF
+```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryTextColor':'#ffffff','lineColor':'#c9d1d9','textColor':'#ffffff','actorBkg':'#26303b','actorBorder':'#ff8c42','actorTextColor':'#ffffff','signalColor':'#c9d1d9','signalTextColor':'#ffffff','labelBoxBkgColor':'#26303b','labelBoxBorderColor':'#ff8c42','labelTextColor':'#ffffff','noteBkgColor':'#3a2a1a','noteTextColor':'#ffffff','fontSize':'18px'}}}%%
+sequenceDiagram
+    participant P as Pod
+    participant VS as Tenant scheduler
+    participant K as KAI
+    participant N as Node
+    participant CP as Control plane cluster
+    P->>VS: submit (schedulerName: kai-scheduler)
+    VS->>K: hand off the decision
+    K->>N: place on a synced node
+    N->>CP: syncer reflects the pod up to run
 ```
 
 ```bash +exec +acquire_terminal
-nvim -O gpu-demo-pod1.yaml gpu-demo-pod2.yaml
+nvim -d gpu-demo-pod1.yaml gpu-demo-pod2.yaml
 ```
 
 <!-- end_slide -->
 
-## Deploy and Test GPU Workload in vCluster
+## Deploy and Test a GPU Workload in the Tenant Cluster
+
+> Two pods request different GPU fractions. KAI, running inside the tenant cluster, places both on one physical card.
 
 ```bash +exec
-# Apply queues and deploy two pods with different GPU fractions
-kubectl apply -f queues.yaml
-kubectl apply -f gpu-demo-pod1.yaml
-kubectl apply -f gpu-demo-pod2.yaml
-
-kubectl wait --for=condition=ready pod -n default --all --timeout=120s
-
-# Show both pods sharing the GPU
-kubectl get pods -l app=gpu-demo -o custom-columns=NAME:.metadata.name,FRACTION:.metadata.annotations."kai\.scheduler/gpu-fraction",STATUS:.status.phase
+./run-tenant-gpu-demo.sh
 ```
-
-<!-- end_slide -->
-
-## Version Switching with vCluster
 
 ```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "KAI made the scheduling decision, not the control plane cluster's scheduler"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Both pods share one physical GPU, each on the fraction it requested"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "KAI, its CRDs and its queues live inside the tenant cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The control plane cluster never saw these pods"
+printf '\n\e[33m%s\e[0m\n' "Blast radius of this scheduler and its config: one tenant cluster."
 ```
 
-> Switch between scheduler versions instantly. vCluster also supports snapshot/restore for complete state management.
+<!-- end_slide -->
+
+## Version Switching
+
+> Wrong version? Delete the tenant cluster: the scheduler and all its state vanish in seconds, and the control plane cluster never noticed.
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The scheduler, its CRDs, and all state go with the tenant cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Zero blast radius on the control plane cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "A new version becomes a safe, reversible experiment"
+```
 
 ```bash +exec
-# Disconnect from vCluster
-vcluster disconnect
-
-# Delete the entire vCluster (timed)
-time vcluster delete kai-isolated --delete-namespace
+./delete-tenant.sh
 ```
 
 <!-- end_slide -->
@@ -443,7 +426,7 @@ time vcluster delete kai-isolated --delete-namespace
 ```bash +exec_replace
 cat << 'EOF'
 Challenge:
-  • ML Team needs KAI v0.9.3 for new features
+  • ML Team needs KAI v0.8.5 for new features
   • Research Team requires stable KAI v0.7
   • Dev Team uses default scheduler
 
@@ -455,116 +438,78 @@ EOF
 
 <!-- end_slide -->
 
-## Parallel Scheduler Versions
+## Different KAI Versions Per Team
 
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+> Each team gets its own tenant cluster and its own KAI version, on one shared control plane cluster.
+
+```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','fontSize':'20px'}}}%%
+graph LR
+    subgraph CP["Control Plane Cluster"]
+        subgraph A["tenant: team-stable"]
+            K1["KAI v0.7.11"]
+        end
+        subgraph B["tenant: team-beta"]
+            K2["KAI v0.8.5"]
+        end
+    end
 ```
-
-> Multiple teams can run different scheduler versions simultaneously
 
 ```bash +exec
-# Create multiple vClusters for different teams using existing config
-# Team 1: Stable version
-vcluster create team-stable --values kai-vcluster.yaml --connect=false &
-
-# Team 2: Beta version
-vcluster create team-beta --values kai-vcluster.yaml --connect=false &
-
-# Wait for both to create
-wait
-
+./deploy-team-versions.sh
 ```
-
-<!-- end_slide -->
-
-## Install Different KAI Versions Per Team
-
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
-```
-
-> Each team's vCluster runs its own KAI version with virtual scheduler
-
-```bash +exec +id:teams
-# Team Stable: v0.7.11 (stable)
-vcluster connect team-stable
-helm upgrade -i kai-scheduler \
-  oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
-  -n kai-scheduler --create-namespace \
-  --version v0.7.11 --wait &
-STABLE_PID=$!
-
-# Team Beta: v0.9.3 (testing new features)
-vcluster connect team-beta
-helm upgrade -i kai-scheduler \
-  oci://ghcr.io/nvidia/kai-scheduler/kai-scheduler \
-  -n kai-scheduler --create-namespace \
-  --version v0.9.3 --wait &
-BETA_PID=$!
-
-# Wait for both installations
-wait $STABLE_PID $BETA_PID
-
-vcluster disconnect
-```
-
-<!-- end_slide -->
-
-### Installation Progress
-
-<!-- snippet_output: teams -->
 
 <!-- end_slide -->
 
 ## Deploy Workloads to Both Teams
 
-> Each team's workloads are managed by their own scheduler version
+> Same workloads, two schedulers. Each team's pods are placed by its own KAI version, on one shared GPU host with no crosstalk.
 
-```bash +exec_replace
-kubectl config current-context | sed 's/^/CURRENT_CONTEXT: /'
+```mermaid +render
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','fontSize':'20px'}}}%%
+graph TB
+    subgraph CP["Control Plane Cluster · one GPU host"]
+        subgraph A["team-stable · KAI v0.7.11"]
+            P1["gpu workloads"]
+        end
+        subgraph B["team-beta · KAI v0.8.5"]
+            P2["gpu workloads"]
+        end
+    end
 ```
 
 ```bash +exec
-# Deploy to team-stable (30% + 50% GPU allocation)
-vcluster connect team-stable
-kubectl apply -f queues.yaml,gpu-demo-pod1.yaml,gpu-demo-pod2.yaml
-vcluster disconnect
-
-# Deploy to team-beta (different allocation strategy)
-vcluster connect team-beta
-kubectl apply -f queues.yaml,gpu-demo-pod1.yaml,gpu-demo-pod2.yaml
-vcluster disconnect
+./deploy-both-teams.sh
 ```
 
 <!-- end_slide -->
 
 ## Parallel Operations
 
-> Both vClusters running with independent KAI schedulers
+> Both tenant clusters running with independent KAI schedulers
 
 ```markdown
 PARALLEL SCHEDULER DEPLOYMENTS
 - team-stable: KAI v0.7.11 (stable version)
-- team-beta:   KAI v0.9.3 (testing new features)
+- team-beta:   KAI v0.8.5 (testing new features)
 
 ARCHITECTURE
-- Virtual Scheduler: ENABLED in each vCluster
-- KAI Location:      Inside each vCluster
-- Scheduling:        Independent per team
-- Host Impact:       NONE
-- Isolation:         COMPLETE
+- Virtual Scheduler:    ENABLED in each tenant cluster
+- KAI Location:         Inside each tenant cluster
+- Scheduling:           Independent per team
+- Control Plane Impact: NONE
+- Isolation:            COMPLETE
 ```
 
 ```bash +exec
-vcluster list
+vcluster list --driver helm
 ```
 
 <!-- end_slide -->
 
-## View Running vClusters
+## View Running Tenant Clusters
 
-> View all vClusters and their resources
+> View all tenant clusters and their resources
 
 ```bash +exec +acquire_terminal
 k9s -c pod
@@ -574,15 +519,44 @@ k9s -c pod
 
 ## Operational Capabilities Achieved
 
-| **Capability**          | **Time Saved**      | **Risk Reduced** |
-| ----------------------- | ------------------- | ---------------- |
-| Test scheduler upgrades | 4 hours → 5 min     | 100% → 0%        |
-| Rollback bad changes    | 2 hours → 30 sec    | Critical → None  |
-| A/B test versions       | Not possible → Easy | High → Zero      |
-| Per-team schedulers     | Days → Minutes      | Complex → Simple |
-| GPU sharing validation  | Weeks → Hours       | High → None      |
+| **Capability**          | **Time Saved**      | **Risk Reduced**       |
+| ----------------------- | ------------------- | ---------------------- |
+| Test scheduler upgrades | 4 hours → 5 min     | Cluster-wide → Contained |
+| Rollback bad changes    | 2 hours → 30 sec    | Critical → Low         |
+| A/B test versions       | Not possible → Easy | High → Low             |
+| Per-team schedulers     | Days → Minutes      | Complex → Simple       |
+| GPU sharing validation  | Weeks → Hours       | High → Low             |
 
 > **Measured Impact:** Based on typical enterprise deployment scenarios
+
+<!-- end_slide -->
+
+## Safe Because It Is Isolated and Disposable
+
+> A tenant cluster is a real Kubernetes control plane running as pods on the control plane cluster, invisible to the workloads inside it.
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Its API server, scheduler and data store run as ordinary pods on the control plane cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The tenant cluster owns every resource the tenant creates"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Delete it and every synced resource goes with it, leaving no orphans"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "A new scheduler or a new version is a change that can be thrown away"
+```
+
+<!-- end_slide -->
+
+## The Takeaway: One Platform, Many Versions
+
+> KAI was the example. The capability is vCluster.
+
+```bash +exec_replace
+printf '\e[1;36m%s\e[0m\n\n' "KAI was just the example"
+printf '\e[33m%s\e[0m\n' "Inside a tenant cluster you can:"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Run a cluster-wide component at a different version than the control plane cluster"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Run several versions side by side, one per team"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Swap subsystems: scheduler, CRDs, admission, API version"
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Delete the whole thing in seconds when it breaks"
+printf '\n\e[32m%s\e[0m\n' "The scheduler was proof. The versatility is the point."
+```
 
 <!-- end_slide -->
 
@@ -591,15 +565,9 @@ k9s -c pod
 > Cleaning up the demo environment
 
 ```bash +exec
-# Stop cloudflared tunnel
-pkill -f cloudflared || true
-
-# Delete the Kind cluster
-kind delete cluster --name kai-demo
-
-# Revert Docker runtime configuration
-sudo jq 'del(."default-runtime")' /etc/docker/daemon.json | sudo sponge /etc/docker/daemon.json
-sudo systemctl restart docker
+# Stops the tunnel, deletes the kind cluster (and the tenant clusters/pods
+# inside it), and reverts the Docker default runtime.
+./cleanup.sh
 ```
 
 <!-- end_slide -->
@@ -618,8 +586,16 @@ Community:
 ```
 
 <!-- end_slide -->
-<!-- new_lines: 10 -->
-![vCluster Logo](./vcluster-logo-main.png)
+
+<!-- new_lines: 3 -->
+
+```bash +exec_replace
+while IFS= read -r line; do
+    printf '\033[38;2;255;102;0m%s\033[0m\n' "$line"
+done < vcluster-logo-ascii.txt
+```
+
+<!-- new_lines: 5 -->
 
 <!-- jump_to_middle -->
 ```bash +exec_replace

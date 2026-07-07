@@ -4,7 +4,7 @@
 <!-- new_lines: 1 -->
 ```mermaid +render
 graph TB
-    subgraph "vCluster Pod Components"
+    subgraph "Virtual Control Plane"
         API["API Server<br/>(k8s)"]
         ETCD["Data Store<br/>(SQLite/etcd)"]
         SYNC["Syncer<br/>(bi-directional)"]
@@ -12,7 +12,7 @@ graph TB
         SCHED["Scheduler<br/>(optional)"]
     end
 
-    subgraph "Host Cluster"
+    subgraph "Control Plane Cluster"
         PODS["Synced Pods"]
         SVCS["Synced Services"]
         PVC["Synced PVCs"]
@@ -30,6 +30,6 @@ graph TB
 | API Server | Full K8s API compatibility | ~100MB RAM |
 | Syncer | Resource translation | ~50MB RAM |
 | Data Store | Complete state isolation | ~10MB disk |
-| Total Overhead | **< 200MB per vCluster** | Minimal impact |
+| Total Overhead | **< 200MB per tenant cluster** | Minimal impact |
 <!-- new_lines: 1 -->
 > **Key Innovation:** Containerized control plane with intelligent resource syncing

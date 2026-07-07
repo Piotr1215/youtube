@@ -20,7 +20,13 @@ spec:
     env:
     - name: NVIDIA_VISIBLE_DEVICES
       value: "all"
-    - name: OPENAI_API_KEY
+    # The haiku app is an OpenAI-compatible client (defaults to a local Ollama
+    # at localhost:11434). Point it at OpenAI so generation works on stage.
+    - name: LLM_URL
+      value: "https://api.openai.com"
+    - name: LLM_MODEL
+      value: "gpt-4o-mini"
+    - name: LLM_API_KEY
       valueFrom:
         secretKeyRef:
           name: openai-secret
