@@ -26,6 +26,13 @@ IMAGES=(
     "piotrzan/nginx-demo:green"
     "busybox:1.28"
     "${VCLUSTER_IMAGE}"
+    # vcluster tenant control-plane init image. Without this preloaded, the FIRST
+    # "create tenant" slide stalls pulling ~a full k8s image live over wifi. Tag is
+    # tied to the vcluster version (0.35.x -> k8s v1.36.0); bump on vcluster upgrade.
+    "ghcr.io/loft-sh/kubernetes:v1.36.0"
+    # Tenant vcluster DNS. Different tag than the host's coredns; pull it onto the
+    # node so the first live `vcluster create` never stalls fetching it over wifi.
+    "docker.io/coredns/coredns:1.14.2"
     "piotrzan/sre-haiku-generator:latest"
 )
 

@@ -320,8 +320,6 @@ printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Throwaway by design: deleting it leav
 
 ```bash +exec
 vcluster create kai-isolated --values kai-vcluster.yaml --driver helm --connect=false
-# Connect right away so kai-isolated shows up in the k9s :ctx menu and stays
-# reachable across slides (vcluster leaves a background proxy). Swap to it live.
 vcluster connect kai-isolated --driver helm
 ```
 
@@ -407,16 +405,13 @@ printf '\n\e[33m%s\e[0m\n' "Blast radius of this scheduler and its config: one t
 
 ## Version Switching
 
-> Wrong version? Delete the tenant cluster: the scheduler and all its state vanish in seconds, and the control plane cluster never noticed.
+> Deleting a tenant cluster removes scheduler and all its resources, and the host cluster keeps using the default version.
 
 ```bash +exec_replace
 printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The scheduler, its CRDs, and all state go with the tenant cluster"
 printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Zero blast radius on the control plane cluster"
 printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "A new version becomes a safe, reversible experiment"
-```
-
-```bash +exec
-./delete-tenant.sh
+printf '\n\e[33m%s\e[0m\n' "To switch or roll back, we simply delete the tenant cluster."
 ```
 
 <!-- end_slide -->

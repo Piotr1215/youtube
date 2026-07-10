@@ -1,5 +1,21 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+# Point the node containerd at the persistent local registry cache
+# (setup-registry-cache.sh) as a pull-through mirror, with the real upstream as a
+# fallback endpoint. Cached images are served from localhost:5000 on the kind
+# network (fast, offline-capable); anything not cached falls back to the internet.
+# If the cache container is down, containerd fails fast to the fallback, so this is
+# always safe.
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+    endpoint = ["http://kind-registry:5000", "https://registry-1.docker.io"]
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."ghcr.io"]
+    endpoint = ["http://kind-registry:5000", "https://ghcr.io"]
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."nvcr.io"]
+    endpoint = ["http://kind-registry:5000", "https://nvcr.io"]
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.k8s.io"]
+    endpoint = ["http://kind-registry:5000", "https://registry.k8s.io"]
 nodes:
 - role: control-plane
   image: kindest/node:v1.31.0
