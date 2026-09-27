@@ -62,7 +62,7 @@ printf '\e[33m%s\e[0m\n' 'Getting it to the prompt without leaving the keyboard 
 
 ## Basic Concepts
 
-> Where does tmux keep the text you scrolled past?
+> How do tmux and your terminal hold and move text?
 
 ```bash +exec_replace
 ./journey.sh 2
@@ -103,6 +103,22 @@ printf '  \e[31m%s\e[0m %s\n' '✗' 'you steer to words you already know'
 
 ```bash +exec
 ./demo.sh copy-mode
+```
+
+<!-- end_slide -->
+
+## Escape Sequences
+
+> Messages between a program and its terminal
+
+```bash +exec_replace
+printf '  \e[36m%s\e[0m%s\n' 'CSI  ' 'Control Sequence Introducer: ESC ['
+printf '  \e[36m%s\e[0m%s\n\n' 'OSC  ' 'Operating System Command:    ESC ]'
+printf '  \e[1;33m%s\e[0m%s\e[90m%s\e[0m\n' 'ESC[?2004h            ' '"wrap my pastes"              ' 'shell → tmux'
+printf '  \e[1;33m%s\e[0m%s\e[90m%s\e[0m\n' 'ESC[200~ … ESC[201~   ' '"this was pasted, not typed"  ' 'tmux → shell'
+printf '  \e[1;33m%s\e[0m%s\e[90m%s\e[0m\n\n' 'ESC]52;c;…            ' '"copy this to clipboard"      ' 'tmux → terminal'
+printf '\e[37m%s\e[0m\n' 'The program sends these, the terminal acts on them.'
+printf '\e[90m%s\e[0m\n' 'More on escape sequences: the Neovim Terminal video.'
 ```
 
 <!-- end_slide -->
@@ -277,22 +293,6 @@ printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '⏺ Update(values.yaml)              
 printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '• Search the runbook               ' ' ──▶  ' 'Search the runbook'
 printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '    memory: 512Mi                  ' ' ──▶  ' '    memory: 512Mi'
 printf '\n\e[32m%s\e[0m\n' 'Indentation stays, so YAML keeps its shape.'
-```
-
-<!-- end_slide -->
-
-## Escape Sequences
-
-> Messages between a program and its terminal
-
-```bash +exec_replace
-printf '  \e[36m%s\e[0m%s\n' 'CSI  ' 'Control Sequence Introducer: ESC ['
-printf '  \e[36m%s\e[0m%s\n\n' 'OSC  ' 'Operating System Command:    ESC ]'
-printf '  \e[1;33m%s\e[0m%s\e[90m%s\e[0m\n' 'ESC[?2004h            ' '"wrap my pastes"              ' 'shell → tmux'
-printf '  \e[1;33m%s\e[0m%s\e[90m%s\e[0m\n' 'ESC[200~ … ESC[201~   ' '"this was pasted, not typed"  ' 'tmux → shell'
-printf '  \e[1;33m%s\e[0m%s\e[90m%s\e[0m\n\n' 'ESC]52;c;…            ' '"copy this to clipboard"      ' 'tmux → terminal'
-printf '\e[37m%s\e[0m\n' 'The program sends these, the terminal acts on them.'
-printf '\e[90m%s\e[0m\n' 'More on escape sequences: the Neovim Terminal video.'
 ```
 
 <!-- end_slide -->
