@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Plays keystroke golf in the demo session. Each hole is one exercise: every
 # method plays it from a fresh copy, the ledger counts the keys, and the card
-# names the method with the fewest.
+# names the method with the fewest and the rule of thumb that picks it.
 #
 #   ./demo.sh        every hole
 #   ./demo.sh 3      start at hole 3, for a retake
@@ -21,7 +21,7 @@ set -euo pipefail
 session="multicursor-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 pace="${PACE:-1}"
-holes=5
+holes=3
 # One demo nvim per tmux server, so two servers never drive each other's.
 server="$(tmux display-message -p '#{pid}' 2>/dev/null || true)"
 sock="${XDG_RUNTIME_DIR:-/tmp}/multicursor-demo-${server}.sock"
@@ -159,11 +159,11 @@ play_keys() {
 	pause 1.5
 }
 
-# One hole: the exercise, then every method as name, keys, and meaning, each
-# from a fresh copy. The fewest keys that reach the goal win.
+# One hole: the exercise, the rule it tests, then every method as name, keys,
+# and meaning, each from a fresh copy. The fewest keys that reach the goal win.
 hole() {
-	local number="$1" name="$2" title="$3" total i=0 count best="" fewest=0
-	shift 3
+	local number="$1" name="$2" title="$3" rule="$4" total i=0 count best="" fewest=0
+	shift 4
 	((number < start)) && return 0
 	total=$(($# / 3))
 	nv 'Demo.golf_reset()'
@@ -180,7 +180,7 @@ hole() {
 	done
 	if [[ -n ${best} ]]; then
 		card "hole ${number}/${holes} · ${title}" "🏆 ${best}" "${fewest} keys" \
-			"The fewest keys to the goal" "space ▸ next    q ▸ quit"
+			"Rule: ${rule}" "space ▸ next    q ▸ quit"
 	else
 		card "hole ${number}/${holes} · ${title}" "no winner" "" \
 			"No method reached the goal" "space ▸ next    q ▸ quit"
@@ -188,25 +188,19 @@ hole() {
 	wait_key
 }
 
-# The course. Each hole lists its methods as name, keys, and meaning; every
-# key sequence is checked against the exercise's goal in solutions.md.
+# The course: one hole for each kind of rule, from the Rule of Thumb slide.
+# Each hole lists its methods as name, keys, and meaning; every key sequence
+# is checked against the exercise's goal in solutions.md.
 course() {
-	hole 1 01-add-prefix "add prefix" \
+	hole 1 01-add-prefix "add prefix" "one column on adjacent lines" \
 		"visual block" "<C-V>GI- <Esc>" "Insert into a column" \
 		":norm" ":%norm I- <CR>" "The same keys on every line" \
 		"multicursor" "VGQI- <Esc>" "A cursor per line, then type"
-	hole 2 06-wrap-parens "wrap parens" \
-		":s" ':%s/ \zs.*/(&)<CR>' "Wrap what follows the space" \
-		"macro" "qqwi(<Esc>A)<Esc>+q4@q" "Record line one, replay four" \
-		"multicursor" "VGQwi(<Esc>A)<Esc>" "Type the edit once, live"
-	hole 3 07-flip-assignment "flip assignment" \
+	hole 2 07-flip-assignment "flip assignment" "anything else on screen" \
 		":s" ':%s/\v(.*)\=(.*)/\2=\1<CR>' "Swap two capture groups" \
 		"macro" "qqdt=A=<Esc>p0xjq4@q" "Cut, append, paste, replay" \
 		"multicursor" "VGQdt=A=<Esc>p0x" "Each cursor pastes its own cut"
-	hole 4 09-snake-to-camel "snake to camel" \
-		":s" ':%s/\v_(.)/\u\1/g<CR>' "Uppercase the letter after _" \
-		"multicursor" "/_<CR>1Qx~" "A cursor on every _ match"
-	hole 5 08-conditional-prefix "conditional prefix" \
+	hole 3 08-conditional-prefix "conditional prefix" "lines picked by a pattern" \
 		":v" ":v/:/s/^/[ok] <CR>" "Lines without a colon" \
 		"search + Q" '/^\w*$<CR>1QI[ok] <Esc>' "A cursor on every one-word line" \
 		":v + Q" ":v/:/norm! Q<CR>I[ok] <Esc>" "A command places, you type"

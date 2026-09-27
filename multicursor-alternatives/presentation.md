@@ -248,46 +248,57 @@ printf '\e[90m%s\e[0m\n' 'CTRL-L taken? Map a key to clear the nvim.multicursor 
 
 <!-- end_slide -->
 
-## Keystroke Golf
+## Limits
 
-> Which method wins each exercise?
+> From :help mcursor-limitations and the cursor rules.
+
+```bash +exec_replace
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'cursors live in one buffer; many files still need :cdo'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'Q does nothing while a macro records or runs'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' '"+ and "* are shared, not per cursor'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'g-, g+ and :earlier clear every cursor'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'nightly only, until Neovim 0.13 ships'
+```
+<!-- end_slide -->
+
+## Choosing a Method
+
+> Which method fits which edit?
 
 ```bash +exec_replace
 ./journey.sh 5
 ```
-
 <!-- end_slide -->
 
-## Golf Rules
+## Rule of Thumb
 
-> Same exercise, every method, fewest keys wins.
+> Ask from the top; the first yes picks the method.
 
 ```bash +exec_replace
-printf '  \e[36m%s\e[0m%s\n' 'hole      ' 'one exercise, its goal diffed below the edit'
-printf '  \e[36m%s\e[0m%s\n' 'methods   ' 'each one plays a fresh copy of the exercise'
-printf '  \e[36m%s\e[0m%s\n' 'ledger    ' 'counts every key typed, Esc and Enter included'
-printf '  \e[1;33m%s\e[0m%s\n' '🏆        ' 'the fewest keys that reach the goal'
+q() { printf '  %s\e[90m%s\e[0m\e[%sm%s\e[0m\n' "$1" ' ──▶ ' "$2" "$3"; }
+q 'Across files, or too many lines to watch? ' 36 ':s  :norm  with :cdo'
+q 'An edit you will replay later?            ' 36 'macro'
+q 'One column on adjacent lines?             ' 36 'visual block'
+q 'Lines picked by a pattern?                ' 36 ':g  :v'
+q 'One fixed string swapped for another?     ' 36 ':s'
+q 'Anything else on screen                   ' 32 'multicursor'
 ```
-
 <!-- end_slide -->
 
-## Golf Course
+## Rules in Play
 
-> Five exercises, each played by the methods that fit it.
+> Three exercises, the ledger counting keys: each rule picks the winner.
 
 ```bash +exec_replace
-printf '  \e[90m%s\e[0m\n' 'hole  exercise             methods'
-printf '  %s\e[36m%s\e[0m%s\n' '1     ' 'add prefix           ' 'visual block  :norm  multicursor'
-printf '  %s\e[36m%s\e[0m%s\n' '2     ' 'wrap parens          ' ':s  macro  multicursor'
-printf '  %s\e[36m%s\e[0m%s\n' '3     ' 'flip assignment      ' ':s  macro  multicursor'
-printf '  %s\e[36m%s\e[0m%s\n' '4     ' 'snake to camel       ' ':s  multicursor'
-printf '  %s\e[36m%s\e[0m%s\n' '5     ' 'conditional prefix   ' ':v  search + Q  :v + Q'
+printf '  \e[90m%s\e[0m\n' 'exercise              rule'
+printf '  \e[36m%s\e[0m%s\n' 'add prefix            ' 'one column on adjacent lines'
+printf '  \e[36m%s\e[0m%s\n' 'flip assignment       ' 'anything else on screen'
+printf '  \e[36m%s\e[0m%s\n' 'conditional prefix    ' 'lines picked by a pattern'
 ```
 
 ```bash +exec
 ./demo.sh
 ```
-
 <!-- end_slide -->
 
 ## Scoreboard
@@ -308,49 +319,18 @@ row '08 cond prefix      ' 15 ':v               ' 16
 row '09 snake to camel   ' 18 ':s               ' 7
 printf '\n\e[33m%s\e[0m\n' 'Multicursor wins on-screen edits; a column or a condition favors the classics.'
 ```
-
 <!-- end_slide -->
 
-## Choosing a Method
+## Getting Started
 
-> Which method fits which edit?
+> How do you try it today?
 
 ```bash +exec_replace
 ./journey.sh 6
 ```
-
 <!-- end_slide -->
 
-## Where Each Fits
-
-> Match the method to where the targets are.
-
-```bash +exec_replace
-printf '  \e[36m%s\e[0m%s\n' 'visual block   ' 'a fixed column: prefixes, column deletes'
-printf '  \e[36m%s\e[0m%s\n' ':norm          ' 'the same keys on every line of a range'
-printf '  \e[36m%s\e[0m%s\n' ':g  :v         ' 'lines picked by a condition'
-printf '  \e[36m%s\e[0m%s\n' ':s             ' 'case, expressions, many files with :cdo'
-printf '  \e[36m%s\e[0m%s\n' 'macro          ' 'an edit you keep and replay later'
-printf '  \e[32m%s\e[0m%s\n' 'multicursor    ' 'targets you pick, edits you watch as you type'
-```
-
-<!-- end_slide -->
-
-## Limits
-
-> From :help mcursor-limitations and the cursor rules.
-
-```bash +exec_replace
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'cursors live in one buffer; many files still need :cdo'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'Q does nothing while a macro records or runs'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' '"+ and "* are shared, not per cursor'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'g-, g+ and :earlier clear every cursor'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'nightly only, until Neovim 0.13 ships'
-```
-
-<!-- end_slide -->
-
-## Getting Started
+## First Steps
 
 > Grab a nightly build and try it on the exercises.
 
@@ -359,14 +339,13 @@ printf '  \e[1;33m%s\e[0m%s\n' 'nightly         ' 'github.com/neovim/neovim/rele
 printf '  \e[1;33m%s\e[0m%s\n' ':help mcursor   ' 'every key, with examples'
 printf '  \e[1;33m%s\e[0m%s\n' './exercises.sh  ' 'nine exercises, each checked against its goal'
 ```
-
 <!-- end_slide -->
 
 ## Takeaways
 
 ```bash +exec_replace
 printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'multicursor     ' 'the newest method: it replays commands at every cursor'
-printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'other methods   ' 'still win on columns, conditions, and many files'
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'rule of thumb   ' 'files, reuse, columns, line filters, fixed strings first'
 printf '  \e[1;33m%s\e[0m\e[36m%s\e[0m%s\n' '▶ ' 'next            ' 'install a nightly, press VGQ, run the exercises'
 ```
 
