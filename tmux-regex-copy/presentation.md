@@ -10,6 +10,16 @@ echo "Pane Regex" | figlet -f small -w 90
 
 <!-- end_slide -->
 
+## Keyboard First
+
+> Why keep your hands on the keyboard at all?
+
+```bash +exec_replace
+./journey.sh 1
+```
+
+<!-- end_slide -->
+
 ## Terminal Loop
 
 > Most terminal work feeds one command's output into the next.
@@ -46,6 +56,16 @@ printf '\e[33m%s\e[0m\n' 'Getting it to the prompt without leaving the keyboard 
 
 ```bash +exec
 ./demo.sh teaser
+```
+
+<!-- end_slide -->
+
+## Basic Concepts
+
+> Where does tmux keep the text you scrolled past?
+
+```bash +exec_replace
+./journey.sh 2
 ```
 
 <!-- end_slide -->
@@ -87,6 +107,16 @@ printf '  \e[31m%s\e[0m %s\n' '✗' 'you steer to words you already know'
 
 <!-- end_slide -->
 
+## Built-in Shortcomings
+
+> Why aren't the mouse and copy mode enough?
+
+```bash +exec_replace
+./journey.sh 3
+```
+
+<!-- end_slide -->
+
 ## Soft Wraps
 
 > tmux keeps a long line whole; the terminal only sees rows.
@@ -120,6 +150,16 @@ printf '  \e[1;32m%s\e[0m\e[32m%s %s\e[0m\n' 'pane regex       ' '✓' 'type a f
 
 <!-- end_slide -->
 
+## Pane Regex
+
+> How do you grab text by describing it?
+
+```bash +exec_replace
+./journey.sh 4
+```
+
+<!-- end_slide -->
+
 ## Landmark Query
 
 > Press `prefix + R`, type words from the text you want, and tmux paints the match in the pane.
@@ -139,26 +179,6 @@ printf '\e[37m%s\e[0m\n' '2026-09-27T08:14:17Z INFO  runbook: https://github.com
 
 <!-- end_slide -->
 
-## Pipeline
-
-> Each query paints the match in the pane and fills a paste buffer.
-
-```bash +exec_replace
-printf '  \e[1;33m%s\e[0m\e[90m%s\e[0m\n' '^ERROR.*5432        ' 'typed in the picker'
-printf '  \e[90m%s\e[0m\n' '    ▼'
-printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'capture-pane -J     ' 'the whole history, wrapped lines joined'
-printf '  \e[90m%s\e[0m\n' '    ▼'
-printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'strip margins       ' 'prompt glyphs and agent bullets removed'
-printf '  \e[90m%s\e[0m\n' '    ▼'
-printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'Python re           ' 'picks the exact range'
-printf '  \e[90m%s\e[0m\n' '    │'
-printf '  \e[90m%s\e[0m\e[32m%s\e[0m\n' '    ├──▶ ' 'tmux search paints it in the pane'
-printf '  \e[90m%s\e[0m\e[32m%s\e[0m\n' '    ├──▶ ' 'Enter    bracketed paste at the prompt'
-printf '  \e[90m%s\e[0m\e[32m%s\e[0m\n' '    └──▶ ' 'Ctrl-Y   clipboard through OSC 52'
-```
-
-<!-- end_slide -->
-
 ## Feedback in the Pane
 
 > The popup holds the question, the pane holds the answer.
@@ -171,23 +191,6 @@ printf '  \e[33m%s\e[0m\e[30;43m%s\e[0m\n' '^ERROR          ' '08:14:17Z ERROR g
 printf '  \e[33m%s\e[0m%s\e[30;43m%s\e[0m%s\n' '^ERROR.*5       ' '08:14:17Z ' 'ERROR giving up: dial tcp 10.96.14.7:5' '432: connect …'
 printf '  \e[33m%s\e[0m%s\e[30;43m%s\e[0m%s\n\n' '^ERROR.*5432    ' '08:14:17Z ' 'ERROR giving up: dial tcp 10.96.14.7:5432' ': connect …'
 printf '\e[32m%s\e[0m\n' 'Every keystroke repaints the selection in the pane itself.'
-```
-
-<!-- end_slide -->
-
-## Python Regex
-
-> tmux search speaks POSIX regex: greedy, one line at a time.
-
-```bash +exec_replace
-printf '  \e[90m%s\e[0m\n\n' '^ERROR.*5432 on a line that holds 5432 twice'
-printf '  \e[36m%s\e[0m\e[30;41m%s\e[0m   \e[31m%s\e[0m\n' 'tmux search   ' 'ERROR ··· 5432 ··· 5432' 'greedy: runs to the last one'
-printf '  \e[36m%s\e[0m\e[30;42m%s\e[0m\e[90m%s\e[0m   \e[32m%s\e[0m\n\n' 'Python re     ' 'ERROR ··· 5432' ' ··· 5432' 'lazy: stops at the first'
-printf '  \e[90m%s\e[0m\n' '                      tmux search   Python re'
-printf '  %s\e[31m%s\e[0m%s\e[32m%s\e[0m\n' 'stop at the first end      ' '✗' '            ' '✓'
-printf '  %s\e[31m%s\e[0m%s\e[32m%s\e[0m\n' 'span several lines         ' '✗' '            ' '✓'
-printf '  %s\e[31m%s\e[0m%s\e[32m%s\e[0m\n\n' 'trim with groups           ' '✗' '            ' '✓'
-printf '\e[32m%s\e[0m\n' 'Python picks the range, tmux paints it.'
 ```
 
 <!-- end_slide -->
@@ -212,6 +215,53 @@ printf '  \e[35m%s\e[1;33m%s\e[0m%s\n' '            ' '\u          ' 'the newest
 
 ```bash +exec
 ./demo.sh atoms
+```
+
+<!-- end_slide -->
+
+## Under the Hood
+
+> How do a few typed words turn into a paste?
+
+```bash +exec_replace
+./journey.sh 5
+```
+
+<!-- end_slide -->
+
+## Pipeline
+
+> Each query paints the match in the pane and fills a paste buffer.
+
+```bash +exec_replace
+printf '  \e[1;33m%s\e[0m\e[90m%s\e[0m\n' '^ERROR.*5432        ' 'typed in the picker'
+printf '  \e[90m%s\e[0m\n' '    ▼'
+printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'capture-pane -J     ' 'the whole history, wrapped lines joined'
+printf '  \e[90m%s\e[0m\n' '    ▼'
+printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'strip margins       ' 'prompt glyphs and agent bullets removed'
+printf '  \e[90m%s\e[0m\n' '    ▼'
+printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'Python re           ' 'picks the exact range'
+printf '  \e[90m%s\e[0m\n' '    │'
+printf '  \e[90m%s\e[0m\e[32m%s\e[0m\n' '    ├──▶ ' 'tmux search paints it in the pane'
+printf '  \e[90m%s\e[0m\e[32m%s\e[0m\n' '    ├──▶ ' 'Enter    bracketed paste at the prompt'
+printf '  \e[90m%s\e[0m\e[32m%s\e[0m\n' '    └──▶ ' 'Ctrl-Y   clipboard through OSC 52'
+```
+
+<!-- end_slide -->
+
+## Python Regex
+
+> tmux search speaks POSIX regex: greedy, one line at a time.
+
+```bash +exec_replace
+printf '  \e[90m%s\e[0m\n\n' '^ERROR.*5432 on a line that holds 5432 twice'
+printf '  \e[36m%s\e[0m\e[30;41m%s\e[0m   \e[31m%s\e[0m\n' 'tmux search   ' 'ERROR ··· 5432 ··· 5432' 'greedy: runs to the last one'
+printf '  \e[36m%s\e[0m\e[30;42m%s\e[0m\e[90m%s\e[0m   \e[32m%s\e[0m\n\n' 'Python re     ' 'ERROR ··· 5432' ' ··· 5432' 'lazy: stops at the first'
+printf '  \e[90m%s\e[0m\n' '                      tmux search   Python re'
+printf '  %s\e[31m%s\e[0m%s\e[32m%s\e[0m\n' 'stop at the first end      ' '✗' '            ' '✓'
+printf '  %s\e[31m%s\e[0m%s\e[32m%s\e[0m\n' 'span several lines         ' '✗' '            ' '✓'
+printf '  %s\e[31m%s\e[0m%s\e[32m%s\e[0m\n\n' 'trim with groups           ' '✗' '            ' '✓'
+printf '\e[32m%s\e[0m\n' 'Python picks the range, tmux paints it.'
 ```
 
 <!-- end_slide -->
@@ -283,6 +333,16 @@ printf '  \e[36m%s\e[0m\e[90m%s\e[0m\n' 'terminal                ' 'decodes it, 
 printf '  \e[90m%s\e[0m\n' '    ▼'
 printf '  \e[1;32m%s\e[0m\n\n' 'system clipboard'
 printf '\e[33m%s\e[0m\n' 'Your terminal has to allow OSC 52 writes.'
+```
+
+<!-- end_slide -->
+
+## Getting Started
+
+> What should you know before you try it?
+
+```bash +exec_replace
+./journey.sh 6
 ```
 
 <!-- end_slide -->
