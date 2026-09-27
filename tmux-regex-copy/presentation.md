@@ -1,6 +1,6 @@
 # tmux Pane Regex
 
-> Paste scrollback by typing the words you remember
+> Paste the scrollback text you want by typing a few of its words
 
 <!-- new_lines: 3 -->
 
@@ -102,14 +102,14 @@ printf '  \e[90m%s\e[0m\n\n' 'method             cost'
 printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n' 'mouse drag       ' '✗' 'wrapped lines paste with stray line breaks'
 printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n' 'copy mode        ' '✗' 'six steps, steering to words you know'
 printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n\n' 'shell history    ' '✗' 'has the command, never its output'
-printf '  \e[1;32m%s\e[0m\e[32m%s %s\e[0m\n' 'pane regex       ' '✓' 'type the words you remember, paste'
+printf '  \e[1;32m%s\e[0m\e[32m%s %s\e[0m\n' 'pane regex       ' '✓' 'type a few words of what you want, paste'
 ```
 
 <!-- end_slide -->
 
 ## Landmark Query
 
-> Press `prefix + R`, type the words you remember, and tmux paints the match in the pane.
+> Press `prefix + R`, type words from the text you want, and tmux paints the match in the pane.
 
 ```bash +exec_replace
 printf '\e[90m%s\e[0m\n' "╭─ pane regex ─────────────────────────────────────────────────────────────"
@@ -300,7 +300,7 @@ set -g @plugin 'Piotr1215/tmux-pane-regex'
 ```
 
 ```bash +exec_replace
-printf '\e[32m%s\e[0m\n' 'prefix + R, then a word you remember.'
+printf '\e[32m%s\e[0m\n' 'prefix + R, then a word from the text you want.'
 ```
 
 <!-- end_slide -->

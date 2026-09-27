@@ -142,7 +142,7 @@ teaser() {
 copy_mode() {
 	scene "1/6" "prefix [" "The pane becomes a view of its history"
 	tmux copy-mode -t "${demo_pane}"
-	scene "2/6" "?ERROR  Enter" "Search back for a word you remember"
+	scene "2/6" "?ERROR  Enter" "Search back for a word in the text you want"
 	tmux send-keys -X -t "${demo_pane}" search-backward "ERROR"
 	scene "3/6" "Space" "Start the selection"
 	tmux send-keys -X -t "${demo_pane}" begin-selection
