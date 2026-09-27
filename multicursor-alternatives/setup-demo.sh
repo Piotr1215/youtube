@@ -16,6 +16,18 @@ if ! nvim --clean --headless -c 'lua io.stdout:write(vim.api.nvim_mcursor and "y
 	exit 1
 fi
 
+# noice.nvim draws the command line in a popup mid-screen, where viewers can
+# read each Ex command as it is typed. Pinned, so every take looks the same.
+plugins="${XDG_DATA_HOME:-${HOME}/.local/share}/multicursor-demo"
+fetch_plugin() {
+	local repo="$1" commit="$2" dest="${plugins}/${1#*/}"
+	[[ -d ${dest} ]] && return 0
+	git clone --quiet --filter=blob:none "https://github.com/${repo}" "${dest}"
+	git -C "${dest}" checkout --quiet "${commit}"
+}
+fetch_plugin folke/noice.nvim 7bfd942445fb63089b59f97ca487d605e715f155
+fetch_plugin MunifTanjim/nui.nvim 10fc361835c856ba4233ef5ea135b919bf3dce97
+
 tmux kill-session -t "=${session}" 2>/dev/null || true
 rm -rf "${sock}" "${work}"
 mkdir -p "${work}"

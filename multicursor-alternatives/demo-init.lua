@@ -1,5 +1,6 @@
 -- Config for the demo nvim: stock Neovim, so viewers see the defaults they
--- get, plus the keystroke golf ledger from the dotfiles when it exists.
+-- get, plus the keystroke golf ledger from the dotfiles when it exists and a
+-- command line centered on screen, so every Ex command reads as it is typed.
 -- demo.sh drives it over RPC through the Demo table below; those calls are
 -- not keystrokes, so the ledger counts only the keys the demo types.
 vim.g.mapleader = " "
@@ -15,6 +16,34 @@ vim.opt.diffopt:append({ "foldcolumn:0" })
 pcall(function()
 	vim.opt.diffopt:append({ "inline:char" })
 end)
+
+-- setup-demo.sh clones noice.nvim and nui.nvim here; without them the command
+-- line stays at the bottom.
+local plugins = (vim.env.XDG_DATA_HOME or vim.fn.expand("~/.local/share")) .. "/multicursor-demo"
+vim.opt.runtimepath:prepend({ plugins .. "/nui.nvim", plugins .. "/noice.nvim" })
+local has_noice, noice = pcall(require, "noice")
+if has_noice then
+	noice.setup({
+		cmdline = {
+			view = "cmdline_popup",
+			-- Show the typed : or / where noice puts an icon: the ledger counts it.
+			format = {
+				cmdline = { conceal = false, icon = false },
+				search_down = { conceal = false, icon = false },
+				search_up = { conceal = false, icon = false },
+			},
+		},
+		messages = { enabled = false },
+		popupmenu = { enabled = false },
+		notify = { enabled = false },
+		lsp = {
+			progress = { enabled = false },
+			hover = { enabled = false },
+			signature = { enabled = false },
+			message = { enabled = false },
+		},
+	})
+end
 
 package.path = vim.fn.expand("~/.config/nvim/lua") .. "/?.lua;" .. package.path
 local has_golf, golf = pcall(require, "user_functions.keystroke_golf")
@@ -49,11 +78,10 @@ end
 
 Demo = {}
 
--- Opens the exercise copy on top and its goal below, diffed against each
--- other, and puts the cursor on the first line of the copy with no cursors,
--- search, or recording left over. An empty goal shows the copy alone, for
--- scenes that end somewhere other than the exercise's goal.
-function Demo.load(work, goal, show_golf)
+-- Opens the exercise copy on top, its goal below, diffed against each other,
+-- and the ledger at the bottom. Puts the cursor on the first line of the copy
+-- with no cursors, search, or recording left over.
+function Demo.load(work, goal)
 	vim.cmd("stopinsert")
 	vim.cmd("diffoff!")
 	vim.cmd("only")
@@ -70,25 +98,22 @@ function Demo.load(work, goal, show_golf)
 	vim.cmd("edit " .. vim.fn.fnameescape(work))
 	work_win = vim.api.nvim_get_current_win()
 	work_buf = vim.api.nvim_get_current_buf()
-	goal_buf = nil
-	if goal ~= "" then
-		vim.cmd("diffthis")
-		vim.wo.foldenable = false
-		vim.cmd("belowright split " .. vim.fn.fnameescape(goal))
-		goal_buf = vim.api.nvim_get_current_buf()
-		vim.bo.modifiable = false
-		vim.wo.winbar = " goal"
-		vim.cmd("diffthis")
-		vim.wo.foldenable = false
-		vim.api.nvim_win_set_height(work_win, 9)
-	end
+	vim.cmd("diffthis")
+	vim.wo.foldenable = false
+	vim.cmd("belowright split " .. vim.fn.fnameescape(goal))
+	goal_buf = vim.api.nvim_get_current_buf()
+	vim.bo.modifiable = false
+	vim.wo.winbar = " goal"
+	vim.cmd("diffthis")
+	vim.wo.foldenable = false
+	vim.api.nvim_win_set_height(work_win, 9)
 	vim.api.nvim_clear_autocmds({ group = goal_group })
 	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
 		group = goal_group,
 		buffer = work_buf,
 		callback = mark_goal,
 	})
-	if has_golf and show_golf then
+	if has_golf then
 		golf.toggle_panel()
 	end
 	vim.api.nvim_set_current_win(work_win)

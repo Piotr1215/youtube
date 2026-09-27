@@ -131,7 +131,7 @@ printf '\e[37m%s\e[0m\n' 'You type it once on the command line and see only the 
 ```bash +exec_replace
 printf '  \e[1;33m%s\e[0m%s\n' ':g/pattern/cmd       ' 'run cmd on lines that match'
 printf '  \e[1;33m%s\e[0m%s\n\n' ':v/pattern/cmd       ' 'run cmd on lines that do not'
-printf '  \e[36m%s\e[0m%s\n\n' ':v/:/norm I[ok]␣     ' 'prefix every line without a colon'
+printf '  \e[36m%s\e[0m%s\n\n' ':v/:/s/^/[ok]␣       ' 'prefix every line without a colon'
 printf '\e[37m%s\e[0m\n' 'The target is a condition, not a place on screen.'
 ```
 
@@ -142,8 +142,9 @@ printf '\e[37m%s\e[0m\n' 'The target is a condition, not a place on screen.'
 > :s rewrites every match of a pattern.
 
 ```bash +exec_replace
-printf '  \e[1;33m%s\e[0m\n\n' ':%s/_\(\w\)/\u\1/g'
-printf '  \e[36m%s\e[0m%s\n' '_\(\w\)    ' 'an underscore and the letter after it'
+printf '  \e[1;33m%s\e[0m\n\n' ':%s/\v_(.)/\u\1/g'
+printf '  \e[36m%s\e[0m%s\n' '\v         ' 'very magic: ( ) group without backslashes'
+printf '  \e[36m%s\e[0m%s\n' '_(.)       ' 'an underscore and the letter after it'
 printf '  \e[36m%s\e[0m%s\n' '\u\1       ' 'that letter, uppercased'
 printf '  \e[36m%s\e[0m%s\n\n' 'g          ' 'every match on the line'
 printf '\e[37m%s\e[0m\n' 'Case changes, expressions, and many files with :cdo or :argdo.'
@@ -156,20 +157,10 @@ printf '\e[37m%s\e[0m\n' 'Case changes, expressions, and many files with :cdo or
 > Record an edit once, replay it anywhere.
 
 ```bash +exec_replace
-printf '  \e[1;33m%s\e[0m%s\n' 'qq … q             ' 'record the edit into register q'
-printf '  \e[1;33m%s\e[0m%s\n' ':2,$norm @q        ' 'replay it on a range'
+printf '  \e[1;33m%s\e[0m%s\n' 'qq … +q            ' 'record the edit, end on the next line'
+printf '  \e[1;33m%s\e[0m%s\n' '4@q                ' 'replay it four times'
 printf '  \e[1;33m%s\e[0m%s\n\n' '"qp                ' 'paste the macro as text to fix it'
 printf '\e[37m%s\e[0m\n' 'The register keeps the macro for later, in any file.'
-```
-
-<!-- end_slide -->
-
-## Classic Demo
-
-> One exercise for each classic method.
-
-```bash +exec
-./demo.sh classic
 ```
 
 <!-- end_slide -->
@@ -198,16 +189,6 @@ printf '\e[37m%s\e[0m\n' 'Then type: the edit lands at every cursor as you go.'
 
 <!-- end_slide -->
 
-## Placing Demo
-
-> A selection, your own picks, and search matches.
-
-```bash +exec
-./demo.sh placing
-```
-
-<!-- end_slide -->
-
 ## Scripted Placement
 
 > Q is a normal command, so any Ex command can place cursors.
@@ -219,16 +200,6 @@ printf '  \e[1;33m%s\e[0m%s\n' ':v/:/normal! Q            ' 'on lines without a 
 printf '  \e[1;33m%s\e[0m%s\n' ':cdo normal! Q            ' 'at each quickfix item'
 printf '  \e[1;33m%s\e[0m%s\n\n' 'nvim_mcursor(0, {r, c})   ' 'anywhere, from Lua'
 printf '\e[33m%s\e[0m\n' 'A command picks the spots; you type the edit live.'
-```
-
-<!-- end_slide -->
-
-## Scripted Demo
-
-> Command methods pick the lines, multicursor makes the edit.
-
-```bash +exec
-./demo.sh scripted
 ```
 
 <!-- end_slide -->
@@ -277,16 +248,6 @@ printf '\e[90m%s\e[0m\n' 'CTRL-L taken? Map a key to clear the nvim.multicursor 
 
 <!-- end_slide -->
 
-## Editing Demo
-
-> Motions, undo, registers, and a counter, at every cursor.
-
-```bash +exec
-./demo.sh editing
-```
-
-<!-- end_slide -->
-
 ## Keystroke Golf
 
 > Which method wins each exercise?
@@ -297,33 +258,55 @@ printf '\e[90m%s\e[0m\n' 'CTRL-L taken? Map a key to clear the nvim.multicursor 
 
 <!-- end_slide -->
 
+## Golf Rules
+
+> Same exercise, every method, fewest keys wins.
+
+```bash +exec_replace
+printf '  \e[36m%s\e[0m%s\n' 'hole      ' 'one exercise, its goal diffed below the edit'
+printf '  \e[36m%s\e[0m%s\n' 'methods   ' 'each one plays a fresh copy of the exercise'
+printf '  \e[36m%s\e[0m%s\n' 'ledger    ' 'counts every key typed, Esc and Enter included'
+printf '  \e[1;33m%s\e[0m%s\n' '🏆        ' 'the fewest keys that reach the goal'
+```
+
+<!-- end_slide -->
+
+## Golf Course
+
+> Five exercises, each played by the methods that fit it.
+
+```bash +exec_replace
+printf '  \e[90m%s\e[0m\n' 'hole  exercise             methods'
+printf '  %s\e[36m%s\e[0m%s\n' '1     ' 'add prefix           ' 'visual block  :norm  multicursor'
+printf '  %s\e[36m%s\e[0m%s\n' '2     ' 'wrap parens          ' ':s  macro  multicursor'
+printf '  %s\e[36m%s\e[0m%s\n' '3     ' 'flip assignment      ' ':s  macro  multicursor'
+printf '  %s\e[36m%s\e[0m%s\n' '4     ' 'snake to camel       ' ':s  multicursor'
+printf '  %s\e[36m%s\e[0m%s\n' '5     ' 'conditional prefix   ' ':v  search + Q  :v + Q'
+```
+
+```bash +exec
+./demo.sh
+```
+
+<!-- end_slide -->
+
 ## Scoreboard
 
-> Keys typed for each exercise: the best other method against multicursor.
+> Keys typed for each exercise: the shortest other method found, and multicursor.
 
 ```bash +exec_replace
 printf '  \e[90m%s\e[0m\n' 'exercise             other method       multicursor'
 row() { if (($2 < $4)); then w=32 m=90; else w=90 m=32; fi; printf '  %s\e[%sm%3d  %s\e[0m\e[%sm%3d\e[0m\n' "$1" "$w" "$2" "$3" "$m" "$4"; }
 row '01 add prefix       ' 6 'visual block     ' 7
-row '02 log levels       ' 12 ':norm            ' 7
-row '03 bracket quotes   ' 16 ':s               ' 9
+row '02 log levels       ' 11 'macro            ' 7
+row '03 bracket quotes   ' 13 'macro            ' 9
 row '04 first field      ' 8 ':s               ' 6
 row '05 semicolons       ' 8 ':s               ' 6
-row '06 wrap parens      ' 15 ':s               ' 10
-row '07 flip assignment  ' 23 ':s               ' 12
-row '08 cond prefix      ' 17 ':v               ' 16
-row '09 snake to camel   ' 19 ':s               ' 7
-printf '\n\e[33m%s\e[0m\n' 'On-screen edits favor multicursor; a fixed column favors visual block.'
-```
-
-<!-- end_slide -->
-
-## Golf Demo
-
-> The keystroke golf ledger ranks each attempt by keys typed.
-
-```bash +exec
-./demo.sh golf
+row '06 wrap parens      ' 14 'macro            ' 10
+row '07 flip assignment  ' 16 'macro            ' 12
+row '08 cond prefix      ' 15 ':v               ' 16
+row '09 snake to camel   ' 18 ':s               ' 7
+printf '\n\e[33m%s\e[0m\n' 'Multicursor wins on-screen edits; a column or a condition favors the classics.'
 ```
 
 <!-- end_slide -->
