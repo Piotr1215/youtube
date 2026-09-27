@@ -10,7 +10,7 @@ echo "Pane Regex" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Keyboard First
+## Keyboard-Centric Workflow
 
 > Why keep your hands on the keyboard at all?
 
@@ -167,9 +167,9 @@ printf '  \e[1;32m%s\e[0m\e[32m%s %s\e[0m\n' 'pane regex       ' '✓' 'type a f
 
 <!-- end_slide -->
 
-## Pane Regex
+## tmux-pane-regex
 
-> How do you grab text by describing it?
+> What does the plugin add for keyboard users?
 
 ```bash +exec_replace
 ./journey.sh 4
@@ -192,6 +192,7 @@ printf '\e[37m%s\e[0m\n' '2026-09-27T08:14:12Z WARN  connection refused, retry 2
 printf '\e[37m%s\e[0m\n' '2026-09-27T08:14:17Z WARN  connection refused, retry 3 of 3'
 printf '\e[37m%s\e[30;43m%s\e[0m\e[37m%s\e[0m\n' '2026-09-27T08:14:17Z ' 'ERROR giving up: dial tcp 10.96.14.7:5432' ': connect: connection refused'
 printf '\e[37m%s\e[0m\n' '2026-09-27T08:14:17Z INFO  runbook: https://github.com/acme/checkout-worker/...'
+printf '\n\e[90m%s\e[0m\n' 'The mouse keeps working; the plugin adds a keyboard path.'
 ```
 
 <!-- end_slide -->
@@ -236,7 +237,7 @@ printf '  \e[35m%s\e[1;33m%s\e[0m%s\n' '            ' '\u          ' 'the newest
 
 <!-- end_slide -->
 
-## Under the Hood
+## Plugin Internals
 
 > How do a few typed words turn into a paste?
 
@@ -375,6 +376,16 @@ set -g @plugin 'Piotr1215/tmux-pane-regex'
 
 ```bash +exec_replace
 printf '\e[32m%s\e[0m\n' 'prefix + R, then a word from the text you want.'
+```
+
+<!-- end_slide -->
+
+## Takeaways
+
+```bash +exec_replace
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'keyboard copying   ' 'type a few words instead of steering a cursor'
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'regex you know     ' 'already gets you halfway there'
+printf '  \e[1;33m%s\e[0m\e[36m%s\e[0m%s\n' '▶ ' 'next               ' 'install the plugin, press prefix + R on your own scrollback'
 ```
 
 <!-- end_slide -->
