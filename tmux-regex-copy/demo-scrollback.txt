@@ -1,0 +1,72 @@
+$ kubectl get pods -n payments
+NAME                              READY   STATUS             RESTARTS   AGE
+checkout-api-7d9f8b6c4d-x2kqp     1/1     Running            0          3h
+checkout-worker-5c6b7f9d8-m4n7z   0/1     CrashLoopBackOff   12         41m
+ledger-sync-6f8c9d7b5-q8r2t       1/1     Running            0          3h
+
+$ kubectl logs checkout-worker-5c6b7f9d8-m4n7z -n payments --tail 6
+2026-09-27T08:14:02Z INFO  connecting to ledger-db.payments.svc:5432
+2026-09-27T08:14:07Z WARN  connection refused, retry 1 of 3
+2026-09-27T08:14:12Z WARN  connection refused, retry 2 of 3
+2026-09-27T08:14:17Z WARN  connection refused, retry 3 of 3
+2026-09-27T08:14:17Z ERROR giving up: dial tcp 10.96.14.7:5432: connect: connection refused
+2026-09-27T08:14:17Z INFO  runbook: https://github.com/acme/checkout-worker/blob/main/docs/runbook.md#database
+
+$ helm upgrade --install checkout-worker ./charts/checkout-worker --namespace payments --create-namespace --set image.tag=1.14.2 --set database.host=ledger-db.payments.svc --set database.port=5432 --set resources.limits.memory=512Mi --set resources.requests.cpu=100m --wait --timeout 5m
+Release "checkout-worker" has been upgraded. Happy Helming!
+NAME: checkout-worker
+STATUS: deployed
+REVISION: 7
+
+$ kubectl get deploy checkout-worker -n payments -o yaml | yq '.spec.template.spec.containers[0].resources'
+limits:
+  cpu: 500m
+  memory: 512Mi
+requests:
+  cpu: 100m
+  memory: 256Mi
+
+$ cat RELEASE_NOTES.md
+The worker now retries database connections with exponential backoff. It doesn’t block the queue while it waits, and failed jobs return to the queue after 30 seconds. See the migration guide (https://docs.example.com/checkout/1.14/migration) before upgrading.
+
+Rollback is one command away if the new retry policy misbehaves.
+
+$ kubectl get events -n payments --sort-by=.lastTimestamp
+LAST SEEN   TYPE      REASON              OBJECT                                  MESSAGE
+52m         Normal    Scheduled           pod/checkout-worker-5c6b7f9d8-m4n7z     Successfully assigned payments/checkout-worker-5c6b7f9d8-m4n7z to node-3
+52m         Normal    Pulling             pod/checkout-worker-5c6b7f9d8-m4n7z     Pulling image "ghcr.io/acme/checkout-worker:1.14.1"
+51m         Normal    Pulled              pod/checkout-worker-5c6b7f9d8-m4n7z     Successfully pulled image in 4.2s
+51m         Normal    Created             pod/checkout-worker-5c6b7f9d8-m4n7z     Created container worker
+51m         Normal    Started             pod/checkout-worker-5c6b7f9d8-m4n7z     Started container worker
+49m         Warning   BackOff             pod/checkout-worker-5c6b7f9d8-m4n7z     Back-off restarting failed container worker
+47m         Normal    Pulled              pod/checkout-worker-5c6b7f9d8-m4n7z     Container image already present on machine
+47m         Normal    Created             pod/checkout-worker-5c6b7f9d8-m4n7z     Created container worker
+47m         Normal    Started             pod/checkout-worker-5c6b7f9d8-m4n7z     Started container worker
+45m         Warning   BackOff             pod/checkout-worker-5c6b7f9d8-m4n7z     Back-off restarting failed container worker
+44m         Normal    Scheduled           pod/ledger-sync-6f8c9d7b5-q8r2t         Successfully assigned payments/ledger-sync-6f8c9d7b5-q8r2t to node-1
+44m         Normal    Pulled              pod/ledger-sync-6f8c9d7b5-q8r2t         Container image already present on machine
+44m         Normal    Created             pod/ledger-sync-6f8c9d7b5-q8r2t         Created container sync
+44m         Normal    Started             pod/ledger-sync-6f8c9d7b5-q8r2t         Started container sync
+41m         Normal    SuccessfulCreate    replicaset/checkout-api-7d9f8b6c4d      Created pod: checkout-api-7d9f8b6c4d-x2kqp
+41m         Normal    Scheduled           pod/checkout-api-7d9f8b6c4d-x2kqp       Successfully assigned payments/checkout-api-7d9f8b6c4d-x2kqp to node-2
+40m         Normal    Pulled              pod/checkout-api-7d9f8b6c4d-x2kqp       Container image already present on machine
+40m         Normal    Created             pod/checkout-api-7d9f8b6c4d-x2kqp       Created container api
+40m         Normal    Started             pod/checkout-api-7d9f8b6c4d-x2kqp       Started container api
+38m         Warning   BackOff             pod/checkout-worker-5c6b7f9d8-m4n7z     Back-off restarting failed container worker
+33m         Normal    Pulled              pod/checkout-worker-5c6b7f9d8-m4n7z     Container image already present on machine
+33m         Normal    Created             pod/checkout-worker-5c6b7f9d8-m4n7z     Created container worker
+33m         Normal    Started             pod/checkout-worker-5c6b7f9d8-m4n7z     Started container worker
+31m         Warning   BackOff             pod/checkout-worker-5c6b7f9d8-m4n7z     Back-off restarting failed container worker
+27m         Normal    ScalingReplicaSet   deployment/checkout-worker              Scaled up replica set checkout-worker-7b8c9d6f5 to 1
+27m         Normal    SuccessfulCreate    replicaset/checkout-worker-7b8c9d6f5    Created pod: checkout-worker-7b8c9d6f5-h3j9k
+27m         Normal    Scheduled           pod/checkout-worker-7b8c9d6f5-h3j9k     Successfully assigned payments/checkout-worker-7b8c9d6f5-h3j9k to node-2
+26m         Normal    Pulling             pod/checkout-worker-7b8c9d6f5-h3j9k     Pulling image "ghcr.io/acme/checkout-worker:1.14.2"
+26m         Normal    Pulled              pod/checkout-worker-7b8c9d6f5-h3j9k     Successfully pulled image in 3.8s
+26m         Normal    Created             pod/checkout-worker-7b8c9d6f5-h3j9k     Created container worker
+26m         Normal    Started             pod/checkout-worker-7b8c9d6f5-h3j9k     Started container worker
+24m         Normal    ScalingReplicaSet   deployment/checkout-worker              Scaled down replica set checkout-worker-5c6b7f9d8 to 0
+24m         Normal    Killing             pod/checkout-worker-5c6b7f9d8-m4n7z     Stopping container worker
+19m         Normal    Pulled              pod/ledger-sync-6f8c9d7b5-q8r2t         Container image already present on machine
+12m         Normal    Created             pod/ledger-sync-6f8c9d7b5-q8r2t         Created container sync
+12m         Normal    Started             pod/ledger-sync-6f8c9d7b5-q8r2t         Started container sync
+4m          Normal    Sync                configmap/checkout-worker-config        Configuration reloaded
