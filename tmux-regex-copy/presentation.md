@@ -90,6 +90,25 @@ printf '  \e[32m%s\e[0m%s\n' 'scrollback      ' 'everything they printed, 2000 l
 
 <!-- end_slide -->
 
+## Soft Wraps
+
+> tmux keeps a long line whole; the terminal only sees rows.
+
+```bash +exec_replace
+printf '\e[36m%s\e[0m\n' '╭─ tmux stores one line ────────────────────────────────────────────────────────'
+printf '\e[36m│\e[0m %s\n' '$ helm upgrade --install checkout-worker ./charts/checkout-worker -n payments'
+printf '\e[36m%s\e[0m\n\n' '╰───────────────────────────────────────────────────────────────────────────────'
+printf '\e[90m%s\e[0m\n' '╭─ the terminal draws rows ─────────────'
+printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' '$ helm upgrade --install checkout-wo' ' ⏎'
+printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' 'rker ./charts/checkout-worker -n pay' ' ⏎'
+printf '\e[90m│\e[0m %s\n' 'ments'
+printf '\e[90m%s\e[0m\n\n' '╰───────────────────────────────────────'
+printf '  \e[31m%s\e[0m %s\n' '✗' 'a mouse drag copies rows, with stray line breaks'
+printf '  \e[32m%s\e[0m %s\n' '✓' 'copy mode and pane regex copy the line'
+```
+
+<!-- end_slide -->
+
 ## Copy Mode
 
 > A cursor you steer through history.
@@ -129,25 +148,6 @@ printf '\e[90m%s\e[0m\n' 'More on escape sequences: the Neovim Terminal video.'
 
 ```bash +exec_replace
 ./journey.sh 3
-```
-
-<!-- end_slide -->
-
-## Soft Wraps
-
-> tmux keeps a long line whole; the terminal only sees rows.
-
-```bash +exec_replace
-printf '\e[36m%s\e[0m\n' '╭─ tmux stores one line ────────────────────────────────────────────────────────'
-printf '\e[36m│\e[0m %s\n' '$ helm upgrade --install checkout-worker ./charts/checkout-worker -n payments'
-printf '\e[36m%s\e[0m\n\n' '╰───────────────────────────────────────────────────────────────────────────────'
-printf '\e[90m%s\e[0m\n' '╭─ the terminal draws rows ─────────────'
-printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' '$ helm upgrade --install checkout-wo' ' ⏎'
-printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' 'rker ./charts/checkout-worker -n pay' ' ⏎'
-printf '\e[90m│\e[0m %s\n' 'ments'
-printf '\e[90m%s\e[0m\n\n' '╰───────────────────────────────────────'
-printf '  \e[31m%s\e[0m %s\n' '✗' 'a mouse drag copies rows, with stray line breaks'
-printf '  \e[32m%s\e[0m %s\n' '✓' 'copy mode and pane regex copy the line'
 ```
 
 <!-- end_slide -->
