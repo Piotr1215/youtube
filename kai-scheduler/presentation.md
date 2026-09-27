@@ -197,7 +197,7 @@ printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The rest of the demo runs on this sam
 # Clear any leftover verify pod, then test GPU accessibility (rerun-safe)
 kubectl delete pod gpu-verify --ignore-not-found --now
 kubectl run gpu-verify --image=nvidia/cuda:12.2.0-base-ubuntu20.04 \
-  --rm -it --restart=Never \
+  --rm --attach --restart=Never \
   --overrides='{"spec":{"runtimeClassName":"nvidia","nodeSelector":{"nvidia.com/gpu.present":"true"}}}' \
   -- nvidia-smi -L
 ```
