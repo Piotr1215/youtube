@@ -1,16 +1,16 @@
-# Edit Methods
+# Multiline Editing
 
-> Every Neovim way to repeat an edit, multicursor included
+> Every Neovim way to edit many lines at once, multicursor included
 
 <!-- new_lines: 3 -->
 
 ```bash +exec_replace
-echo "Edit Methods" | figlet -f small -w 90
+echo "Multiline Editing" | figlet -f small -w 90
 ```
 
 <!-- end_slide -->
 
-## Repeated Edits
+## Multiline Edits
 
 > Why not just make the edit on each line?
 
@@ -35,7 +35,7 @@ printf '\e[33m%s\e[0m\n' 'Every extra line is another trip around the loop.'
 
 ## Basic Concepts
 
-> What does every repeated edit need?
+> What does every multiline edit need?
 
 ```bash +exec_replace
 ./journey.sh 2
@@ -45,7 +45,7 @@ printf '\e[33m%s\e[0m\n' 'Every extra line is another trip around the loop.'
 
 ## Targets and Edit
 
-> Every repeated edit answers two questions.
+> Every multiline edit answers two questions.
 
 ```bash +exec_replace
 printf '  \e[36m%s\e[0m%s\n' 'where   ' 'the targets: lines, search matches, spots you pick'
@@ -85,7 +85,7 @@ printf '\e[33m%s\e[0m\n' ':g/pat/normal! Q joins them: a command picks, you type
 
 ## Classic Methods
 
-> How did Neovim repeat an edit before multicursor?
+> How did Neovim edit many lines before multicursor?
 
 ```bash +exec_replace
 ./journey.sh 3
