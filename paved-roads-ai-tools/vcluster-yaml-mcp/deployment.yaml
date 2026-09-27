@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vcluster-yaml-mcp-server
+  labels:
+    app: vcluster-yaml-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vcluster-yaml-mcp-server
+  template:
+    metadata:
+      labels:
+        app: vcluster-yaml-mcp-server
+    spec:
+      # Restricted-compliant so the pod is admitted under the template's
+      # podSecurityStandard: restricted. The team writes this; nothing else.
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server
+          image: piotrzan/vcluster-yaml-mcp-server:latest
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # readOnlyRootFilesystem is on, so give the node app a writable /tmp
+            # (guards against a crashloop if it writes caches or temp files).
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,41 @@
+# ai-tool-runtime - the approved paved-road values for team-owned AI tools.
+# Local demo uses these with the vcluster helm driver:
+#   vcluster create team-docs --values ai-tool-runtime.yaml --driver helm
+# On the platform (loft.rocks) the same policies block ships inside the
+# ai-tool-runtime VirtualClusterTemplate, so non-admins can only self-serve
+# tenant clusters that already carry this envelope.
+#
+# Policies block validated against the vCluster config schema (valid: true).
+
+sync:
+  toHost:
+    ingresses:
+      enabled: true
+
+policies:
+  podSecurityStandard: restricted
+  resourceQuota:
+    enabled: true
+    quota:
+      requests.cpu: "8"
+      requests.memory: 16Gi
+      limits.cpu: "16"
+      limits.memory: 32Gi
+      requests.storage: "50Gi"
+      count/pods: "40"
+      count/services: "20"
+      # No NodePort, no LoadBalancer: the only sanctioned exit is an Ingress
+      # (sync.toHost.ingresses above). This keeps a team tool on the paved road
+      # instead of punching its own hole to the network.
+      services.loadbalancers: "0"
+      services.nodeports: "0"
+  limitRange:
+    enabled: true
+    default:
+      cpu: "1"
+      memory: 512Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+  networkPolicy:
+    enabled: true

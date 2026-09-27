@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vcluster-yaml-mcp-server
+  labels:
+    app: vcluster-yaml-mcp-server
+spec:
+  # ClusterIP, reached through the Ingress. The template's quota forbids
+  # NodePort (services.nodeports: "0") and LoadBalancer, so the only sanctioned
+  # exit is an Ingress. vcluster syncs both to the host namespace.
+  type: ClusterIP
+  selector:
+    app: vcluster-yaml-mcp-server
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

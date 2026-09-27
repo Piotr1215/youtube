@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vcluster-yaml-mcp-server
+  labels:
+    app: vcluster-yaml-mcp-server
+  annotations:
+    # MCP is plain HTTP; cloudflared terminates TLS at the edge.
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  # vcluster syncs this Ingress to the host namespace (sync.toHost.ingresses),
+  # where ingress-nginx on the kind cluster serves it. Host-less rule so it
+  # matches whatever Host cloudflared forwards.
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vcluster-yaml-mcp-server
+                port:
+                  number: 3000

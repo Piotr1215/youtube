@@ -1,0 +1,24 @@
+# kind config for the demo control plane cluster. The ingress-ready label and
+# 80/443 port mappings let ingress-nginx (installed by setup.sh) receive
+# traffic, so the in-tenant MCP server is reachable through an Ingress, the exit
+# the governance template sanctions (NodePort and LoadBalancer are forbidden by
+# the quota). extraPortMappings must exist at cluster-creation time (kind cannot
+# add them to a running cluster); they publish the ingress controller to the
+# host as localhost:8088, where cloudflared reaches it with no port-forward.
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8088
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
