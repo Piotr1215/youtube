@@ -1,0 +1,5 @@
+let x = 5
+const name = "john"
+var count = 100
+let items = []
+const fn = () => {}

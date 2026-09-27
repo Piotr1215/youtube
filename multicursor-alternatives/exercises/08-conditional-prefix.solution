@@ -1,0 +1,7 @@
+[ok] apple
+ERROR: bad input
+[ok] banana
+WARNING: check this
+[ok] cherry
+DEBUG: trace info
+[ok] grape

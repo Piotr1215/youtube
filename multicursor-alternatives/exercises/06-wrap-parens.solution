@@ -1,0 +1,5 @@
+print (hello)
+echo (world)
+log (message)
+say (hi)
+output (result)

@@ -1,0 +1,5 @@
+"INFO" server started on port 8080
+"ERROR 503" connection failed: timeout after 30s
+"WARNING DISK" disk space low
+"DEBUG REQ" request payload: {"user": "john"}
+"CRITICAL SYS" system overload detected

@@ -1,0 +1,10 @@
+digraph G {
+  rankdir=LR;
+  node [shape=box, style=rounded];
+
+  select [label="Select Lines\n(V + motion)"];
+  norm [label=":norm cmd"];
+  result [label="All Lines\nModified"];
+
+  select -> norm -> result;
+}
