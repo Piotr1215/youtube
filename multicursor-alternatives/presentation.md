@@ -74,10 +74,10 @@ printf '\e[33m%s\e[0m\n' 'Replay f] on each line and it finds that line'"'"'s ow
 > Describe the edit and run it, or make it on screen and watch it land.
 
 ```bash +exec_replace
-printf '  \e[36m%s\e[0m\e[32m%s\e[0m\n' 'command methods            ' 'cursor methods'
-printf '  \e[90m%s\e[0m\e[90m%s\e[0m\n' 'describe, then run         ' 'edit on screen, live'
-printf '  %s%s\n' ':norm  :g  :v  :s  macro   ' 'visual block  multicursor'
-printf '  \e[90m%s\e[0m\e[90m%s\e[0m\n\n' 'you see the result         ' 'you see every key land'
+printf '  \e[36m%s\e[0m\e[32m%s\e[0m\n' 'command methods                ' 'cursor methods'
+printf '  \e[90m%s\e[0m\e[90m%s\e[0m\n' 'describe, then run             ' 'edit on screen, live'
+printf '  %s%s\n' ':norm  :g  :v  :s  :!  macro   ' 'visual block  multicursor'
+printf '  \e[90m%s\e[0m\e[90m%s\e[0m\n\n' 'you see the result             ' 'you see every key land'
 printf '\e[33m%s\e[0m\n' ':g/pat/normal! Q joins them: a command picks, you type.'
 ```
 
@@ -148,6 +148,19 @@ printf '  \e[36m%s\e[0m%s\n' '_(.)       ' 'an underscore and the letter after i
 printf '  \e[36m%s\e[0m%s\n' '\u\1       ' 'that letter, uppercased'
 printf '  \e[36m%s\e[0m%s\n\n' 'g          ' 'every match on the line'
 printf '\e[37m%s\e[0m\n' 'Case changes, expressions, and many files with :cdo or :argdo.'
+```
+
+<!-- end_slide -->
+
+## Filter Commands
+
+> :{range}!cmd pipes lines through a CLI tool and keeps what it prints.
+
+```bash +exec_replace
+printf '  \e[1;33m%s\e[0m%s\n' ':%!sort -u          ' 'sort the lines, drop duplicates'
+printf '  \e[1;33m%s\e[0m%s\n' ":'<,'>!column -t    " 'align the selection into columns'
+printf '  \e[1;33m%s\e[0m%s\n\n' ':%!jq .             ' 'pretty-print JSON'
+printf '\e[37m%s\e[0m\n' 'Any tool that reads stdin and writes stdout becomes an edit.'
 ```
 
 <!-- end_slide -->
@@ -243,7 +256,7 @@ printf '  \e[1;33m%s\e[0m%s\n' 'gQ          ' 'bring the last cursors back'
 printf '  \e[1;33m%s\e[0m%s\n' ']C  [C      ' 'jump to the next or previous cursor'
 printf '  \e[1;33m%s\e[0m%s\n' 'g CTRL-A    ' 'number the cursors 1, 2, 3'
 printf '  \e[1;33m%s\e[0m%s\n\n' 'u           ' 'undo the last edit at every cursor'
-printf '\e[90m%s\e[0m\n' 'CTRL-L taken? Map a key to clear the nvim.multicursor namespace.'
+printf '\e[90m%s\e[0m\n' 'CTRL-L taken? Map <Esc> to clear the nvim.multicursor namespace.'
 ```
 
 <!-- end_slide -->
@@ -276,6 +289,7 @@ printf '  \e[31m%s\e[0m%s\n' '✗ ' 'nightly only, until Neovim 0.13 ships'
 
 ```bash +exec_replace
 q() { printf '  %s\e[90m%s\e[0m\e[%sm%s\e[0m\n' "$1" ' ──▶ ' "$2" "$3"; }
+q 'A job a CLI tool already does?            ' 36 ':!  filter'
 q 'Across files, or too many lines to watch? ' 36 ':s  :norm  with :cdo'
 q 'An edit you will replay later?            ' 36 'macro'
 q 'One column on adjacent lines?             ' 32 'visual block'
@@ -345,7 +359,7 @@ printf '  \e[1;33m%s\e[0m%s\n' './exercises.sh  ' 'nine exercises, each checked 
 
 ```bash +exec_replace
 printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'multicursor     ' 'the newest method: it replays commands at every cursor'
-printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'rule of thumb   ' 'files, reuse, columns, line filters, fixed strings first'
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'rule of thumb   ' 'tools, files, reuse, columns, patterns, fixed strings first'
 printf '  \e[1;33m%s\e[0m\e[36m%s\e[0m%s\n' '▶ ' 'next            ' 'install a nightly, press VGQ, run the exercises'
 ```
 
