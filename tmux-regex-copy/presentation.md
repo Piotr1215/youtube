@@ -104,24 +104,7 @@ printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' 'rker ./charts/checkout-worker -n pay'
 printf '\e[90m│\e[0m %s\n' 'ments'
 printf '\e[90m%s\e[0m\n\n' '╰───────────────────────────────────────'
 printf '  \e[31m%s\e[0m %s\n' '✗' 'a mouse drag copies rows, with stray line breaks'
-printf '  \e[32m%s\e[0m %s\n' '✓' 'copy mode and pane regex copy the line'
-```
-
-<!-- end_slide -->
-
-## Copy Mode
-
-> A cursor you steer through history.
-
-```bash +exec_replace
-printf '  \e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[0m\n' 'prefix [' ' ─▶ ' '?ERROR' ' ─▶ ' 'Space' ' ─▶ ' 'E E E E E E h' ' ─▶ ' 'Enter' ' ─▶ ' 'prefix ]'
-printf '  \e[90m%s\e[0m\n\n' 'enter       search    select   steer            copy     paste'
-printf '  \e[32m%s\e[0m %s\n' '✓' 'precise, and a wrapped line copies as one line'
-printf '  \e[31m%s\e[0m %s\n' '✗' 'you steer to words you already know'
-```
-
-```bash +exec
-./demo.sh copy-mode
+printf '  \e[32m%s\e[0m %s\n' '✓' 'copying from tmux history keeps the line whole'
 ```
 
 <!-- end_slide -->
@@ -148,6 +131,24 @@ printf '\e[90m%s\e[0m\n' 'More on escape sequences: the Neovim Terminal video.'
 
 ```bash +exec_replace
 ./journey.sh 3
+```
+
+<!-- end_slide -->
+
+## Copy Mode
+
+> A cursor you steer through history.
+
+```bash +exec_replace
+printf '  \e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[90m%s\e[1;33m%s\e[0m\n' 'prefix [' ' ─▶ ' '?ERROR' ' ─▶ ' 'Space' ' ─▶ ' 'E E E E E E h' ' ─▶ ' 'Enter' ' ─▶ ' 'prefix ]'
+printf '  \e[90m%s\e[0m\n\n' 'enter       search    select   steer            copy     paste'
+printf '  \e[32m%s\e[0m %s\n' '✓' 'precise, and a wrapped line copies as one line'
+printf '  \e[31m%s\e[0m %s\n' '✗' 'a regex can jump the cursor, but it cannot select a range'
+printf '  \e[31m%s\e[0m %s\n' '✗' 'you steer to the end of text you can already see'
+```
+
+```bash +exec
+./demo.sh copy-mode
 ```
 
 <!-- end_slide -->
