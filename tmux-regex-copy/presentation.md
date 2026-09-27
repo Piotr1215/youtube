@@ -125,9 +125,9 @@ printf '\e[90m%s\e[0m\n' 'More on escape sequences: the Neovim Terminal video.'
 
 <!-- end_slide -->
 
-## Built-in Shortcomings
+## Built-in Copying
 
-> Why aren't the mouse and copy mode enough?
+> How does copying work without a plugin?
 
 ```bash +exec_replace
 ./journey.sh 3
