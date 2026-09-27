@@ -1,0 +1,173 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "dune_3@3.20.2": {
+      "last_modified": "2025-11-23T21:50:36Z",
+      "resolved": "github:NixOS/nixpkgs/ee09932cedcef15aaf476f9343d1dea2cb77e261#dune_3",
+      "source": "devbox-search",
+      "version": "3.20.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9lrf3vw6vi946mc3g9sbv6hlpkh5iv73-dune-3.20.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9lrf3vw6vi946mc3g9sbv6hlpkh5iv73-dune-3.20.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/p1hpwccm23z07a2zm65al4d4gqb10x52-dune-3.20.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/p1hpwccm23z07a2zm65al4d4gqb10x52-dune-3.20.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9llc8lvr5lbpmpp56anyrin1fw3ryylf-dune-3.20.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9llc8lvr5lbpmpp56anyrin1fw3ryylf-dune-3.20.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/p936av4kaw7zyc6vblrhfm0rwy807zzj-dune-3.20.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/p936av4kaw7zyc6vblrhfm0rwy807zzj-dune-3.20.2"
+        }
+      }
+    },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2025-12-05T15:03:55Z",
+      "resolved": "github:NixOS/nixpkgs/a672be65651c80d3f592a89b3945466584a22069?lastModified=1764947035&narHash=sha256-EYHSjVM4Ox4lvCXUMiKKs2vETUSL5mx%2BJ2FfutM7T9w%3D"
+    },
+    "ocaml@5.3.0": {
+      "last_modified": "2025-11-23T21:50:36Z",
+      "resolved": "github:NixOS/nixpkgs/ee09932cedcef15aaf476f9343d1dea2cb77e261#ocaml",
+      "source": "devbox-search",
+      "version": "5.3.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ak9cc7yqw0gvnmpzchv77n4ca221zjsv-ocaml-5.3.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ak9cc7yqw0gvnmpzchv77n4ca221zjsv-ocaml-5.3.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6kmn26mqm7hhq0q9mwxvgs3r5qm14xhf-ocaml-5.3.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/6kmn26mqm7hhq0q9mwxvgs3r5qm14xhf-ocaml-5.3.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/zy98kgp89j64sw1qh5xs6wqjgglwjwjj-ocaml-5.3.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/zy98kgp89j64sw1qh5xs6wqjgglwjwjj-ocaml-5.3.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ypzb47w33xpc56j91qxam2bahs3198w9-ocaml-5.3.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ypzb47w33xpc56j91qxam2bahs3198w9-ocaml-5.3.0"
+        }
+      }
+    },
+    "ocamlPackages.cmdliner": {
+      "resolved": "github:NixOS/nixpkgs/a672be65651c80d3f592a89b3945466584a22069?narHash=sha256-EYHSjVM4Ox4lvCXUMiKKs2vETUSL5mx%2BJ2FfutM7T9w%3D#ocamlPackages.cmdliner",
+      "source": "nixpkg"
+    },
+    "opam@2.3.0": {
+      "last_modified": "2025-07-28T17:09:23Z",
+      "resolved": "github:NixOS/nixpkgs/648f70160c03151bc2121d179291337ad6bc564b#opam",
+      "source": "devbox-search",
+      "version": "2.3.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/gpvjfspdhf10yaddcvr56f5zz48yi0c1-opam-2.3.0",
+              "default": true
+            },
+            {
+              "name": "installer",
+              "path": "/nix/store/d3d8jp9vvbajyj18wnar1zijkca4w14p-opam-2.3.0-installer"
+            }
+          ],
+          "store_path": "/nix/store/gpvjfspdhf10yaddcvr56f5zz48yi0c1-opam-2.3.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/qwrak5yqfwyzyx72kpaybhj11zaqd1fm-opam-2.3.0",
+              "default": true
+            },
+            {
+              "name": "installer",
+              "path": "/nix/store/p7kksch2c5amz4c2daj9cll16xjznvxn-opam-2.3.0-installer"
+            }
+          ],
+          "store_path": "/nix/store/qwrak5yqfwyzyx72kpaybhj11zaqd1fm-opam-2.3.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/140vvvayhxwqc00cx0vsdhck3asg2j9a-opam-2.3.0",
+              "default": true
+            },
+            {
+              "name": "installer",
+              "path": "/nix/store/1s6y0pd49apmvsypp5c8rbzjffssscds-opam-2.3.0-installer"
+            }
+          ],
+          "store_path": "/nix/store/140vvvayhxwqc00cx0vsdhck3asg2j9a-opam-2.3.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kbhaw1qzxz4rffb3j2gx7w5c85cgf0r1-opam-2.3.0",
+              "default": true
+            },
+            {
+              "name": "installer",
+              "path": "/nix/store/gljqwxqm6hw0czcp69n5w2nhrv7zc89l-opam-2.3.0-installer"
+            }
+          ],
+          "store_path": "/nix/store/kbhaw1qzxz4rffb3j2gx7w5c85cgf0r1-opam-2.3.0"
+        }
+      }
+    }
+  }
+}
