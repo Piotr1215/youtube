@@ -19,7 +19,8 @@ start folder_name:
   mkdir -p "{{folder_name}}/diagrams"
   
   cp slides_template.md "{{folder_name}}/presentation.md"
-  chmod +x "{{folder_name}}/presentation.md"
+  cp templates/journey.sh "{{folder_name}}/journey.sh"
+  chmod +x "{{folder_name}}/presentation.md" "{{folder_name}}/journey.sh"
   
   echo "Created new folder structure in: {{folder_name}}"
   cd "{{folder_name}}" && nvim presentation.md

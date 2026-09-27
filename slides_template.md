@@ -1,6 +1,6 @@
 # Replace Me
 
-> Replace with your subtitle
+> One line: what the viewer can do after this video
 
 ```bash +exec_replace
 echo "Your Title Here" | figlet -f small -w 90
@@ -8,60 +8,89 @@ echo "Your Title Here" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Problem: Describe the Challenge
+## Why It Matters
 
-> Use blockquote to emphasize the key pain point
+> Which problem does the viewer already have?
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-Explain the problem. This is the most elegant way.
-
-Multiple lines supported with beautiful colorization.
-
-Heredoc with ccze is the recommended approach.
-EOF
+./journey.sh 1
 ```
 
 <!-- end_slide -->
 
-## Solution: Describe the Fix
+## Everyday Loop
 
-> **Key concept** = Brief definition
+> One sentence the diagram below proves.
 
 ```bash +exec_replace
-cat << 'EOF' | ccze -A
-Main content explaining the solution.
-Use code blocks for centered text.
-EOF
+printf '  \e[36m%s\e[90m%s\e[36m%s\e[90m%s\e[1;33m%s\e[90m%s\e[36m%s\e[0m\n' 'first step' ' ──▶ ' 'second step' ' ──▶ ' 'painful step' ' ──▶ ' 'last step'
+printf '  \e[90m%s\e[0m\n' '    ▲                                                   │'
+printf '  \e[90m%s\e[0m\n\n' '    └───────────────────────────────────────────────────┘'
+printf '\e[33m%s\e[0m\n' 'The painful step, in one yellow line.'
 ```
 
 <!-- end_slide -->
 
-## Sequences or Steps
+## First Look
 
-| Step | Action |
-|------|--------|
-| **First** | What happens first |
-| **Second** | What happens next |
-| **Third** | What happens last |
+> Show the payoff before explaining it.
 
-<!-- end_slide -->
-
-## Comparison or Options
-
-> Tables work great for comparisons
-
-| Feature | Option A | Option B |
-|---------|----------|----------|
-| Speed | Fast | Slow |
-| Cost | Low | High |
-| Complexity | Simple | Complex |
+```bash +exec
+tmux switchc -t demo
+```
 
 <!-- end_slide -->
 
-## Architecture Diagram
+## Basic Concepts
 
-> Modern plantuml diagrams for clear visualization of sequence diagrams, digraph for component diagrams
+> What does the viewer need to know first?
+
+```bash +exec_replace
+./journey.sh 2
+```
+
+<!-- end_slide -->
+
+## Concept Name
+
+> One-line definition of the concept.
+
+```bash +exec_replace
+printf '  \e[90m%s\e[0m\n' '┌─ history ─────────────────────────'
+printf '  \e[90m│\e[0m %s\n' 'older lines, off screen'
+printf '  \e[90m%s\e[0m\n' '├─ screen ──────────────────────────'
+printf '  \e[90m│\e[0m \e[1;33m%s\e[0m\n' 'the line the viewer cares about'
+printf '  \e[90m%s\e[0m\n\n' '└───────────────────────────────────'
+printf '\e[32m%s\e[0m\n' '✓ what this concept buys the viewer'
+```
+
+<!-- end_slide -->
+
+## The Solution
+
+> What does the tool add?
+
+```bash +exec_replace
+./journey.sh 3
+```
+
+<!-- end_slide -->
+
+## Existing Options
+
+> The same task, done every available way.
+
+```bash +exec_replace
+printf '  \e[31m%s\e[0m\e[36m%s\e[0m%s\n' '✗ ' 'option one     ' 'what it costs the viewer'
+printf '  \e[31m%s\e[0m\e[36m%s\e[0m%s\n' '✗ ' 'option two     ' 'what it costs the viewer'
+printf '  \e[32m%s\e[0m\e[1;36m%s\e[0m\e[32m%s\e[0m\n' '✓ ' 'this tool      ' 'what it does instead'
+```
+
+<!-- end_slide -->
+
+## Pipeline
+
+> PlantUML for sequences, digraph for components, both render as ASCII.
 
 ```bash +exec_replace
 just plantuml diagram-name
@@ -69,24 +98,43 @@ just plantuml diagram-name
 
 <!-- end_slide -->
 
-## Code Example
+## Getting Started
 
-> Show real implementation
+> What should the viewer know before trying it?
 
-```bash +exec
-# Your code example here
-echo "Hello World"
+```bash +exec_replace
+./journey.sh 4
+```
+
+<!-- end_slide -->
+
+## Install
+
+> Minimum version or the one requirement that matters.
+
+```bash
+# the install command the viewer copies
+```
+
+<!-- end_slide -->
+
+## Takeaways
+
+```bash +exec_replace
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'so what     ' 'why the viewer should care'
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'now what    ' 'what the viewer already knows that helps'
+printf '  \e[1;33m%s\e[0m\e[36m%s\e[0m%s\n' '▶ ' 'then what   ' 'the one action to take next'
 ```
 
 <!-- end_slide -->
 
 ## Resources
 
-| Resource |
-|----------|
-| Resource 1: URL or description |
-| Resource 2: URL or description |
-| Resource 3: URL or description |
+```markdown
+Project:     https://github.com/Piotr1215/replace-me
+Blog post:   https://cloudrumble.net/blog/replace-me
+Channel:     youtube.com/@cloud-native-corner
+```
 
 <!-- end_slide -->
 
