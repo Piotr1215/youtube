@@ -209,7 +209,7 @@ printf '  \e[35m%s\e[1;33m%s\e[0m%s\n' '            ' '\u          ' 'the newest
 
 ```bash +exec_replace
 printf '  \e[90m%s\e[0m\n' 'on screen                                pasted'
-printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' ' main helm upgrade --install      ' ' ──▶  ' 'main helm upgrade --install'
+printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '› helm upgrade --install           ' ' ──▶  ' 'helm upgrade --install'
 printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '⏺ Update(values.yaml)              ' ' ──▶  ' 'Update(values.yaml)'
 printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '• Search the runbook               ' ' ──▶  ' 'Search the runbook'
 printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' '    memory: 512Mi                  ' ' ──▶  ' '    memory: 512Mi'
