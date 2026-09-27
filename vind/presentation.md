@@ -22,7 +22,8 @@ vcluster-032 use driver docker
 ## Start Platform
 
 ```bash +exec
-docker rm -f vcluster-platform 2>/dev/null; vcluster-032 platform start
+vcluster use driver docker
+vcluster platform start --reset
 ```
 
 <!-- end_slide -->
