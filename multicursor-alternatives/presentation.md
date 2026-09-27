@@ -278,7 +278,7 @@ printf '  \e[31m%s\e[0m%s\n' '✗ ' 'nightly only, until Neovim 0.13 ships'
 q() { printf '  %s\e[90m%s\e[0m\e[%sm%s\e[0m\n' "$1" ' ──▶ ' "$2" "$3"; }
 q 'Across files, or too many lines to watch? ' 36 ':s  :norm  with :cdo'
 q 'An edit you will replay later?            ' 36 'macro'
-q 'One column on adjacent lines?             ' 36 'visual block'
+q 'One column on adjacent lines?             ' 32 'visual block'
 q 'Lines picked by a pattern?                ' 36 ':g  :v'
 q 'One fixed string swapped for another?     ' 36 ':s'
 q 'Anything else on screen                   ' 32 'multicursor'
