@@ -8,8 +8,9 @@
 #
 # The slides call this. It rebuilds the demo session, switches the presenter's
 # client to it, and opens a floating caption card there. The card runs this
-# script again with --play: it names the next method, waits for Space, and then
-# types its keys into the demo nvim one at a time. q quits, and the client
+# script again with --play: it explains the screen before hole 1, names the
+# next method, waits for Space, and then types its keys into the demo nvim one
+# at a time. q quits, and the client
 # returns to the slides when the card closes.
 #
 # Exercises load over RPC (nvim --server), which types nothing, so the ledger
@@ -69,6 +70,13 @@ scene() {
 # Updates the footer while a method plays.
 beat() {
 	card "${step}" "${method}" "${keys}" "${text}" "▶ $1"
+}
+
+# Explains the screen once, over hole 1's exercise, before any method plays.
+intro() {
+	card "how it works" "one exercise, three methods" "fewest keys to the goal wins" \
+		"edit top, goal middle, ledger bottom" "space ▸ start    q ▸ quit"
+	wait_key
 }
 
 # Shows a failure and waits, so the presenter can read it before leaving.
@@ -168,6 +176,7 @@ hole() {
 	total=$(($# / 3))
 	nv 'Demo.golf_reset()'
 	exercise "${name}"
+	((number == 1)) && intro
 	while (($# >= 3)); do
 		i=$((i + 1))
 		((i > 1)) && nv 'Demo.reset()'
