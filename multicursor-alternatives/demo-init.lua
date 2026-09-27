@@ -17,32 +17,17 @@ pcall(function()
 	vim.opt.diffopt:append({ "inline:char" })
 end)
 
--- setup-demo.sh clones noice.nvim and nui.nvim here; without them the command
--- line stays at the bottom.
+-- ui2 draws the command line in a window of its own, and tiny-cmdline moves
+-- that window mid-screen while a command or search is typed. setup-demo.sh
+-- clones tiny-cmdline here; without it the command line stays at the bottom.
+require("vim._core.ui2").enable({})
 local plugins = (vim.env.XDG_DATA_HOME or vim.fn.expand("~/.local/share")) .. "/multicursor-demo"
-vim.opt.runtimepath:prepend({ plugins .. "/nui.nvim", plugins .. "/noice.nvim" })
-local has_noice, noice = pcall(require, "noice")
-if has_noice then
-	noice.setup({
-		cmdline = {
-			view = "cmdline_popup",
-			-- Show the typed : or / where noice puts an icon: the ledger counts it.
-			format = {
-				cmdline = { conceal = false, icon = false },
-				search_down = { conceal = false, icon = false },
-				search_up = { conceal = false, icon = false },
-			},
-		},
-		messages = { enabled = false },
-		popupmenu = { enabled = false },
-		notify = { enabled = false },
-		lsp = {
-			progress = { enabled = false },
-			hover = { enabled = false },
-			signature = { enabled = false },
-			message = { enabled = false },
-		},
-	})
+vim.opt.runtimepath:prepend(plugins .. "/tiny-cmdline.nvim")
+local has_cmdline, cmdline = pcall(require, "tiny-cmdline")
+if has_cmdline then
+	-- Keep 'cmdheight' so messages stay on the bottom row, and center searches
+	-- too: hole 3 places its cursors with one.
+	cmdline.setup({ manage_cmdheight = false, native_types = {} })
 end
 
 package.path = vim.fn.expand("~/.config/nvim/lua") .. "/?.lua;" .. package.path
