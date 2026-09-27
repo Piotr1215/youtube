@@ -10,6 +10,19 @@ echo "Pane Regex" | figlet -f small -w 90
 
 <!-- end_slide -->
 
+## Terminal Loop
+
+> Most terminal work feeds one command's output into the next.
+
+```bash +exec_replace
+printf '  \e[36m%s\e[90m%s\e[36m%s\e[90m%s\e[1;33m%s\e[90m%s\e[36m%s\e[0m\n' 'run a command' ' ──▶ ' 'read the output' ' ──▶ ' 'reuse a piece of it' ' ──▶ ' 'next command'
+printf '  \e[90m%s\e[0m\n' '      ▲                                                             │'
+printf '  \e[90m%s\e[0m\n\n' '      └─────────────────────────────────────────────────────────────┘'
+printf '\e[33m%s\e[0m\n' 'The reuse step is where the hand leaves the keyboard for the mouse.'
+```
+
+<!-- end_slide -->
+
 ## Text on Screen
 
 > The text you need next is already on screen.
@@ -29,7 +42,7 @@ printf '\e[33m%s\e[0m\n' 'Getting it to the prompt without leaving the keyboard 
 
 ## First Look
 
-> Two queries, two pastes, no mouse.
+> Type a few words from the text, and it lands at your prompt.
 
 ```bash +exec
 ./demo.sh teaser
@@ -76,7 +89,7 @@ printf '  \e[31m%s\e[0m %s\n' '✗' 'you steer to words you already know'
 
 ## Soft Wraps
 
-> One line in tmux, several rows on screen.
+> tmux keeps a long line whole; the terminal only sees rows.
 
 ```bash +exec_replace
 printf '\e[36m%s\e[0m\n' '╭─ tmux stores one line ────────────────────────────────────────────────────────'
@@ -87,7 +100,7 @@ printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' '$ helm upgrade --install checkout-wo'
 printf '\e[90m│\e[0m %s\e[31m%s\e[0m\n' 'rker ./charts/checkout-worker -n pay' ' ⏎'
 printf '\e[90m│\e[0m %s\n' 'ments'
 printf '\e[90m%s\e[0m\n\n' '╰───────────────────────────────────────'
-printf '  \e[31m%s\e[0m %s\n' '✗' 'a mouse drag copies rows: two stray line breaks'
+printf '  \e[31m%s\e[0m %s\n' '✗' 'a mouse drag copies rows, with stray line breaks'
 printf '  \e[32m%s\e[0m %s\n' '✓' 'copy mode and pane regex copy the line'
 ```
 
@@ -100,7 +113,7 @@ printf '  \e[32m%s\e[0m %s\n' '✓' 'copy mode and pane regex copy the line'
 ```bash +exec_replace
 printf '  \e[90m%s\e[0m\n\n' 'method             cost'
 printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n' 'mouse drag       ' '✗' 'wrapped lines paste with stray line breaks'
-printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n' 'copy mode        ' '✗' 'six steps, steering to words you know'
+printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n' 'copy mode        ' '✗' 'steering a cursor to text you can already see'
 printf '  \e[36m%s\e[0m\e[31m%s\e[0m %s\n\n' 'shell history    ' '✗' 'has the command, never its output'
 printf '  \e[1;32m%s\e[0m\e[32m%s %s\e[0m\n' 'pane regex       ' '✓' 'type a few words of what you want, paste'
 ```
@@ -128,7 +141,7 @@ printf '\e[37m%s\e[0m\n' '2026-09-27T08:14:17Z INFO  runbook: https://github.com
 
 ## Pipeline
 
-> One query drives two jobs: painting the pane and filling a paste buffer.
+> Each query paints the match in the pane and fills a paste buffer.
 
 ```bash +exec_replace
 printf '  \e[1;33m%s\e[0m\e[90m%s\e[0m\n' '^ERROR.*5432        ' 'typed in the picker'
@@ -181,11 +194,11 @@ printf '\e[32m%s\e[0m\n' 'Python picks the range, tmux paints it.'
 
 ## Vim Atoms
 
-> One span, found fast: the query borrows vim motions.
+> The query borrows vim motions to grab exactly the span you want.
 
 ```bash +exec_replace
 printf '  \e[90m%s\e[0m%s\n' 'grep          ' 'every line that matches a pattern'
-printf '  \e[1;32m%s\e[0m\e[32m%s\e[0m\n\n' 'pane regex    ' 'the one span you want, like a vim motion'
+printf '  \e[1;32m%s\e[0m\e[32m%s\e[0m\n\n' 'pane regex    ' 'the exact span you want, like a vim motion'
 printf '  \e[90m%s\e[0m\n' 'vim         query       grabs'
 printf '  \e[35m%s\e[1;33m%s\e[0m%s\n' '3t,         ' '\3t,        ' 'stop before the 3rd comma'
 printf '  \e[35m%s\e[1;33m%s\e[0m%s\n' '2f.         ' '\2f.        ' 'through the 2nd period'
