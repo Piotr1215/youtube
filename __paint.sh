@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # Color slide text without ANSI escape codes.
 #
-# Source it in a presenterm +exec_replace block, then print each row as
-# color/text pairs. Text is printed verbatim and never parsed, so brackets,
-# percent signs, and backslashes need no escaping.
+# Run it as the paint command in a presenterm +exec_replace block, one row
+# per call, as color/text pairs. Text is printed verbatim and never parsed,
+# so brackets, percent signs, and backslashes need no escaping.
 #
-#   source ../__paint.sh
 #   paint cyan 'find the spot' gray ' ──▶ ' 'bold yellow' 'next line'
 #   paint plain 'no color, ' '#ff8800' 'any hex color, ' 'white on red' 'a background'
 #   paint
@@ -14,6 +13,9 @@
 # (black red green yellow blue magenta cyan white gray grey), a hex #rrggbb,
 # and "on <color>" for the background. paint with no arguments prints a
 # blank line.
+#
+# Install once: ln -s ~/dev/youtube/__paint.sh ~/.local/bin/paint
+# Sourcing the file defines the same paint function without a new process.
 #
 # presenterm ignores the bright codes (90-97) and the 256-color grey ramp in
 # command output, so gray is sent as RGB, like every hex color.
@@ -85,3 +87,7 @@ paint() {
 	done
 	printf '%s\n' "${line}"
 }
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+	paint "$@"
+fi

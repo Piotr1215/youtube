@@ -58,3 +58,14 @@ setup() {
 	run paint 'bold yellow' 'x'
 	[ "$output" = $'\e[1;33mx\e[0m' ]
 }
+
+@test "runs as a command" {
+	run "${BATS_TEST_DIRNAME}/../__paint.sh" cyan 'x' plain ' [ok]'
+	[ "$status" -eq 0 ]
+	[ "$output" = $'\e[36mx\e[0m [ok]' ]
+}
+
+@test "command exits non-zero on bad input" {
+	run "${BATS_TEST_DIRNAME}/../__paint.sh" teal 'x'
+	[ "$status" -eq 1 ]
+}
