@@ -212,7 +212,7 @@ printf '  \e[31m%s\e[0m%s\n' '✗ ' 'a cursor whose edit cannot start, like ct; 
 
 ```bash +exec_replace
 q() { printf '  %s\e[90m%s\e[0m\e[%sm%s\e[0m\n' "$1" ' ──▶ ' "$2" "$3"; }
-q 'A job a CLI tool already does?            ' 36 ':!  filter'
+q 'A job a CLI tool already does?            ' 36 ':%!  external commands'
 q 'Across files, or too many lines to watch? ' 36 ':s  :norm  with :cdo'
 q 'An edit you will replay later?            ' 36 'macro'
 q 'One column on adjacent lines?             ' 32 'visual block'
