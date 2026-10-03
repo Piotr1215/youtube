@@ -20,15 +20,26 @@ echo "Multiline Editing" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Edit Loop
+## Multi Line Editing
 
-> The same small change, line after line.
+> The mechanisms this video covers, in order.
 
 ```bash +exec_replace
-printf '  \e[36m%s\e[90m%s\e[36m%s\e[90m%s\e[1;33m%s\e[0m\n' 'find the spot' ' ──▶ ' 'make the edit' ' ──▶ ' 'next line'
-printf '  \e[90m%s\e[0m\n' '▲                                         │'
-printf '  \e[90m%s\e[0m\n\n' '└─────────────────────────────────────────┘'
-printf '\e[33m%s\e[0m\n' 'Every extra line is another trip around the loop.'
+m() { printf '  \e[1;%sm%s\e[0m%s\e[90m%s\e[0m\n' "$1" "$2" "$3" "$4"; }
+m 32 'CTRL-V  I  A     ' 'visual block        ' 'type into a column of rows'
+m 36 ':%norm           ' 'normal on a range   ' 'run keys on every line'
+m 36 ':g/pat/cmd       ' 'global command      ' 'run cmd on matching lines; :v on the rest'
+m 36 ':g/pat/.!cmd     ' 'mix them            ' 'run a CLI on those lines only'
+printf '  \e[1;36m%s\e[0m%s\e[90m%s\e[1;33m%s\e[0m\n' ':%s/\v           ' 'substitution        ' 'rewrite every match of a ' 'regex'
+m 36 ':%!              ' 'external commands   ' 'pass lines through any CLI on your system'
+m 36 'q  @             ' 'macros              ' 'record an edit, replay it'
+m 32 'Q                ' 'multicursor         ' 'type once at every cursor'
+m 32 ':g/pat/norm! nQ  ' 'mix them            ' 'a cursor on every match, then @q or keys'
+printf '\n'
+o() { printf '  \e[90m%s\e[0m\e[36m%s\e[0m\n' "$1" "$2"; }
+o 'also             ' ':%luado   :s with \=expr'
+o 'across files     ' ':cdo   :argdo   :bufdo'
+printf '\n\e[33m%s\e[0m\n' 'Multicursor is the newest, and it mixes with most of the above.'
 ```
 
 <!-- end_slide -->
@@ -55,20 +66,6 @@ printf '\e[37m%s\e[0m\n' 'Each method in this video is one pair of answers.'
 
 <!-- end_slide -->
 
-## Vim Grammar
-
-> A motion finds its own target on every line.
-
-```bash +exec_replace
-printf '  %s\n' '[INFO] server started on port 8080'
-printf '  \e[1;33m%s\e[0m\e[90m%s\e[0m\n' '     ▲' ' f] stops here'
-printf '  %s\n' '[ERROR 503] connection failed: timeout after 30s'
-printf '  \e[1;33m%s\e[0m\e[90m%s\e[0m\n\n' '          ▲' ' f] stops here'
-printf '\e[33m%s\e[0m\n' 'Replay f] on each line and it finds that line'"'"'s own bracket.'
-```
-
-<!-- end_slide -->
-
 ## Method Families
 
 > Describe the edit and run it, or make it on screen and watch it land.
@@ -83,9 +80,9 @@ printf '\e[33m%s\e[0m\n' ':g/pat/normal! Q joins them: a command picks, you type
 
 <!-- end_slide -->
 
-## Classic Methods
+## Methods
 
-> How did Neovim edit many lines before multicursor?
+> How does each method edit many lines?
 
 ```bash +exec_replace
 ./journey.sh 3
@@ -95,19 +92,19 @@ printf '\e[33m%s\e[0m\n' ':g/pat/normal! Q joins them: a command picks, you type
 
 ## Visual Block
 
-> CTRL-V selects a rectangle; I types into every row of it.
+> CTRL-V selects a rectangle; I or A types into every row of it.
 
 ```bash +exec_replace
-printf '  \e[1;33m%s\e[0m\n\n' 'CTRL-V  G  I  -␣  Esc'
-printf '  \e[30;46m%s\e[0m%s\n' '- ' 'Buy milk'
-printf '  \e[30;46m%s\e[0m%s\n' '- ' 'Call the dentist tomorrow morning'
-printf '  \e[30;46m%s\e[0m%s\n\n' '- ' 'Fix bug'
+printf '  \e[1;33m%s\e[0m%s\n' 'CTRL-V  G  I  -␣  Esc     ' 'insert before the column'
+printf '  \e[1;33m%s\e[0m%s\n\n' 'CTRL-V  G  $  A  ;  Esc   ' 'append at every line end'
+printf '  \e[30;46m%s\e[0m%s\e[30;46m%s\e[0m\n' '- ' 'Buy milk' ';'
+printf '  \e[30;46m%s\e[0m%s\e[30;46m%s\e[0m\n' '- ' 'Call the dentist tomorrow morning' ';'
+printf '  \e[30;46m%s\e[0m%s\e[30;46m%s\e[0m\n\n' '- ' 'Fix bug' ';'
 printf '  \e[32m%s\e[0m%s\n' '✓ ' 'the same column on every line'
 printf '  \e[31m%s\e[0m%s\n' '✗ ' 'targets that move from line to line'
 ```
 
 <!-- end_slide -->
-
 
 ## Normal on a Range
 
@@ -119,7 +116,8 @@ printf '  \e[90m%s\e[0m%s\n' ' │     ││ └─ ' 'D    delete to the end'
 printf '  \e[90m%s\e[0m%s\n' ' │     │└─── ' 'f]   jump to the ]'
 printf '  \e[90m%s\e[0m%s\n' ' │     └──── ' 'x    delete the ['
 printf '  \e[90m%s\e[0m%s\n\n' ' └────────── ' '%    every line'
-printf '\e[37m%s\e[0m\n' 'You type it once on the command line and see only the result.'
+printf '  \e[32m%s\e[0m%s\n' '✓ ' "motions like f] find each line's own target"
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'you see only the result, not the keys land'
 ```
 
 <!-- end_slide -->
@@ -129,17 +127,19 @@ printf '\e[37m%s\e[0m\n' 'You type it once on the command line and see only the 
 > :g and :v pick lines by a condition.
 
 ```bash +exec_replace
-printf '  \e[1;33m%s\e[0m%s\n' ':g/pattern/cmd       ' 'run cmd on lines that match'
-printf '  \e[1;33m%s\e[0m%s\n\n' ':v/pattern/cmd       ' 'run cmd on lines that do not'
-printf '  \e[36m%s\e[0m%s\n\n' ':v/:/s/^/[ok]␣       ' 'prefix every line without a colon'
-printf '\e[37m%s\e[0m\n' 'The target is a condition, not a place on screen.'
+printf '  \e[1;33m%s\e[0m%s\n' ':g/pattern/cmd           ' 'run cmd on lines that match'
+printf '  \e[1;33m%s\e[0m%s\n' ':v/pattern/cmd           ' 'run cmd on lines that do not'
+printf '  \e[36m%s\e[0m%s\n' ':v/:/s/^/[ok]␣           ' 'prefix every line without a colon'
+printf '  \e[36m%s\e[0m%s\n\n' ':g/error/.!tr a-z A-Z    ' 'run a CLI on matching lines only'
+printf '  \e[32m%s\e[0m%s\n' '✓ ' 'targets picked by a condition, anywhere in the file'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'it picks lines; spots inside a line need :s or :norm'
 ```
 
 <!-- end_slide -->
 
 ## Substitution
 
-> :s rewrites every match of a pattern.
+> :s rewrites every match of a regex.
 
 ```bash +exec_replace
 printf '  \e[1;33m%s\e[0m\n\n' ':%s/\v_(.)/\u\1/g'
@@ -147,20 +147,22 @@ printf '  \e[36m%s\e[0m%s\n' '\v         ' 'very magic: ( ) group without backsl
 printf '  \e[36m%s\e[0m%s\n' '_(.)       ' 'an underscore and the letter after it'
 printf '  \e[36m%s\e[0m%s\n' '\u\1       ' 'that letter, uppercased'
 printf '  \e[36m%s\e[0m%s\n\n' 'g          ' 'every match on the line'
-printf '\e[37m%s\e[0m\n' 'Case changes, expressions, and many files with :cdo or :argdo.'
+printf '  \e[32m%s\e[0m%s\n' '✓ ' 'regex groups and case changes, every match at once'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'a long regex is hard to write and to read back'
 ```
 
 <!-- end_slide -->
 
-## Filter Commands
+## External Commands
 
-> :{range}!cmd pipes lines through a CLI tool and keeps what it prints.
+> :{range}!cmd passes lines through any CLI on your system.
 
 ```bash +exec_replace
 printf '  \e[1;33m%s\e[0m%s\n' ':%!sort -u          ' 'sort the lines, drop duplicates'
 printf '  \e[1;33m%s\e[0m%s\n' ":'<,'>!column -t    " 'align the selection into columns'
 printf '  \e[1;33m%s\e[0m%s\n\n' ':%!jq .             ' 'pretty-print JSON'
-printf '\e[37m%s\e[0m\n' 'Any tool that reads stdin and writes stdout becomes an edit.'
+printf '  \e[32m%s\e[0m%s\n' '✓ ' 'any tool that reads stdin and writes stdout becomes an edit'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'only as portable as the tools on the machine'
 ```
 
 <!-- end_slide -->
@@ -173,105 +175,26 @@ printf '\e[37m%s\e[0m\n' 'Any tool that reads stdin and writes stdout becomes an
 printf '  \e[1;33m%s\e[0m%s\n' 'qq … +q            ' 'record the edit, end on the next line'
 printf '  \e[1;33m%s\e[0m%s\n' '4@q                ' 'replay it four times'
 printf '  \e[1;33m%s\e[0m%s\n\n' '"qp                ' 'paste the macro as text to fix it'
-printf '\e[37m%s\e[0m\n' 'The register keeps the macro for later, in any file.'
+printf '  \e[32m%s\e[0m%s\n' '✓ ' 'saved in a register, ready for later in any file'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'raw keys: a slip in the recording replays everywhere'
 ```
 
 <!-- end_slide -->
 
 ## Multicursor
 
-> How does the newest method work?
+> Q places cursors; every edit lands at each one as you type.
 
 ```bash +exec_replace
-./journey.sh 4
+printf '  \e[1;33m%s\e[0m%s\n' '{Visual}Q              ' 'a cursor on each selected line'
+printf '  \e[1;33m%s\e[0m%s\n' '[count]Q               ' 'a cursor on every search match'
+printf '  \e[1;33m%s\e[0m%s\n' ':g/pattern/normal! nQ  ' 'a cursor on every match, by condition'
+printf '  \e[1;33m%s\e[0m%s\n' ':cdo normal! Q         ' 'a cursor at each quickfix item'
+printf '  \e[1;33m%s\e[0m%s\n\n' '@q                     ' 'the macro replays at every cursor'
+printf '  \e[32m%s\e[0m%s\n' '✓ ' 'you watch every edit land, with one undo for all'
+printf '  \e[31m%s\e[0m%s\n' '✗ ' 'a cursor whose edit cannot start, like ct; with no ;, is removed'
 ```
 
-<!-- end_slide -->
-
-## Placing Cursors
-
-> Q adds cursors from a selection, a search, or where you stand.
-
-```bash +exec_replace
-printf '  \e[1;33m%s\e[0m%s\n' '{Visual}Q          ' 'a cursor on each selected line'
-printf '  \e[1;33m%s\e[0m%s\n' 'Q                  ' 'toggle a cursor where you stand'
-printf '  \e[1;33m%s\e[0m%s\n' '[count]Q           ' 'a cursor on every search match'
-printf '  \e[1;33m%s\e[0m%s\n\n' 'CTRL-click         ' 'add one with the mouse'
-printf '\e[37m%s\e[0m\n' 'Then type: the edit lands at every cursor as you go.'
-```
-
-<!-- end_slide -->
-
-## Scripted Placement
-
-> Q is a normal command, so any Ex command can place cursors.
-
-```bash +exec_replace
-printf '  \e[1;33m%s\e[0m%s\n' ':g/pat/normal! nQ         ' 'on every match'
-printf '  \e[1;33m%s\e[0m%s\n' ':g/ERROR/normal! f]Q      ' 'after the ] on ERROR lines only'
-printf '  \e[1;33m%s\e[0m%s\n' ':v/:/normal! Q            ' 'on lines without a colon'
-printf '  \e[1;33m%s\e[0m%s\n' ':cdo normal! Q            ' 'at each quickfix item'
-printf '  \e[1;33m%s\e[0m%s\n\n' 'nvim_mcursor(0, {r, c})   ' 'anywhere, from Lua'
-printf '\e[33m%s\e[0m\n' 'A command picks the spots; you type the edit live.'
-```
-
-<!-- end_slide -->
-
-## Command Replay
-
-> Neovim replays the command at each cursor, not the raw keys.
-
-```bash +exec_replace
-printf '  \e[90m%s\e[0m\n' 'typed once          runs at every cursor'
-printf '  \e[1;33m%s\e[90m%s\e[0m%s\n' 'f]                ' ' ──▶ ' "each line's own ]"
-printf '  \e[1;33m%s\e[90m%s\e[0m%s\n' 'dt=               ' ' ──▶ ' "each line's own text, cut to its own register"
-printf '  \e[1;33m%s\e[90m%s\e[0m%s\n' '@q                ' ' ──▶ ' 'the whole macro'
-printf '  \e[1;33m%s\e[90m%s\e[0m%s\n' 'u                 ' ' ──▶ ' 'one undo for every cursor'
-```
-
-<!-- end_slide -->
-
-## Per-Cursor Registers
-
-> Each cursor yanks and pastes its own text.
-
-```bash +exec_replace
-printf '  \e[90m%s\e[0m\n' 'VGQ  dt=  A=<Esc>  p  0x'
-printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' 'name=john   ' '  ──▶  ' 'john=name'
-printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n' 'age=30      ' '  ──▶  ' '30=age'
-printf '  %s\e[90m%s\e[0m\e[32m%s\e[0m\n\n' 'city=london ' '  ──▶  ' 'london=city'
-printf '\e[37m%s\e[0m\n' 'On clear, the yanks join into one register, a line each.'
-```
-
-<!-- end_slide -->
-
-## Session Keys
-
-> A few more keys work while cursors are active.
-
-```bash +exec_replace
-printf '  \e[1;33m%s\e[0m%s\n' 'q=          ' 'follow mode: motions move every cursor'
-printf '  \e[1;33m%s\e[0m%s\n' 'CTRL-L      ' 'clear the cursors'
-printf '  \e[1;33m%s\e[0m%s\n' 'gQ          ' 'bring the last cursors back'
-printf '  \e[1;33m%s\e[0m%s\n' ']C  [C      ' 'jump to the next or previous cursor'
-printf '  \e[1;33m%s\e[0m%s\n' 'g CTRL-A    ' 'number the cursors 1, 2, 3'
-printf '  \e[1;33m%s\e[0m%s\n\n' 'u           ' 'undo the last edit at every cursor'
-printf '\e[90m%s\e[0m\n' 'CTRL-L taken? Map <Esc> to clear the nvim.multicursor namespace.'
-```
-
-<!-- end_slide -->
-
-## Limits
-
-> From :help mcursor-limitations and the cursor rules.
-
-```bash +exec_replace
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'cursors live in one buffer; many files still need :cdo'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'Q does nothing while a macro records or runs'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' '"+ and "* are shared, not per cursor'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'g-, g+ and :earlier clear every cursor'
-printf '  \e[31m%s\e[0m%s\n' '✗ ' 'nightly only, until Neovim 0.13 ships'
-```
 <!-- end_slide -->
 
 ## Choosing a Method
@@ -279,7 +202,7 @@ printf '  \e[31m%s\e[0m%s\n' '✗ ' 'nightly only, until Neovim 0.13 ships'
 > Which method fits which edit?
 
 ```bash +exec_replace
-./journey.sh 5
+./journey.sh 4
 ```
 <!-- end_slide -->
 
@@ -335,12 +258,12 @@ printf '\n\e[33m%s\e[0m\n' 'Multicursor wins on-screen edits; a column or a cond
 ```
 <!-- end_slide -->
 
-## Getting Started
+## What's Next
 
 > How do you try it today?
 
 ```bash +exec_replace
-./journey.sh 6
+./journey.sh 5
 ```
 <!-- end_slide -->
 
