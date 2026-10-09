@@ -102,6 +102,7 @@ paint
 paint cyan '              host    ' plain 'KVM VM, cloud VM, or bare metal'
 paint cyan '              join    ' plain 'one curl installs kubelet and connects the tunnel'
 paint cyan '              scope   ' plain 'one cluster and one kube context'
+paint cyan '              VPN     ' plain 'Tailscale library + WireGuard; no Tailscale account'
 paint
 paint yellow '          Remote hardware becomes a worker, not a second cluster.'
 ```
