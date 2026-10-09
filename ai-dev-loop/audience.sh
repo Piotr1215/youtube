@@ -37,10 +37,15 @@ start() {
 	ok "page" "http://127.0.0.1:${PORT}, bound to this laptop only"
 
 	public="${URL}"
+	host="${URL#https://}"
+	# Ask public DNS: a home or venue resolver may still cache the hostname's old
+	# NXDOMAIN. --resolve then reaches Cloudflare's edge without that resolver.
+	edge="$(dig +short +time=3 @1.1.1.1 "${host}" A 2>/dev/null | grep -E '^[0-9.]+$' | head -1 || true)"
+	reach=()
 	if alive tunnel; then
 		public="$(<"${STATE}/public")"
 		ok "tunnel" "started earlier"
-	elif getent hosts "${URL#https://}" >/dev/null; then
+	elif [[ -n "${edge}" ]]; then
 		# The hostname's route lives on the named tunnel, which may already run for
 		# another demo; only a connector started here is stopped by stop.
 		if pgrep -x cloudflared >/dev/null; then
@@ -63,13 +68,14 @@ start() {
 			[[ -n "${public}" ]] && break
 			sleep 1
 		done
-		ok "tunnel" "quick tunnel: ${URL#https://} has no route yet"
+		ok "tunnel" "quick tunnel: ${host} has no route yet"
 	fi
 	echo "${public}" >"${STATE}/public"
+	[[ "${public}" == "${URL}" && -n "${edge}" ]] && reach=(--resolve "${host}:443:${edge}")
 
 	code=""
 	for _ in $(seq 1 60); do
-		[[ -n "${public}" ]] && code="$(curl -s -o /dev/null -w '%{http_code}' -m 5 "${public}/healthz" || true)"
+		[[ -n "${public}" ]] && code="$(curl -s "${reach[@]}" -o /dev/null -w '%{http_code}' -m 5 "${public}/healthz" || true)"
 		[[ "${code}" == 200 ]] && break
 		sleep 1
 	done
