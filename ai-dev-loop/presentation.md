@@ -343,20 +343,21 @@ paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model hea
 
 <!-- end_slide -->
 
-## How the Call Travels
+## The Whole Path
 
-> One endpoint hides a cross-network call from the developer.
+> The platform connects the nodes; applications use the model endpoint.
 
 ```bash +exec_replace
-paint 'bold cyan' '  laptop     ' plain 'classif calls a LoadBalancer IP'
-paint gray '     │'
-paint 'bold cyan' '  tunnel     ' plain 'WireGuard carries the call to the T4 node'
-paint gray '     │'
-paint 'bold cyan' '  T4 node    ' plain 'a proxy pod forwards it to Ollama on the host'
-paint gray '     │'
-paint 'bold cyan' '  GPU        ' plain 'Winnow 12B scores the request'
+just digraph architecture | awk '
+{
+  gsub(/vCluster Platform|join tokens [+] VPN|Stack health/, "\033[1;35m&\033[0m")
+  gsub(/LAPTOP \/ ai-dev|API [+] worker-1|Local KVM|cloud-node/, "\033[1;36m&\033[0m")
+  gsub(/GCE \/ vind-node|proxy -> Ollama|Winnow on T4/, "\033[1;32m&\033[0m")
+  gsub(/Audience phone|via Cloudflare|HTTPS|page [+] classif|model Service|Tailscale\/WireGuard/, "\033[1;33m&\033[0m")
+  print
+}'
 paint
-paint yellow '  The platform owns this route; the developer uses one endpoint.'
+paint yellow '  One kube context spans Docker, KVM, and the T4.'
 ```
 
 <!-- end_slide -->

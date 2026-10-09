@@ -1,0 +1,15 @@
+digraph architecture {
+  rankdir=TB;
+  node [shape=box];
+
+  platform [label="vCluster Platform\njoin tokens + VPN\nStack health"];
+  audience [label="Audience phone\nvia Cloudflare"];
+  laptop [label="LAPTOP / ai-dev\nAPI + worker-1\npage + classif"];
+  vm [label="Local KVM\ncloud-node"];
+  gpu [label="GCE / vind-node\nproxy -> Ollama\nWinnow on T4"];
+
+  platform -> laptop [label="coordinate", style=dashed];
+  audience -> laptop [label="HTTPS"];
+  laptop -> vm [label="VPN", style=dashed];
+  laptop -> gpu [label="model Service\nTailscale/WireGuard"];
+}
