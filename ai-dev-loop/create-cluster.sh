@@ -15,8 +15,13 @@ platform="$(jq -r '.platform.host // empty' ~/.vcluster/config.json | sed -E 's#
 
 cmd "vcluster create ${CLUSTER} --values vcluster.yaml"
 start="$(date +%s)"
-if docker ps -a --format '{{.Names}}' | grep -qx "vcluster.cp.${CLUSTER}"; then
+if docker ps --format '{{.Names}}' | grep -qx "vcluster.cp.${CLUSTER}"; then
 	ok "${CLUSTER}" "already exists, kept"
+elif docker ps -a --format '{{.Names}}' | grep -qx "vcluster.cp.${CLUSTER}"; then
+	# Left paused by an interrupted sleep-wake.sh.
+	vcluster resume "${CLUSTER}" >/dev/null 2>&1
+	kubectl wait --for=condition=Ready node --all --timeout=180s >/dev/null
+	ok "${CLUSTER}" "was paused, resumed in $(($(date +%s) - start)) seconds"
 else
 	log="$(mktemp)"
 	if ! vcluster create "${CLUSTER}" --values vcluster.yaml >"${log}" 2>&1; then

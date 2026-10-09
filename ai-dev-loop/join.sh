@@ -10,6 +10,20 @@ cd "$(dirname "$0")"
 source ./common.sh
 
 target="${1:?usage: ./join.sh vm|gpu}"
+case "${target}" in
+vm) node=cloud-node ;;
+gpu) node="${GPU_VM}" ;;
+*)
+	fail "unknown target ${target}" "use vm or gpu"
+	exit 1
+	;;
+esac
+
+# A rerun after the join changes nothing: the join script refuses a running kubelet.
+if [[ "$(kubectl get node "${node}" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)" == True ]]; then
+	ok "${node}" "already joined to ${CLUSTER} and Ready, kept"
+	exit 0
+fi
 
 cmd "vcluster token create --expires=1h"
 join="$(vcluster token create --expires=1h 2>/dev/null)" || {
@@ -37,9 +51,5 @@ vm)
 	;;
 gpu)
 	exec gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t sudo -i
-	;;
-*)
-	fail "unknown target ${target}" "use vm or gpu"
-	exit 1
 	;;
 esac

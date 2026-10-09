@@ -38,7 +38,11 @@ ok "$VM" "a GCE VM in $ZONE, $created"
 ok "GPU" "$(sed -n 1p <<<"$info")"
 ok "model" "Winnow 12B, $(sed -n 2p <<<"$info"), served by Ollama"
 if [[ "$(sed -n 3p <<<"$info")" == active ]]; then
-	fail "kubelet already runs" "  a join from an earlier run: ./reset.sh undoes it"
+	if kubectl get node "$VM" >/dev/null 2>&1; then
+		ok "kubelet" "running: already joined to ${CLUSTER}"
+	else
+		fail "kubelet already runs" "  a join from an earlier run: ./reset.sh undoes it"
+	fi
 else
 	ok "kubelet" "none yet: the join adds it"
 fi

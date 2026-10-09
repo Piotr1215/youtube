@@ -32,6 +32,10 @@ echo "=== Undoing the GPU VM's join ==="
 join="$(vcluster token create --expires=10m 2>/dev/null)"
 if [[ -n "${join}" ]] && gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command='systemctl is-active -q kubelet' 2>/dev/null; then
   gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="sudo sh -c '${join}s -- --reset-only' && sudo systemctl disable --now vcluster-vpn && sudo rm -f /etc/vcluster-vpn/config.json" 2>&1 | tail -3
+elif gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command='systemctl is-active -q kubelet' 2>/dev/null; then
+  # The cluster is gone, so no token for --reset-only: stop what makes the next
+  # join refuse or hang; that join resets the rest before it installs.
+  gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="sudo systemctl disable --now kubelet vcluster-vpn && sudo rm -f /etc/vcluster-vpn/config.json" 2>&1 | tail -3
 else
   echo "no join to undo"
 fi

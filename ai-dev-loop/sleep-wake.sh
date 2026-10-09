@@ -9,7 +9,8 @@ cd "$(dirname "$0")"
 source ./common.sh
 
 cmd "vcluster pause ${CLUSTER}"
-vcluster pause "${CLUSTER}" >/dev/null 2>&1
+# Already paused by an interrupted run is fine: resume follows.
+vcluster pause "${CLUSTER}" >/dev/null 2>&1 || true
 running="$(docker ps --format '{{.Names}}' | grep -c "^vcluster\.[a-z]*\.${CLUSTER}" || true)"
 ok "laptop" "${CLUSTER}'s containers stopped, ${running} still running"
 ok "${GPU_VM}" "untouched: the cloud VM keeps running"

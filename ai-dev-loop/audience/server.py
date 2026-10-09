@@ -5,7 +5,8 @@ On the laptop it serves index.html and POST /api/classify on 127.0.0.1 only, the
 Cloudflare tunnel being the sole way in, and asks through ../ask. In a cluster
 (classifier/) CLASSIF_HOSTS names the model Service, it runs classif directly and
 binds AUDIENCE_BIND. Either way it uses an argv list, never a shell, and returns
-only the label, its probability and the time. Input is capped,
+only the label, its probability and the time. The text goes in on stdin, never in
+argv: classif would read text such as "-i/etc/passwd" as an option. Input is capped,
 requests are rate limited per client and bounded overall. Nothing logs the text:
 classif's question form does not write its log, and CLASSIF_LOG points at a
 private directory that audience.sh deletes in case a later classif does.
@@ -60,7 +61,7 @@ def classify(text):
     """Ask the T4 and keep only the public fields of classif's JSON."""
     started = time.monotonic()
     try:
-        out = subprocess.run([ASK, "-j", "-d", "20", QUESTION, text], capture_output=True,
+        out = subprocess.run([ASK, "-j", "-d", "20", QUESTION], input=text, capture_output=True,
                              text=True, timeout=30, cwd=HERE).stdout
         result = json.loads(out)
     except (subprocess.TimeoutExpired, ValueError):
