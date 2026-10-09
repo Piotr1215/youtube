@@ -18,6 +18,10 @@ done < vcluster-logo-ascii.txt
 
 <!-- end_slide -->
 
+<!-- include: ../_partials/about-me.md -->
+
+<!-- end_slide -->
+
 ## AI Dev Loop
 
 > What changes when developers need a model inside their workflow?
