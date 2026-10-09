@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: classifier
+  labels:
+    app: classifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: classifier
+  template:
+    metadata:
+      labels:
+        app: classifier
+    spec:
+      containers:
+      - name: classifier
+        image: classifier:dev
+        ports:
+        - containerPort: 8089
+        env:
+        # The Service the classif Stack's model task creates, in any cluster that runs it.
+        - name: CLASSIF_HOSTS
+          value: ollama.classif.svc.cluster.local:11434=winnow:12b-q4_K_M
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8089

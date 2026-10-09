@@ -1,0 +1,26 @@
+# The classifier package the laptop tests against the T4, reconciled by Argo CD in a shared
+# cluster. CI builds audience/ and pushes an immutable tag; the images override points the
+# package at it, since classifier:dev exists only in the laptop's Docker.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: classifier
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Piotr1215/youtube.git
+    targetRevision: main
+    path: ai-dev-loop/classifier
+    kustomize:
+      images:
+      - classifier=ghcr.io/piotr1215/classifier:sha-REPLACE_IN_CI
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: classifier-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

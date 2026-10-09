@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# classif against the model the Stack serves from the GPU node. The endpoint is the
+# LoadBalancer IP of the Stack's ollama Service, the source of its "endpoint" output.
+#
+#   ./ask "Is this about Kubernetes?" "The pod keeps crashlooping."
+set -eo pipefail
+
+source "$(dirname "$0")/common.sh"
+MODEL="${MODEL:-winnow:12b-q4_K_M}"
+ip="$(kubectl get svc ollama -n classif -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)"
+if [[ -z "${ip}" ]]; then
+	echo "no endpoint yet: is the classif Stack Healthy?" >&2
+	exit 2
+fi
+
+# The LoadBalancer takes a few seconds to route again after vcluster resume.
+for _ in $(seq 1 30); do
+	curl -sf -m 2 "http://${ip}:11434/api/version" >/dev/null && break
+	sleep 2
+done
+
+classif="$(command -v classif || echo "${HOME}/dev/classif/classif")"
+CLASSIF_HOSTS="${ip}:11434=${MODEL}" exec "${classif}" "$@"

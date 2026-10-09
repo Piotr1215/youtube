@@ -1,0 +1,5 @@
+# The app as both the laptop cluster and Argo CD run it. Locally, web:dev is the image
+# docker build just made; a shared cluster swaps in the tag CI pushed (argocd/).
+resources:
+- deployment.yaml
+- service.yaml

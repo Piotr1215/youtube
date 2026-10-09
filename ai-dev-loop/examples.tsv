@@ -1,0 +1,6 @@
+yes	The pod keeps crashlooping after the deploy.
+yes	The node reports DiskPressure and evicts pods.
+yes	kubectl apply fails with a webhook timeout.
+no	The UPS in the server room keeps beeping.
+no	The DNS record for the company blog expired.
+no	The backup tape drive needs cleaning.

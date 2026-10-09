@@ -1,0 +1,5 @@
+# The AI app from the loop: the bounded classifier page, calling the model Service
+# the classif Stack runs on the GPU node. classifier:dev is built from audience/.
+resources:
+- deployment.yaml
+- service.yaml

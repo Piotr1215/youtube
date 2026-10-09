@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask the GPU</title>
+<style>
+  :root {
+    --bg: #0b1020; --card: #141b30; --line: #263049; --text: #e8ebf3; --muted: #8a93a8;
+    --accent: #ff6600; --yes: #3ecf8e; --no: #ff5c5c; --unknown: #f5c542;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 28px 16px 40px; }
+  .brand { color: var(--accent); font-weight: 600; font-size: 14px; letter-spacing: .04em; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 8px 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  textarea {
+    width: 100%; min-height: 110px; resize: vertical; padding: 12px 14px;
+    background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+    font: inherit;
+  }
+  textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .count { text-align: right; color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
+  .chip {
+    background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; text-align: left;
+  }
+  .chip:hover { color: var(--text); border-color: var(--muted); }
+  button.ask {
+    width: 100%; padding: 14px; border: 0; border-radius: 10px; cursor: pointer;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 17px;
+  }
+  button.ask:disabled { opacity: .6; cursor: wait; }
+  .result {
+    margin-top: 20px; padding: 18px; border-radius: 12px; background: var(--card);
+    border: 1px solid var(--line); display: none;
+  }
+  .result.show { display: block; }
+  .label { font-size: 40px; font-weight: 700; letter-spacing: .02em; }
+  .label.yes { color: var(--yes); } .label.no { color: var(--no); } .label.unknown { color: var(--unknown); }
+  .meta { color: var(--muted); margin-top: 2px; }
+  .path {
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+    font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted);
+  }
+  .path b { color: var(--text); font-weight: 500; }
+  .msg { color: var(--unknown); }
+  footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">vCluster · Curl a GPU Into Your Cluster</div>
+  <h1>Is this a Kubernetes problem?</h1>
+  <p class="sub">Describe any problem in a sentence. A 12B model on a cloud GPU, joined to the speaker's laptop cluster, answers yes, no or unknown.</p>
+
+  <textarea id="text" maxlength="500" placeholder="The deployment is stuck at 0 of 3 replicas."></textarea>
+  <div class="count"><span id="count">0</span>/500</div>
+  <div class="chips">
+    <button class="chip" type="button">My PVC stays Pending after the apply.</button>
+    <button class="chip" type="button">Pods cannot pull images from the private registry.</button>
+    <button class="chip" type="button">The coffee machine on floor two is broken.</button>
+  </div>
+  <button class="ask" id="ask" type="button">Ask the GPU</button>
+
+  <section class="result" id="result" aria-live="polite">
+    <div class="label" id="label"></div>
+    <div class="meta" id="meta"></div>
+    <div class="path">
+      <b>your phone</b> › Cloudflare › <b>speaker's laptop</b><br>
+      › WireGuard tunnel › <b>NVIDIA T4</b> › Winnow 12B
+    </div>
+  </section>
+
+  <footer>Nothing you type is stored or shown on screen.</footer>
+</main>
+<script>
+  const text = document.getElementById("text");
+  const ask = document.getElementById("ask");
+  const result = document.getElementById("result");
+  const label = document.getElementById("label");
+  const meta = document.getElementById("meta");
+  const count = document.getElementById("count");
+  const errors = {
+    429: "Lots of questions right now. Try again in a minute.",
+    503: "The GPU is busy or out of reach. Try again in a few seconds.",
+    400: "Type between 1 and 500 characters.",
+  };
+
+  text.addEventListener("input", () => { count.textContent = text.value.length; });
+  document.querySelectorAll(".chip").forEach(chip => chip.addEventListener("click", () => {
+    text.value = chip.textContent;
+    count.textContent = text.value.length;
+    send();
+  }));
+  ask.addEventListener("click", send);
+  text.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+
+  function show(cls, big, small) {
+    label.className = "label " + cls;
+    label.textContent = big;
+    meta.textContent = small;
+    meta.className = cls ? "meta" : "meta msg";
+    result.classList.add("show");
+  }
+
+  async function send() {
+    const value = text.value.trim();
+    if (!value) { text.focus(); return; }
+    ask.disabled = true;
+    ask.textContent = "Asking the GPU…";
+    try {
+      const r = await fetch("/api/classify", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: value }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.label) {
+        show(data.label, data.label.toUpperCase(),
+          Math.round(data.p * 100) + "% sure · answered in " + data.seconds + " s");
+      } else {
+        show("", "", errors[r.status] || errors[503]);
+      }
+    } catch (e) {
+      show("", "", "No connection. Check your network and try again.");
+    } finally {
+      ask.disabled = false;
+      ask.textContent = "Ask the GPU";
+    }
+  }
+</script>
+</body>
+</html>

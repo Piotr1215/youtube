@@ -1,0 +1,26 @@
+# The same app package the laptop applies in step 2, reconciled by Argo CD in a shared
+# cluster. CI builds web/ and pushes an immutable tag; the images override points the
+# package at it, since web:dev exists only in the laptop's Docker.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Piotr1215/youtube.git
+    targetRevision: main
+    path: ai-dev-loop/app
+    kustomize:
+      images:
+      - web=ghcr.io/piotr1215/web:sha-REPLACE_IN_CI
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: web
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
