@@ -18,6 +18,10 @@ spec:
       # podSecurityStandard: restricted. The team writes this; nothing else.
       securityContext:
         runAsNonRoot: true
+        # The image declares no non-root USER, so kubelet refuses it under
+        # runAsNonRoot unless the pod names a numeric non-root user.
+        runAsUser: 1000
+        runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       containers:

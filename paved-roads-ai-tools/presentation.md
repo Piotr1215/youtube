@@ -1,24 +1,18 @@
-# Paved Roads for AI Tools
+# Your Platform Already Has AI Users
 
-> Governed self-service runtimes with vCluster
+> Paved roads for the AI tools and agents teams ship
 
 <!-- new_lines: 3 -->
 
 ```bash +exec_replace
-echo "Paved Roads" | figlet -f small -w 90
-```
-
-<!-- jump_to_middle -->
-
-```bash +exec_replace
-while IFS= read -r line; do
-    printf '\033[38;5;208m%s\033[0m\n' "$line"
-done < vcluster-logo-ascii.txt
+echo "AI Users" | figlet -f small -w 90
 ```
 
 <!-- end_slide -->
 
 ## About Me
+
+<!-- skip_slide -->
 
 ```bash +exec_replace
 echo "Piotr Zaniewski" | figlet -f small -w 90
@@ -27,230 +21,297 @@ echo "Piotr Zaniewski" | figlet -f small -w 90
 > Head of Engineering Enablement @ vCluster
 
 ```bash +exec_replace
-printf "  Expertise  | Platform engineering, Kubernetes, GitOps, SRE, CNCF\n  Speaking   | Workshops, presentations, live demos\n  Content    | YouTube, Medium, Killercoda\n  Projects   | Neovim, CLI tools, MCP servers, K8s operators" | ccze -A
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Expertise   ' 'platform engineering, Kubernetes, GitOps, SRE'
+m 'AI work     ' 'agent platforms, MCP servers, RAG'
+m 'Speaking    ' 'workshops, conference talks, live demos'
+m 'Content     ' 'YouTube, Medium, Killercoda'
 ```
 
 ```bash +exec_replace
 qrencode -t UTF8 -m 2 "https://cloudrumble.net"
+printf '  \e[37m%s\e[0m\n' 'cloudrumble.net  ·  github.com/Piotr1215  ·  @cloud-native-corner'
 ```
 
-> cloudrumble.net  ·  github.com/Piotr1215  ·  @cloud-native-corner
-
 <!-- end_slide -->
 
-## Demo Setup
+## Converging Components
 
-> A local Kubernetes control plane and a tenant cluster created from an approved policy template.
-
-```bash +exec
-./setup.sh
-```
-
-> The tenant cluster carries pod security, quota, limits, and network policy from the moment it starts.
-
-<!-- end_slide -->
-
-## Teams Want to Run AI Tools on Kubernetes
-
-> MCP servers, RAG services, and agents are just workloads, and Kubernetes runs workloads well.
-
-| AI tool                        | Why Kubernetes fits             |
-| ------------------------------ | ------------------------------- |
-| Internal documentation server | Scales, self-heals, rolls out   |
-| RAG service over company data  | Secrets, storage, scheduling    |
-| Agent runtime with credentials | Identity and network built in   |
-| Any tool, iterated fast        | Declarative, repeatable deploys |
-
-> Teams want the platform's scheduling, identity, and rollout for their AI tools.
-
-<!-- end_slide -->
-
-## The Shared Cluster Makes It Hard
-
-> One cluster, many teams, and every AI tool lands next to workloads it should never touch.
+> Paved roads for AI tools combine three components.
 
 ```bash +exec_replace
-printf '\e[1;36m%s\e[0m\n\n' "SHARED-CLUSTER PAIN"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Isolation: one namespace is a weak boundary"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Blast radius: a noisy tool starves its neighbors"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Access: who is allowed to reach which tool"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Policy sprawl: rules copied per team, drift sets in"
+f() { printf '  \e[1;36m%-23s\e[0m\e[37m%-17s\e[0m\e[35m%s\e[0m\e[1;33m%s\e[0m\n' "$1" "$2" "$3" "$4"; }
+f 'Platform engineering' 'the discipline' '──┐'
+f 'Kubernetes' 'the runtime' '──┼──▶  ' 'paved roads for AI tools'
+f 'MCP' 'the interface' '──┘'
+printf '\n'
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+m 'Discipline  ' 'self-service, golden paths, guardrails'
+m 'Runtime     ' 'where AI tools and agents actually run'
+m 'Interface   ' 'how agents discover and call those tools'
 ```
 
-> Speed cannot come at the cost of a dependable boundary.
-
 <!-- end_slide -->
 
-## What a Team Actually Asks For
+## The Shift
 
-> A team brings an image and a need. The platform answers with a runtime.
+> Why do platforms need to care about AI tools now?
 
-| Team A brings                     | The platform provides        |
-| --------------------------------- | ---------------------------- |
-| "I built an MCP server"           | A tenant cluster to run it   |
-| "It has to be served over HTTP"   | Ingress and a public route   |
-| "Who is allowed to reach it?"     | OIDC and SSO, wired in       |
-| "It must run on our own hardware" | Private nodes, same template |
-
-> The team owns the tool. The platform owns everything around it. That is the paved road.
-
-<!-- end_slide -->
-
-<!-- include: ../_partials/what-is-vcluster.md -->
-
-<!-- end_slide -->
-
-<!-- include: ../_partials/vcluster-architecture.md -->
-
-<!-- end_slide -->
-
-## The Paved Road
-
-> On the vCluster Platform, an approved template creates a governed tenant cluster on demand.
-
-```bash
-vcluster platform create vcluster --template ai-tool-runtime
+```bash +exec_replace
+./journey.sh 1
 ```
 
-| Without the paved road        | With `ai-tool-runtime`             |
-| ----------------------------- | ---------------------------------- |
-| Platform ticket               | Team self-service                  |
-| Bespoke cluster configuration | Approved, repeatable contract      |
-| Policy added later            | Policy present at creation         |
-| Platform engineer in the loop | Platform engineer defines the road |
-
-> The Platform UI exposes the same self-service path.
-
 <!-- end_slide -->
 
-## The Design
+## Two Kinds of Platform Users
 
-> One approved template becomes many isolated runtimes, and one pull request evolves them all.
+> Agents call the same APIs your developers do.
 
-```mermaid +render
-%%{init: {'theme':'base','themeVariables':{'primaryColor':'#26303b','primaryBorderColor':'#ff8c42','primaryTextColor':'#ffffff','lineColor':'#c9d1d9','textColor':'#ffffff','clusterBkg':'#161b22','clusterBorder':'#ff8c42','fontSize':'20px'}}}%%
-graph TB
-    PR["Pull request<br/>evolves the road"]
-    TPL["Approved template<br/>ai-tool-runtime"]
-    PROJ["Project<br/>gates access and quota"]
-    DOCS["team-docs<br/>MCP server"]
-    SUPPORT["team-support<br/>RAG service"]
-    DATA["team-data<br/>agent runtime"]
-    PR --> TPL
-    TPL --> PROJ
-    PROJ --> DOCS
-    PROJ --> SUPPORT
-    PROJ --> DATA
+```bash +exec_replace
+m() { printf '  \e[1;36m%-14s\e[0m\e[37m%-26s\e[0m\e[33m%s\e[0m\n' "$1" "$2" "$3"; }
+printf '  \e[1;37m%-14s%-26s%s\e[0m\n\n' 'DIMENSION' 'DEVELOPERS' 'AGENTS'
+m 'Interface' 'portal, CLI, docs' 'MCP tools, typed schemas'
+m 'Golden path' 'templates, scaffolding' 'skills, workflow definitions'
+m 'Guardrails' 'permissions, review gates' 'tool allowlists, approval gates'
+m 'Bottleneck' 'cognitive load' 'context window'
+m 'Memory' 'experience, wikis' 'none, unless the platform keeps it'
+m 'Cost' 'salaries and time' 'tokens and compute'
+printf '\n  \e[32m%s\e[0m\n' 'The same platform serves both; the interface layer changes.'
 ```
 
-> Governance is code: change the template once, every future runtime inherits it.
+<!-- end_slide -->
+
+## AI Tools Across Teams
+
+> MCP servers, RAG services, and agents run like any other workload.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+printf '  \e[1;33m%s\e[0m\n\n' 'AI TOOL                           WHAT IT NEEDS'
+m 'MCP server for internal docs   ' 'a place to run and a web address'
+m 'RAG service over company data  ' 'passwords, storage, data access rules'
+m 'Agent calling other systems    ' 'its own identity, limits on what it reaches'
+m 'Report or analysis agent       ' 'read access to data, a human before results ship'
+printf '\n  \e[32m%s\e[0m\n' 'The same guardrails repeat across teams, so they belong in the platform.'
+```
 
 <!-- end_slide -->
 
-## The Ownership Split
+## Without Shared Guardrails
 
-> Clear ownership removes the platform team from the delivery path.
+> Each team solves isolation, access, and data handling on its own.
 
-| Teams own                         | Platform owns                           |
-| --------------------------------- | --------------------------------------- |
-| Tool code and behavior            | Approved runtime templates              |
-| Container images and dependencies | Security and resource policy            |
-| Release cadence                   | Template access through Projects        |
-| Workload configuration            | Shared identity, secrets, observability |
+```bash +exec_replace
+x() { printf '  \e[31m✗\e[0m  \e[1;37m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+x 'Ticket queue    ' 'the platform team becomes the bottleneck'
+x 'Weak isolation  ' 'tools share space, so one failure spreads'
+x 'Data exposure   ' 'an agent reaches data its team never cleared'
+x 'Ad hoc access   ' 'who may call which tool, decided per request'
+x 'Policy drift    ' 'rules copied per team, then diverging'
+printf '\n  \e[33m%s\e[0m\n' 'Fast delivery needs a boundary teams can rely on.'
+```
 
-> Teams iterate on tools while the platform evolves the contract.
+<!-- end_slide -->
+
+## The Discipline
+
+> How does platform engineering answer this?
+
+```bash +exec_replace
+./journey.sh 2
+```
+
+<!-- end_slide -->
+
+## What a Paved Road Is
+
+> A team brings its tool; the platform provides the runtime around it.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+m 'Team brings        ' 'an image and what the tool needs to reach'
+m 'Platform provides  ' 'an isolated runtime, created on request'
+m 'Guardrails         ' 'in place when the runtime starts'
+m 'Changes            ' 'reviewed pull requests to the template'
+printf '\n  \e[32m%s\e[0m\n' 'Teams ship without tickets, and the platform keeps the standards.'
+```
+
+<!-- end_slide -->
+
+## Roads by Risk Class
+
+> A docs server and an agent with write access carry different risk.
+
+```bash +exec_replace
+r() { printf '  \e[1;33m%s\e[0m\e[37m%s\e[0m\n                   \e[36m%s\e[0m\n\n' "$1" "$2" "$3"; }
+r 'docs-tool        ' 'read-only tools, docs MCP servers' 'locked-down runtime, spending cap, public address'
+r 'data-tool        ' 'RAG and analytics over company data' '+ only its own keys, approved data sources, no public address'
+r 'agent-runtime    ' 'agents that act on other systems' '+ own identity, approved destinations, approval for writes'
+r 'gpu-runtime      ' 'training and inference' '+ GPU budget, dedicated machines'
+printf '  \e[32m%s\e[0m\n' 'Teams pick a road; the platform team decides which roads exist.'
+printf '  \e[37m%s\e[0m\n' 'The demo walks the first road, docs-tool.'
+```
+
+<!-- end_slide -->
+
+## What Agents Need From the Platform
+
+> Agents bring needs that platforms built for people do not cover.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+m 'Context      ' 'a finite budget, so the platform delivers it pre-filtered'
+m 'Memory       ' 'sessions start empty unless the platform keeps knowledge'
+m 'Authority    ' 'its own identity, approved tools, a human before writes'
+m 'Containment  ' 'retrieved text is data, outbound only to approved places'
+m 'Testing      ' 'manipulation and data-leak cases run on every change'
+printf '\n  \e[32m%s\e[0m\n' 'A model can be manipulated; the runtime decides what that costs.'
+```
+
+<!-- end_slide -->
+
+## The Runtime
+
+> Where do the tools run, and how are teams kept apart?
+
+```bash +exec_replace
+./journey.sh 3
+```
+
+<!-- end_slide -->
+
+## Isolating Teams on a Shared Cluster
+
+> Every team needs a space of its own; the question is how strong the walls are.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+m 'Namespace per team        ' "cheap, but teams share the cluster's admin"
+m 'Real cluster per team     ' 'strong walls, but slow and costly to run'
+m 'Virtual cluster per team  ' 'a full cluster of its own, on shared machines'
+printf '\n'
+t() { printf '  \e[35m%s\e[0m\e[1;36m%-14s\e[0m\e[37m%s\e[0m\n' "$1" "$2" "$3"; }
+printf '  \e[1;37m%s\e[0m\n' 'shared cluster, run by the platform team'
+t '  ├──▶  ' 'team-docs' 'own admin, own rules, own tools'
+t '  ├──▶  ' 'team-support' 'own admin, own rules, own tools'
+t '  └──▶  ' 'team-data' 'own admin, own rules, own tools'
+printf '\n  \e[37m%s\e[0m\n' 'Built on vCluster, open source. On a platform, a team creates one with a click.'
+```
 
 <!-- end_slide -->
 
 ## The Contract
 
-> `ai-tool-runtime` defines the baseline every workload inherits.
-
-```yaml
-# ai-tool-runtime values - the policy envelope
-policies:
-  podSecurityStandard: restricted     # non-root, drop ALL, no privilege escalation
-  resourceQuota:
-    enabled: true
-    quota:
-      requests.cpu: "8"
-      requests.memory: 16Gi
-      limits.cpu: "16"
-      limits.memory: 32Gi
-      count/pods: "40"
-  limitRange:
-    enabled: true                     # default requests + limits per container
-  networkPolicy:
-    enabled: true                     # declared; enforced by a policy-capable CNI
-```
-
-| Contract element | Runtime value |
-| ---------------- | ------------- |
-| Pod security | Restricted admission baseline |
-| ResourceQuota | Aggregate capacity boundary |
-| LimitRange | Default requests and limits |
-| NetworkPolicy | Declared network boundary |
-
-<!-- end_slide -->
-
-## The Tool Is Real
-
-> `vcluster-yaml` answers vcluster.yaml configuration questions over MCP.
+> Every runtime on this road inherits the same baseline.
 
 ```bash +exec_replace
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Image: piotrzan/vcluster-yaml-mcp-server:1.5.0"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "ArgoCD ApplicationSet ships the workload"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "ArgoCD Image Updater writes image tags back to Git"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Public endpoint: vcluster-yaml.cloudrumble.net"
+c() { printf '  \e[32m✓\e[0m  \e[1;37m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+c 'Safe defaults   ' 'no tool runs as the all-powerful root user'
+c 'Spending cap    ' 'each team may reserve up to 8 CPUs and 16 GB of memory'
+c 'Fair share      ' 'every tool gets default CPU and memory limits'
+c 'Network fence   ' 'traffic rules declared for every tool'
+printf '\n  \e[33m%s\e[0m\n' 'The team writes none of it.'
+printf '  \e[37m%s\e[0m\n' 'Changes to these rules arrive as reviewed pull requests.'
+printf '  \e[37m%s\e[0m\n' 'In rehearsal, it refused my own image for running as root.'
 ```
-
-```bash +exec
-curl -s https://vcluster-yaml.cloudrumble.net/health
-```
-
-> A real production MCP server, live right now.
 
 <!-- end_slide -->
 
-## Step 1: A Real Cluster the Team Owns
+## Step 1: A Cluster the Team Owns
 
-> A tenant cluster is a full Kubernetes API of its own. The team is admin inside it; the host stays untouched.
+> The team gets a private cluster to run as it likes.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Doing   ' 'act as the team inside its cluster, then look at the shared one'
+m 'Why     ' 'teams get full freedom without reaching each other'
+```
 
 ```bash +exec
 ./isolation.sh
 ```
 
-> Not a namespace with extra rules. A cluster, safely theirs.
-
 <!-- end_slide -->
 
-## Step 2: Deploy the MCP Server
+## Step 2: Ship the MCP Server
 
-> The team's manifest deploys into the governed tenant cluster and carries no policy of its own.
+> The team ships its tool and writes no security rules.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Doing   ' 'ship the tool: the program, its address, its entrance'
+m 'Why     ' "the team writes only its tool; the road supplies the rules"
+```
 
 ```bash +exec
 ./ship.sh
 ```
 
-> The runtime already enforces pod security and resource limits. The team authored zero policy manifests.
+<!-- end_slide -->
+
+## Step 3: An Unsafe Tool Is Refused
+
+> The road's rules apply even when a team forgets them.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Doing   ' 'ship a tool the unsafe way, on purpose'
+m 'Why     ' 'guardrails only count if they stop real mistakes'
+```
+
+```bash +exec
+./guardrails.sh
+```
 
 <!-- end_slide -->
 
-## Step 3: Add It to Your AI Client
+## The Interface
 
-> Every HTTP-capable MCP client can reach the same live server. Add it now.
+> How do agents reach the tools teams ship?
+
+```bash +exec_replace
+./journey.sh 4
+```
+
+<!-- end_slide -->
+
+## The Tool Is Real
+
+> The demo tool is an AI assistant's helper for one product's configuration.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Doing   ' 'check the same tool, running in production right now'
+m 'Why     ' 'the demo uses a real service anyone can call'
+```
+
+```bash +exec_replace
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' 'Image: piotrzan/vcluster-yaml-mcp-server:1.5.1'
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' 'Shipped by Argo CD from Git'
+printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' 'Public endpoint: vcluster-yaml.cloudrumble.net'
+```
+
+```bash +exec
+curl -s https://vcluster-yaml.cloudrumble.net/health | jq '{status, name, version}'
+```
+
+<!-- end_slide -->
+
+## Step 4: Add It to Your AI Client
+
+> Any MCP client can connect to the same server.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Doing   ' 'connect an AI assistant to the tool with one command'
+m 'Why     ' 'MCP is a standard plug, so any assistant can use any tool'
+```
 
 Claude Code:
 
 ```bash
-claude mcp add --transport http vcluster-yaml https://vcluster-yaml.cloudrumble.net/mcp
-```
-
-Codex (`~/.codex/config.toml`):
-
-```toml
-[mcp_servers.vcluster-yaml]
-url = "https://vcluster-yaml.cloudrumble.net/mcp"
+claude mcp add --transport http vcluster-yaml \
+  https://vcluster-yaml.cloudrumble.net/mcp
 ```
 
 Any MCP client:
@@ -259,90 +320,82 @@ Any MCP client:
 { "type": "http", "url": "https://vcluster-yaml.cloudrumble.net/mcp" }
 ```
 
-> One command, one hundred clients, one live server.
-
 <!-- end_slide -->
 
-## Step 4: Ask It a Question
+## Step 5: Another Team Asks for Help
 
-> what does sync.toHost.ingresses.enabled do?
-
-The same tool, now answering live in every client in the room.
-
-What the team shipped is what the whole audience is using.
-
-<!-- end_slide -->
-
-## The Pattern
-
-> Any team self-serves a tenant cluster, drops in its tool, and owns nothing else.
-
-1. Team selects the approved template
-2. Team self-serves an isolated tenant cluster
-3. Team deploys its MCP server, RAG service, or agent
-4. Platform supplies isolation, identity, and public exposure
-
-> One recipe for every AI tool the organization will ever ship.
-
-<!-- end_slide -->
-
-## The Takeaway
-
-> The MCP server is the example. The product is the paved road.
+> A teammate asks the assistant, in plain English, for a safe team setup.
 
 ```bash +exec_replace
-printf '\e[1;36m%s\e[0m\n\n' "GOVERNED SELF-SERVICE"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Teams own and ship their AI tools"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "The platform owns the runtime contract"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Approved templates turn policy into a reusable product"
-printf '  \e[35m•\e[0m \e[37m%s\e[0m\n' "Projects control template access and quotas"
-printf '\n\e[32m%s\e[0m\n' "Team-owned tools. Platform-owned guardrails. vCluster paves the road."
+m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
+m 'Doing   ' "ask the assistant, which calls the team's tool"
+m 'Why     ' "one team's tool becomes a shared expert for everyone"
 ```
-
-<!-- end_slide -->
-
-## Resources
 
 ```markdown
-Documentation:
-- vCluster Docs: https://vcluster.com/docs
-- Internal Kubernetes Platform: https://vcluster.com/docs/vcluster/production-guide/internal-k8s-platform
-- Create a Template: https://vcluster.com/docs/platform/administer/templates/create-templates
-
-Community:
-- vCluster Slack: https://slack.loft.sh
-- Office Hours: https://www.loft.sh/events
+Write a config for a team cluster capped at 4 CPUs and 8 GB of memory,
+that blocks tools running as root, and check that it is valid.
 ```
 
 <!-- end_slide -->
 
-## Runtime Lifecycle Is Part of the Product
+## Next Steps
 
-> A tenant cluster and its governed policy envelope can be removed together.
-
-```bash +exec
-./cleanup.sh
-```
-
-> Self-service includes creation, use, and clean retirement.
-
-<!-- end_slide -->
-
-<!-- new_lines: 3 -->
+> Where does an organization start?
 
 ```bash +exec_replace
-while IFS= read -r line; do
-    printf '\033[38;5;208m%s\033[0m\n' "$line"
-done < vcluster-logo-ascii.txt
+./journey.sh 5
 ```
 
-<!-- new_lines: 5 -->
+<!-- end_slide -->
+
+## Agent Platform Maturity
+
+> Platform maturity levels apply to agents too.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+m 'Provisional  ' 'ad hoc API keys, whole files in prompts, no memory'
+m 'Operational  ' 'MCP tools, curated prompts, static allowlists'
+m 'Scalable     ' 'skill chaining, long-term memory, delegated authority'
+m 'Optimizing   ' 'agents request context and earn wider permissions'
+printf '\n  \e[32m%s\e[0m\n' 'Most teams are scalable for developers and provisional for agents.'
+```
+
+<!-- end_slide -->
+
+## Example: Research Data Agents
+
+> The same roads fit agents that work with lab data.
+
+```bash +exec_replace
+m() { printf '  \e[1;36m%s\e[0m\e[35m%s\e[0m\e[37m%s\e[0m\n' "$1" '›  ' "$2"; }
+m 'Experiment data access     ' 'data-tool road, read-only, approved sources'
+m 'Experiment planning agent  ' 'agent-runtime road, a scientist approves each run'
+m 'Reporting agent            ' 'drafts results with links to the source data'
+m 'Partner tools              ' 'connected through MCP servers on their own road'
+printf '\n  \e[32m%s\e[0m\n' 'A new research team starts on an existing road instead of a new project.'
+```
+
+<!-- end_slide -->
+
+## Takeaways
+
+> Paved roads let many teams ship AI tools safely.
+
+```bash +exec_replace
+printf '  \e[32m✓\e[0m  \e[37m%s\e[0m\n' 'Teams ship AI tools on runtimes the platform defines'
+printf '  \e[32m✓\e[0m  \e[37m%s\e[0m\n' 'Roads fork by risk, and each fork adds guardrails'
+printf '  \e[32m✓\e[0m  \e[37m%s\e[0m\n' 'Agents are platform users: serve them tools, context, and memory'
+printf '  \e[33m▶\e[0m  \e[37m%s\e[0m\n' 'Start with a single road and a real tool, then fork as risk grows'
+```
+
+<!-- end_slide -->
 
 <!-- jump_to_middle -->
+
 ```bash +exec_replace
 echo "Thank You!" | figlet -f small -w 90
 ```
 
 ## Questions?
-
-<!-- end_slide -->
