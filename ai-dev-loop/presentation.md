@@ -268,13 +268,22 @@ paint cyan '  Why     ' plain 'the platform must plan for a 7.4 GB model pull an
 
 <!-- end_slide -->
 
-## Step 5: Join the GPU
+## Step 5: Curl In the GPU
 
-> The cloud host uses the same join contract as the local VM.
+> The VM already has a GPU and model; one curl joins it to ai-dev.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'copy a fresh join command, open a root shell on the T4, paste it'
+paint cyan '  Doing   ' plain 'generate a one-hour join URL; paste its curl as root on the T4'
 paint cyan '  Why     ' plain 'remote capacity appears behind the same Kubernetes API'
+```
+
+```bash
+curl -fsSLk '<join-url>' | sh -s -- --node-name vind-node
+```
+
+```bash +exec_replace
+paint gray '  <join-url> contains the token from vcluster token create --expires=1h'
+paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'connect VPN' gray ' ──▶ ' plain 'register node'
 ```
 
 ```bash +acquire_terminal
