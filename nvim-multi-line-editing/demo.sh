@@ -264,8 +264,10 @@ launch() {
 	card_width=$((width * 40 / 100))
 	((card_width < 42)) && card_width=42
 	card_pane="$(tmux new-pane -P -F '#{pane_id}' -t "${demo_pane}" \
-		-x "${card_width}" -y 8 -X "$((width - card_width - 2))" -Y 1 -T ' keystroke golf ' \
+		-x "${card_width}" -y 8 -X "$((width - card_width - 2))" -Y 1 \
 		"PACE='${pace}' '${dir}/demo.sh' --play '${start}' '${demo_pane}'")"
+	# new-pane takes no -T since tmux 3.7, so the title is set afterwards.
+	tmux select-pane -t "${card_pane}" -T ' keystroke golf '
 	tmux set-option -p -t "${card_pane}" remain-on-exit off
 
 	while pane_alive "${card_pane}"; do
