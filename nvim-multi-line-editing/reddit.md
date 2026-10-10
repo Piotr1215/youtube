@@ -2,7 +2,7 @@ Neovim Multi-Line Editing Overview, Multicursor Included
 
 Neovim nightly now ships native multicursor, so I lined it up against every other built-in way to edit many lines at once and counted keystrokes on the same nine exercises. Multicursor took seven of them; visual block and `:v` still won their own cases.
 
-VIDEO_LINK
+https://youtu.be/S5kfUZQNzhU
 
 ---
 
