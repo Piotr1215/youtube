@@ -15,6 +15,10 @@ This video covers:
 
 Multicursor needs a Neovim nightly build until 0.13 ships. Everything else works in any Neovim, and in Vim.
 
+00:00 Methods overview
+15:40 Keystroke golf demo
+23:03 Scoreboard and takeaways
+
 Presentation: https://github.com/Piotr1215/youtube/blob/main/nvim-multi-line-editing/presentation.md
 Exercises: https://github.com/Piotr1215/youtube/tree/main/nvim-multi-line-editing/exercises
 Multicursor pull request: https://github.com/neovim/neovim/pull/41587
