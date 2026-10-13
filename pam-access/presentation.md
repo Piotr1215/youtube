@@ -1,12 +1,27 @@
 ---
-title: PAM infrastructure access
-author: Piotr Zaniewski
-date: 2026-10-13
 options:
   implicit_slide_ends: false
 ---
 
-## The service
+# PAM Access
+
+> Slack, reviewed access policies and native SSH.
+
+<!-- new_lines: 2 -->
+
+```bash +exec_replace
+printf '%s\n' 'PAM Access' | figlet -f small -w 90 | while IFS= read -r line; do
+    paint 'bold cyan' "$line"
+done
+paint
+paint yellow '  Live demo: the bot, PAM configuration, then SSH.'
+```
+
+<!-- end_slide -->
+
+## Bot and PAM
+
+> What works in the POC today?
 
 ```bash +exec_replace
 ./journey.sh 1
@@ -14,35 +29,109 @@ options:
 
 <!-- end_slide -->
 
-# Platform service for CE
+## Live: The Bot Home
 
-- Company SSO already provides automatic baseline access for everyone in CE.
-- Infra/Ops alone manages Google Workspace group membership and the shared platform.
-- CE administers customer targets, access rules, assignments and rollout through the service.
-- Ops owns the technical design, plumbing and security controls.
-- PRs and a thin self-service interface use the same reviewed access policies.
+> Open vCluster Infra Access and show Home.
 
-CE defines its access-management workflow and maintains customer assignments. Ops designs the controls.
+```bash +exec_replace
+paint 'bold cyan' '  HOME'
+paint cyan '    targets       ' plain 'customer systems available to the signed-in user'
+paint cyan '    access        ' plain 'granted or eligible to request'
+paint cyan '    connection    ' plain 'copy the native SSH command'
+paint cyan '    policy        ' plain 'applied policy reference'
+paint
+paint yellow '  Show the original OVH SSH target and the approval-demo target.'
+```
+
+[Open the bot conversation](https://app.slack.com/client/T024313FSQZ/D0C80S3CXNJ)
 
 <!-- end_slide -->
 
-# Slack demo
+## Live: The Access Form
 
-- Open vCluster Infra Access: Home, then Messages.
-- Open a fresh access form and select OVH access approval demo.
-- Show Request access for myself and the short reason `test`.
-- Show the existing bot receipt and PR #29: one policy group, one added member.
-- Show green tests and the required human review.
+> Switch to Messages, send `access`, then open the form.
 
-Use the existing PR for the meeting.
+```bash +exec_replace
+paint cyan '  target   ' plain 'OVH access approval demo'
+paint cyan '  change   ' plain 'Request access for myself'
+paint cyan '  reason   ' plain 'test'
+paint
+paint green '  The short reason is accepted; the form proposes a scoped change.'
+paint yellow '  Show the existing receipt and PR instead of another submission.'
+```
 
-```bash +exec
-gh pr diff 29 --repo loft-sh/tailscale-acls
+The POC form changes Tailscale policy membership. It does not change Google Workspace membership.
+
+<!-- end_slide -->
+
+## Live: The Access PR
+
+> Open the existing request and show its policy diff.
+
+```bash +exec_replace
+just boxart pam-policy
+paint
+paint cyan '  diff       ' plain 'one member added to the approval-demo group'
+paint yellow '  review     ' plain 'human review before merge and policy deployment'
+```
+
+[Open access PR #29](https://github.com/loft-sh/tailscale-acls/pull/29)
+
+<!-- end_slide -->
+
+## Approval in the Service
+
+> Planned workflow: approve in Slack; the policy PR stays behind the scenes.
+
+```bash +exec_replace
+paint cyan '  request     ' plain 'person, customer target and reason'
+paint cyan '  approve     ' plain 'Jonathan or Fabian, in Slack'
+paint cyan '  policy      ' plain 'automated checks and PR approval after the Slack decision'
+paint cyan '  activate    ' plain 'policy deployment, then ongoing access'
+paint cyan '  revoke      ' plain 'remove the assignment when access is no longer needed'
+paint
+paint yellow '  The current POC still requires human GitHub review.'
 ```
 
 <!-- end_slide -->
 
-## Architecture and demo
+## Live: PAM Configuration
+
+> Open the Tailscale admin console and select the OVH PAM service.
+
+```bash +exec_replace
+paint cyan '  service     ' plain 'SSH target and upstream host / port'
+paint cyan '  connector   ' plain 'private gateway that reaches the customer'
+paint cyan '  identity    ' plain 'PAM grant, permitted service and SSH username'
+paint cyan '  recording   ' plain 'session attribution, playback and recordings on request'
+paint
+paint yellow '  Show how the target configuration and access policy fit together.'
+```
+
+[Open Tailscale admin](https://login.tailscale.com/admin) · [Open the policy source](https://github.com/loft-sh/tailscale-acls/blob/main/policy.hujson)
+
+<!-- end_slide -->
+
+## Live: Native SSH
+
+> Ctrl+E connects to the original demo target; `exit` returns here.
+
+```bash +exec_replace
+paint cyan '  inside SSH   ' plain 'whoami, hostname, echo "$SSH_CONNECTION"'
+paint yellow '  after SSH    ' plain 'show the matching PAM session and playback'
+```
+
+```bash +exec +acquire_terminal
+ssh -l boundary-poc ovh-demo.robin-cobia.ts.net
+```
+
+Use the original target; the approval-demo target needs its reviewed policy deployed first.
+
+<!-- end_slide -->
+
+## Access Path
+
+> Where do authorization, credentials and egress happen?
 
 ```bash +exec_replace
 ./journey.sh 2
@@ -50,51 +139,59 @@ gh pr diff 29 --repo loft-sh/tailscale-acls
 
 <!-- end_slide -->
 
-# SSH architecture
+## The SSH Path
+
+> A private connector brokers the customer connection.
 
 ```bash +exec_replace
-cat diagrams/pam-ssh.txt
+just boxart pam-ssh
+paint
+paint cyan '  connector    ' plain 'no public IP or inbound security-group rules'
+paint cyan '  customer     ' plain 'approved Linux account and certificate trust'
+paint yellow '  remaining    ' plain 'clean-target proof and isolation denial tests'
 ```
-
-- The connector has no public IP or inbound security-group rules.
-- The target sees gateway egress, and PAM records engineer identity.
-- Customer setup still needs an approved account and certificate trust.
-
-The demo proves the SSH path on the existing target. Clean-target isolation and broader internal-infrastructure coverage remain open.
 
 <!-- end_slide -->
 
-# Slack and Git
+## Static Customer Egress
+
+> All customer-bound traffic uses known static public IPs.
 
 ```bash +exec_replace
-cat diagrams/pam-policy.txt
+paint cyan '  engineer' gray ' ──▶ ' cyan 'PAM connector' gray ' ──▶ ' 'bold yellow' 'static NAT IP' gray ' ──▶ ' cyan 'customer'
+paint
+paint plain '  63.183.170.86     18.196.66.114'
+paint plain '  3.19.214.126      18.227.187.66'
+paint
+paint green '  Send the published allowlist to customers for firewall setup.'
 ```
 
-- Home shows applied access and a terminal connection command.
-- The form checks identity and role, then proposes a scoped change.
-- PR creation alone does not grant access.
-
-The POC uses catalog roles and explicit email membership. The bot does not change Google Workspace membership.
+[Customer IP allowlist](https://www.vcluster.com/docs/ips)
 
 <!-- end_slide -->
 
-# Terminal demo
+## Customer Administration
 
-Press Ctrl+E to connect to the existing demo SSH target. Type `exit` to return to the slides.
+> Give the customer admin controls over their own domain.
 
-```bash +exec +acquire_terminal
-ssh -l boundary-poc ovh-demo.robin-cobia.ts.net
+```bash +exec_replace
+paint 'bold cyan' '  CUSTOMER ADMIN'
+paint cyan '    setup        ' plain 'register customer targets and maintain access rules'
+paint cyan '    assignment   ' plain 'manage individual customer access, including CTO users'
+paint cyan '    mapping      ' plain 'map existing SSO groups to Tailscale access rules'
+paint
+paint 'bold yellow' '  OPS'
+paint yellow '    platform     ' plain 'technical design, integrations and security controls'
+paint yellow '    SSO          ' plain 'Google Workspace membership remains Ops-only'
 ```
 
-Inside the session, show `whoami`, `hostname` and `echo "$SSH_CONNECTION"`.
-
-Show the corresponding PAM session and playback if your account has access.
-
-This uses the original SSH target. The approval-demo target requires its reviewed policy change to be deployed first.
+Target onboarding and full delegated administration remain implementation work.
 
 <!-- end_slide -->
 
-## Tradeoffs and feedback
+## Tradeoffs and Feedback
+
+> What did the POCs show, and what workflow should we support?
 
 ```bash +exec_replace
 ./journey.sh 3
@@ -102,81 +199,95 @@ This uses the original SSH target. The approval-demo target requires its reviewe
 
 <!-- end_slide -->
 
-# PAM and Boundary
+## PAM and Boundary
 
-| Area | Tailscale PAM POC | Boundary POC |
-| --- | --- | --- |
-| Operated components | Connector and gateway/NAT | HCP, worker, Vault and recording S3 |
-| Engineer entry point | Native SSH | Boundary client/proxy |
-| Upstream authentication | PAM-issued certificate | Vault certificate / credential injection |
-| Recording | Managed playback | S3 recordings and playback |
-| Fixed egress | Proved from target | Proved from target |
-| Group SSO and full delegation | Not verified end to end | Not verified end to end |
+> Compare our tested configurations.
 
-The comparison covers the two recorded POC configurations.
-
-<!-- end_slide -->
-
-# PAM tradeoffs
-
-- Smaller operated stack in this POC: no Vault or recording S3 dependency in the PAM path.
-- Native SSH fits the existing terminal workflow.
-- Managed attribution and playback were observed in earlier tests.
-- Vendor owns more of the session and recording trust boundary.
-- Entitlement, retention controls, failure behavior and delegated administration need validation.
-
-Boundary gives us a Vault/storage-based design with more components to operate. Neither POC has passed full production acceptance.
-
-<!-- end_slide -->
-
-# Customer administration
-
-```text
-  CE admin
-     |
-     +--> Customer/system setup and rollout
-     +--> PAM target registration and maintenance
-     +--> Map existing SSO groups to customer access rules
-     +--> Customer-scoped policy changes and review
-
-  Infra/Ops --> Google Workspace membership, SSO and shared platform
+```bash +exec_replace
+paint 'bold cyan' '  TAILSCALE PAM                 ' 'bold yellow' 'BOUNDARY POC'
+paint plain '  connector + NAT               ' gray 'HCP + worker + Vault + S3'
+paint plain '  native SSH                    ' gray 'Boundary client / proxy'
+paint plain '  PAM-issued certificate        ' gray 'Vault credential injection'
+paint plain '  managed playback              ' gray 'S3 recordings and playback'
+paint
+paint green '  Fixed egress was proved in both POCs.'
+paint yellow '  Neither POC has passed full production acceptance.'
 ```
 
-CE manages customer assignments and Tailscale access rules through our tools. Ops owns the technical design and Google Workspace membership.
+<!-- end_slide -->
 
-The bot has POC policy-membership and eligibility forms. Full target onboarding and SSO-group policy mapping remain acceptance work.
+## PAM Tradeoffs
+
+```bash +exec_replace
+paint green '  + ' cyan 'operated stack   ' plain 'fewer components in this POC'
+paint green '  + ' cyan 'engineer flow    ' plain 'native SSH and managed playback'
+paint yellow '  - ' cyan 'trust boundary   ' plain 'more session and recording handling at the vendor'
+paint yellow '  ? ' cyan 'validate         ' plain 'entitlement, retention, failure handling and recovery'
+```
+
+The smaller footprint is an inference from these POC stacks, not a cost benchmark.
 
 <!-- end_slide -->
 
-# Acceptance work
+## Agreed Customer Access Model
 
-- Clean customer target without Tailscale and verified cross-customer/internal isolation.
-- Google-group SSO, MFA and independent CE-admin workflows.
-- Verify offboarding, access removal and behavior of existing sessions.
-- Validate recording retention, shell/exec coverage and failure handling.
-- Connector recovery, redundancy and commercial readiness.
+> Jonathan confirmed the workflow: approve assignments, then connect.
 
-Working now: Home, modal submission and an ordinary scoped access PR with passing checks.
+```bash +exec_replace
+paint cyan '  assignments   ' plain 'individual people, scoped to customer targets'
+paint cyan '  approval      ' plain 'Jonathan or Fabian approves in Slack'
+paint cyan '  normal use    ' plain 'ongoing access until the assignment is revoked'
+paint cyan '  exceptions    ' plain 'grant temporarily, then revoke when needed'
+paint cyan '  people        ' plain 'CE and approved non-CE users, including the CTO team'
+paint
+paint green '  Standing assignments; native Tailscale JIT is not needed.'
+```
 
-Earlier POC tests proved native SSH, fixed egress and recording playback.
-
-<!-- end_slide -->
-
-# CE access workflow
-
-- Assignments: account teams, individual assignments, a shared CE pool, or a mix?
-- Access: ongoing access while assigned, or approval for each use? Customer-specific exceptions?
-- Admin workflow: which changes should the CE admin handle, and how should engineers request extra customer access?
-
-CE describes the workflow. Ops designs the mechanism; CE uses it to maintain access. Approval for every use changes the authorization workflow.
+The admin tools manage grants and revocation. Google Workspace membership stays Ops-only.
 
 <!-- end_slide -->
 
-# Takeaways
+## Verification Still Needed
 
-- PAM reduced the operated stack in our POC and supports the native SSH demo.
-- The Slack prototype now creates a scoped PR for human review.
-- CE manages its customer domain; Ops owns Google membership, the platform and technical decisions.
-- Use CE's workflow to build controls for managing customer assignments.
+```bash +exec_replace
+paint green '  proved earlier  ' plain 'native SSH, fixed egress and playback'
+paint green '  working now     ' plain 'bot Home, modal submission and a scoped policy PR'
+paint yellow '  verify          ' plain 'clean target; customer/internal isolation; SSO/MFA'
+paint yellow '  verify          ' plain 'offboarding, active sessions, recording retention/failures'
+paint yellow '  verify          ' plain 'Slack approvals, automatic PR handling and delegated admin'
+paint yellow '  verify          ' plain 'recovery, redundancy, entitlement and recording viewers'
+```
 
-Meeting notes and sources: `README.md` in this directory.
+The demo is POC evidence; production acceptance remains open.
+
+<!-- end_slide -->
+
+## Takeaways
+
+```bash +exec_replace
+paint green '  ✓ ' cyan 'so what    ' plain 'PAM supports the native SSH path with a smaller POC stack'
+paint green '  ✓ ' cyan 'now what   ' plain 'the bot creates reviewed policy changes and shows access'
+paint yellow '  ▶ ' cyan 'then what  ' plain 'build individual grant / revoke controls with named approvers'
+```
+
+<!-- end_slide -->
+
+## Demo Tabs and Sources
+
+[Slack bot](https://app.slack.com/client/T024313FSQZ/D0C80S3CXNJ) · [Tailscale admin](https://login.tailscale.com/admin)
+
+[Policy source](https://github.com/loft-sh/tailscale-acls/blob/main/policy.hujson) · [Access PR #29](https://github.com/loft-sh/tailscale-acls/pull/29)
+
+[Customer IP allowlist](https://www.vcluster.com/docs/ips)
+
+Evidence, demo notes and comparison sources: `README.md`.
+
+<!-- end_slide -->
+
+# That's All Folks!
+
+```bash +exec_replace
+printf '%s\n' "That's all folks!" | figlet -f small -w 90 | while IFS= read -r line; do
+    paint 'bold cyan' "$line"
+done
+```

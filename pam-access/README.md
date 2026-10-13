@@ -1,28 +1,36 @@
 # PAM team meeting, 2026-10-13
 
-Architecture, demos and a Boundary comparison for the team meeting. Terminal diagrams render from local text files through presenterm snippets. PlantUML sequence sources are also included.
+Architecture, demos and a Boundary comparison for the team meeting. The deck follows `ai-dev-loop`: a figlet title, `paint` color rows, `boxart` diagrams and chapter maps. The bot and PAM configuration are the main live demos.
 
 ## Presentation
 
 From this directory:
 
 ```sh
-just present
+env -u NO_COLOR just present
 ```
 
-The local diagram text is used directly, so presentation rendering does not depend on PlantUML being installed. The matching `.puml` files are available for editing or regeneration with the repository recipes.
+Run `just boxart pam-ssh` or `just boxart pam-policy` to render the colored diagrams. Their sources are `diagrams/*.json`; text and PlantUML versions are retained as reference material. Unsetting `NO_COLOR` preserves the slide colors if that variable is present in the shell.
 
 Space or Enter advances. Left returns. Ctrl+E runs the command on a demo slide. The SSH slide uses `+acquire_terminal`, so the shell gets the terminal and `exit` returns to the presentation. See the [presenterm execution guide](https://github.com/mfontanini/presenterm/blob/master/docs/src/features/code/execution.md).
 
-Executable slides show a read-only PR diff and connect interactively to the existing POC SSH target. Keep host-key verification enabled.
+Open the demo URLs yourself; the slides do not launch a browser. The only interactive command is SSH to the existing POC target. Keep host-key verification enabled.
+
+### Browser tabs
+
+- [Bot conversation](https://app.slack.com/client/T024313FSQZ/D0C80S3CXNJ): show Home, then Messages and the access form. This is Piotr's existing conversation; use the bot's Home tab in the same workspace.
+- [Access PR #29](https://github.com/loft-sh/tailscale-acls/pull/29): show the scoped policy diff and review/deployment boundary.
+- [Tailscale admin](https://login.tailscale.com/admin): open Services and the OVH SSH PAM service. Show the connector, upstream address/port, and how its access grant selects the service and SSH username. Open session attribution/playback after the SSH demo if available.
+- [Policy source](https://github.com/loft-sh/tailscale-acls/blob/main/policy.hujson): show the matching PAM grant. PAM service setup and access controls are described in the official [services guide](https://tailscale.com/docs/privileged-access-management/services) and [control-access guide](https://tailscale.com/docs/privileged-access-management/how-to/control-access).
 
 ## Demo
 
 1. Open vCluster Infra Access in Slack. Show Home's original OVH demo SSH entry and its applied-policy status.
 2. In Messages, send `access` and open a fresh form. Select OVH access approval demo, Request access for myself and a short reason. If PR #29 is pending, cancel the form after showing it.
 3. Show the existing private receipt and [access PR #29](https://github.com/loft-sh/tailscale-acls/pull/29). At verification, it was OPEN at `5714b8859c542a3bff0521bc8340a9f1cb5b9f4b`, with only one added member in `group:pam-ovh-demo-access`. `tests` and `acls` passed; legacy auto-approval skipped. Human code-owner review was still required.
-4. Run the Terminal demo slide. In SSH, run `whoami`, `hostname` and `echo "$SSH_CONNECTION"`, then `exit`. The October 8 evidence recorded source NAT IP `3.19.214.126`; compare the current connection separately.
-5. Open the PAM session view and show attribution/playback if your current permissions allow it. Playback and attribution were verified on October 8 and have not been reverified for this deck.
+4. At Live: PAM Configuration, switch to the admin tab and show the configured service, connector, upstream endpoint and PAM access grant.
+5. Run the Live: Native SSH slide. In SSH, run `whoami`, `hostname` and `echo "$SSH_CONNECTION"`, then `exit`. The October 8 evidence recorded source NAT IP `3.19.214.126`; compare the current connection separately.
+6. Open the PAM session view and show attribution/playback if your current permissions allow it. Playback and attribution were verified on October 8 and have not been reverified for this deck.
 
 The approval-demo target requires human review, merge and successful deployment at the exact main SHA before access can be tested. The original target is the existing regression/demo path. The presentation SSH command has not been run during deck preparation.
 
@@ -41,7 +49,21 @@ PAM uses a connector to proxy application sessions. See [PAM architecture](https
 
 ## Requirements
 
-AZ-3 specifies PR-reviewed access grants and AZ-5 specifies approved JIT with automatic expiry, both priority 3. The matrix leaves normal session duration and the main access model open. Automatic SSO baseline access is already established. We are building a platform service for CE to manage its own customer domain. CE defines its access-management workflow: account teams, individual assignments or shared access; ongoing access while assigned or approval for each use; and the changes its admin must handle. Ops designs the authorization mechanism and user experience. CE maintains actual assignments through those tools. Approval for every use changes the authorization workflow. No fixed access durations are proposed.
+### CE decision, October 13
+
+Jonathan confirmed individual assignments, including access for non-CE users such as the CTO team. An assignment provides ongoing access. Temporary exceptions may be granted and manually revoked; no customer requiring approval for every use was identified. Customer-access approval can go through Jonathan or Fabian.
+
+The service should provide person/customer grant and revoke controls, an approval record tied to the policy change, and access status reflecting deployed policy. Eligible people must include approved non-CE users. Google Workspace membership remains Ops-only. Jonathan/Fabian approval happens in Slack; policy PRs are handled automatically after approval. Automated scope/provenance checks and CI must bind the approved person, customer and action to the resulting change. The current POC still requires human GitHub review; the complete Slack approval, automatic PR handling and delegated revocation path remain implementation work.
+
+Revocation must be tested after policy deployment, including alternative grants and already-open sessions. An assignment lifetime is separate from the lifetime of an SSH session or its credentials.
+
+AZ-3 specifies PR-reviewed access grants and AZ-5 specifies approved JIT with automatic expiry, both priority 3. Jonathan's answer establishes individual standing assignments and manual revocation as the normal CE workflow. Native Tailscale JIT is not needed for that workflow. AZ-5's automatic-expiry capability remains a separate lower-priority requirement, not evidence that all access must expire. No fixed access durations are proposed.
+
+### Static egress and recordings
+
+All customer-bound traffic must use the service's protected static public IPs. The native SSH POC verified this path. The customer-facing [IP allowlist](https://www.vcluster.com/docs/ips) was fetched successfully on October 13 and publishes four IPv4 addresses, including the POC NAT address `3.19.214.126`. CE can send that page to customers. EG-2 requires at least eight published addresses, so the current four-address page does not complete that acceptance criterion.
+
+Relevant session recordings can be provided on request. This is distinct from granting CE access to the whole recording library; retention, viewer permissions and the Legal decision remain acceptance work. Current playback evidence is dated, as recorded above.
 
 CE owns customer rollout, PAM target registration, assignments and customer-side configuration in tailscale-acls, including mapping existing SSO groups to access rules. Ops/IT/Platform owns the technical decisions, integrations, plumbing and shared security controls. Infra/Ops alone manages Google Workspace group membership. The proposed bot does not administer Google Workspace membership.
 
@@ -55,5 +77,6 @@ Customer and internal access must remain isolated. A clean customer target, deni
 - [PAM decision](https://github.com/loft-sh/architecture/blob/af75f649ecb1df6bec3e767c70d613aebccdf683/platform/adrs/009-tailscale-pam.md)
 - [SSH runbook](https://github.com/loft-sh/architecture/blob/af75f649ecb1df6bec3e767c70d613aebccdf683/platform/runbooks/tailscale-pam-poc.md)
 - [UX Slack proposal](slack-message.md)
+- [Reply to Jonathan's access-model confirmation](jonathan-reply.md)
 
 Older design and coverage snapshots contain the legacy Slack auto-approval path and central Ops ownership. This meeting checkpoint and DEVOPS-1628's latest comments describe the October 13 bot behavior and proposed CE operating model.

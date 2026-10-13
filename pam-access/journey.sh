@@ -8,7 +8,7 @@
 set -euo pipefail
 
 current="${1:?usage: journey.sh <chapter number>}"
-chapters=("The service" "Architecture and demo" "Tradeoffs and feedback")
+chapters=("Bot and PAM" "Access path" "Tradeoffs and feedback")
 
 for i in "${!chapters[@]}"; do
 	n=$((i + 1))

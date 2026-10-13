@@ -1,0 +1,8 @@
+{
+  "boxes": [
+    {"title": "Slack bot", "color": "cyan", "inner": ["Home and form", "Scope checks"]},
+    {"title": "Private Git", "color": "yellow", "inner": ["Scoped policy PR", "Human review"]}
+  ],
+  "connector": {"top": "propose", "bottom": "change", "arrows": true},
+  "footer": "Access changes after review, merge and policy deployment."
+}

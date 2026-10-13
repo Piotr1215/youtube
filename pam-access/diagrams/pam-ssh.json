@@ -1,0 +1,8 @@
+{
+  "boxes": [
+    {"title": "Engineer", "color": "cyan", "inner": ["Company identity", "Native SSH"]},
+    {"title": "Customer SSH", "color": "yellow", "inner": ["PAM certificate", "Linux account"]}
+  ],
+  "connector": {"top": "PAM", "bottom": "NAT", "arrows": true},
+  "footer": "Via a private PAM connector and fixed NAT; sessions are recorded."
+}
