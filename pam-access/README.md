@@ -19,7 +19,7 @@ Open the demo URLs yourself; the slides do not launch a browser. The only intera
 ### Browser tabs
 
 - [Bot conversation](https://app.slack.com/client/T024313FSQZ/D0C80S3CXNJ): show Home, then Messages and the access form. This is Piotr's existing conversation; use the bot's Home tab in the same workspace.
-- [Access PR #29](https://github.com/loft-sh/tailscale-acls/pull/29): show the scoped policy diff and review/deployment boundary.
+- [Test PR #29](https://github.com/loft-sh/tailscale-acls/pull/29): evidence that the bot creates a scoped policy diff. It is a test artifact, not a delivery blocker or a PR that must be merged.
 - [Tailscale admin](https://login.tailscale.com/admin): open Services and the OVH SSH PAM service. Show the connector, upstream address/port, and how its access grant selects the service and SSH username. Open session attribution/playback after the SSH demo if available.
 - [Policy source](https://github.com/loft-sh/tailscale-acls/blob/main/policy.hujson): show the matching PAM grant. PAM service setup and access controls are described in the official [services guide](https://tailscale.com/docs/privileged-access-management/services) and [control-access guide](https://tailscale.com/docs/privileged-access-management/how-to/control-access).
 
@@ -32,18 +32,18 @@ Open the demo URLs yourself; the slides do not launch a browser. The only intera
 5. Run the Live: Native SSH slide. In SSH, run `whoami`, `hostname` and `echo "$SSH_CONNECTION"`, then `exit`. The October 8 evidence recorded source NAT IP `3.19.214.126`; compare the current connection separately.
 6. Open the PAM session view and show attribution/playback if your current permissions allow it. Playback and attribution were verified on October 8 and have not been reverified for this deck.
 
-The approval-demo target requires human review, merge and successful deployment at the exact main SHA before access can be tested. The original target is the existing regression/demo path. The presentation SSH command has not been run during deck preparation.
+If a test policy change is deliberately used to grant approval-demo access, it must be reviewed and deployed before testing that grant. PR #29 itself need not be merged; it already proves PR creation and can stay as the demo artifact. The original target is the existing regression/demo path. The presentation SSH command has not been run during deck preparation.
 
 ## Evidence and comparison
 
 | Claim | Source and limit |
 | --- | --- |
-| Slack modal and ordinary PR creation | Flows #69 deployed at `4b02ead`; private receipt and PR #29 verified on October 13. Current catalog/email-membership flow, not the future Google-group integration. |
+| Slack modal and ordinary PR creation | Flows #69 deployed at `4b02ead`; private receipt and test PR #29 verified on October 13. Current catalog/email-membership flow; automatic approval remains planned. |
 | PAM native SSH, fixed egress, certificate authentication | [PAM evidence](https://github.com/loft-sh/architecture/blob/af75f649ecb1df6bec3e767c70d613aebccdf683/platform/evidence/tailscale-pam-poc-2026-10-08.md). Dated proof on an existing target that still has Tailscale installed. |
 | Recording and attribution | Same PAM evidence. Playback observed by Piotr; recording retention and failure handling remain open. |
 | Boundary stack and SSH path | [Boundary design](https://github.com/loft-sh/architecture/blob/af75f649ecb1df6bec3e767c70d613aebccdf683/platform/designs/boundary-poc.md) and [coverage matrix](https://github.com/loft-sh/architecture/blob/af75f649ecb1df6bec3e767c70d613aebccdf683/platform/evidence/customer-access-coverage.md). HCP, worker, Vault, NAT and S3 in this POC. |
 | Smaller PAM footprint | Inference from the two operated POC stacks, not a benchmark or cost estimate. |
-| SSO baseline and administration split | Piotr's October 13 clarification: CE baseline access is already automatic through company SSO. Only Infra/Ops changes Google Workspace group membership. CE owns customer setup and Tailscale-side changes, including mapping existing SSO groups to targets. End-to-end PAM group mapping and delegated administration remain acceptance work. |
+| SSO baseline and administration split | Piotr's October 13 clarification: company SSO provides baseline access. Only Infra/Ops changes Google Workspace membership. Customer access is assigned to individual company identities by Jonathan or Fabian, independent of the recipient's team. Delegated administration remains acceptance work. |
 
 PAM uses a connector to proxy application sessions. See [PAM architecture](https://tailscale.com/docs/privileged-access-management/architecture-and-concepts) and [PAM SSH](https://tailscale.com/docs/privileged-access-management/how-to/access-ssh). Boundary distinguishes credential injection from brokering: see [credential management](https://developer.hashicorp.com/boundary/docs/concepts/credential-management). Its recording behavior and availability are described in [session recording](https://developer.hashicorp.com/boundary/docs/session-recording). The vendor docs describe capabilities; the POC evidence records our tested results.
 
@@ -53,7 +53,7 @@ PAM uses a connector to proxy application sessions. See [PAM architecture](https
 
 Jonathan confirmed individual assignments, including access for non-CE users such as the CTO team. An assignment provides ongoing access. Temporary exceptions may be granted and manually revoked; no customer requiring approval for every use was identified. Customer-access approval can go through Jonathan or Fabian.
 
-The service should provide person/customer grant and revoke controls, an approval record tied to the policy change, and access status reflecting deployed policy. Eligible people must include approved non-CE users. Google Workspace membership remains Ops-only. Jonathan/Fabian approval happens in Slack; policy PRs are handled automatically after approval. Automated scope/provenance checks and CI must bind the approved person, customer and action to the resulting change. The current POC still requires human GitHub review; the complete Slack approval, automatic PR handling and delegated revocation path remain implementation work.
+The service should provide person/customer grant and revoke controls, an approval record tied to the policy change, and access status reflecting deployed policy. Jonathan or Fabian selects the individual company identity; recipient team membership is not an authorization gate. Customer-specific Tailscale policy groups may remain as permission sets containing named individuals. These are separate from Google Workspace groups, whose membership remains Ops-only. Jonathan/Fabian approval happens in Slack; policy PRs are handled automatically after approval. Automated scope/provenance checks and CI must bind the approved person, customer and action to the resulting change. The current POC still requires human GitHub review; the complete Slack approval, automatic PR handling and delegated revocation path remain implementation work.
 
 Revocation must be tested after policy deployment, including alternative grants and already-open sessions. An assignment lifetime is separate from the lifetime of an SSH session or its credentials.
 

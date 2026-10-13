@@ -1,4 +1,4 @@
-Thank you, this is very helpful. We'll use individual assignments with ongoing access and manual revocation, including access for CTO-team members. We don't need Tailscale's JIT feature for this workflow.
+Thank you, this is very helpful. We'll use individual assignments with ongoing access and manual revocation, regardless of which team someone belongs to. We don't need Tailscale's JIT feature for this workflow.
 
 You and Fabian would manage access from the bot's Home page and approve requests in Slack. The policy PRs would be automatically checked and approved behind the scenes after your Slack approval.
 

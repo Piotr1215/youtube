@@ -64,7 +64,7 @@ The POC form changes Tailscale policy membership. It does not change Google Work
 
 <!-- end_slide -->
 
-## Live: The Access PR
+## Live: The Test Access PR
 
 > Open the existing request and show its policy diff.
 
@@ -75,7 +75,9 @@ paint cyan '  diff       ' plain 'one member added to the approval-demo group'
 paint yellow '  review     ' plain 'human review before merge and policy deployment'
 ```
 
-[Open access PR #29](https://github.com/loft-sh/tailscale-acls/pull/29)
+[Open test PR #29](https://github.com/loft-sh/tailscale-acls/pull/29)
+
+This proves scoped PR creation. Merging this particular test PR is not a delivery requirement.
 
 <!-- end_slide -->
 
@@ -177,7 +179,7 @@ paint green '  Send the published allowlist to customers for firewall setup.'
 ```bash +exec_replace
 paint 'bold cyan' '  CUSTOMER ADMIN'
 paint cyan '    setup        ' plain 'register customer targets and maintain access rules'
-paint cyan '    assignment   ' plain 'manage individual customer access, including CTO users'
+paint cyan '    assignment   ' plain 'assign individual company users to customer targets'
 paint cyan '    mapping      ' plain 'map existing SSO groups to Tailscale access rules'
 paint
 paint 'bold yellow' '  OPS'
@@ -238,7 +240,7 @@ paint cyan '  assignments   ' plain 'individual people, scoped to customer targe
 paint cyan '  approval      ' plain 'Jonathan or Fabian approves in Slack'
 paint cyan '  normal use    ' plain 'ongoing access until the assignment is revoked'
 paint cyan '  exceptions    ' plain 'grant temporarily, then revoke when needed'
-paint cyan '  people        ' plain 'CE and approved non-CE users, including the CTO team'
+paint cyan '  people        ' plain 'named company users; the recipient team does not matter'
 paint
 paint green '  Standing assignments; native Tailscale JIT is not needed.'
 ```
