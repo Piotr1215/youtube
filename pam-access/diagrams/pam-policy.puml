@@ -1,0 +1,13 @@
+@startuml
+hide footbox
+participant "Slack form" as Slack
+participant "Private Git" as Git
+participant Reviewer
+participant "ACL deployment" as Deploy
+
+Slack -> Git : Scoped policy PR
+Git -> Reviewer : Review requested
+Reviewer -> Git : Approve and merge
+Git -> Deploy : Apply reviewed policy
+Deploy --> Slack : Home reflects applied access
+@enduml

@@ -1,0 +1,9 @@
+CONTROL
+  Private Git policy ---> PAM authorization and recording
+       ^                            |
+       |                            | identity, service, SSH permissions
+  Human review + GitOps             v
+
+DATA
+  Engineer ---> PAM connector ---> Fixed NAT ---> Customer SSH
+  native SSH    injected cert      known egress   Linux permissions

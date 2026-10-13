@@ -1,0 +1,7 @@
+  Slack form ---> Scoped policy PR ---> Human review + merge
+                       |                        |
+                       |                        v
+              No access yet              ACL deployment
+                                                |
+                                                v
+                                    Home / connection command

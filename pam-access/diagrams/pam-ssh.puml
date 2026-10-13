@@ -1,0 +1,13 @@
+@startuml
+hide footbox
+participant Engineer
+participant "PAM connector" as PAM
+participant "Fixed NAT" as NAT
+participant "Customer SSH" as SSH
+
+Engineer -> PAM : Native SSH, company identity
+PAM -> PAM : Authorize service and record
+PAM -> NAT : Inject SSH certificate
+NAT -> SSH : Known public source IP
+SSH --> Engineer : Approved Linux account
+@enduml
