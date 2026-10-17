@@ -34,6 +34,24 @@ paint yellow '  A rule could leave that comment, and a snippet could type the fi
 
 <!-- end_slide -->
 
+## Building Blocks
+
+> Find the mistake, type the fix, and ask a model only what syntax cannot tell.
+
+```bash +exec_replace
+just digraph building-blocks | awk '
+{
+  gsub(/syntax tree/, "\033[1;33m&\033[0m")
+  gsub(/ast-grep rule/, "\033[1;36m&\033[0m")
+  gsub(/LuaSnip snippet/, "\033[1;35m&\033[0m")
+  gsub(/classif/, "\033[1;32m&\033[0m")
+  gsub(/fix$|unsure/, "\033[90m&\033[0m")
+  print "  " $0
+}'
+```
+
+<!-- end_slide -->
+
 ## First Look
 
 > One scan flags every error-handling problem in the file.
