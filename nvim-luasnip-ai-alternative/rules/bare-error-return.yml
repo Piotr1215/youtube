@@ -1,7 +1,7 @@
 id: bare-error-return
 language: go
 severity: warning
-message: Wrap errors with context for better debugging
+message: Wrap errors with context
 rule:
   pattern: |
     if $ERR != nil {

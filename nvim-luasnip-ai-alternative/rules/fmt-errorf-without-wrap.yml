@@ -1,7 +1,7 @@
 id: fmt-errorf-without-wrap
 language: go
 severity: warning
-message: Use %w to wrap errors instead of %v
+message: Wrap with %w, not %v
 rule:
   pattern: fmt.Errorf($FMT, $$$REST)
   # only when the last argument looks like an error, the one %w should wrap
