@@ -206,33 +206,32 @@ classify() {
 	fail "classif gave no verdict within a minute"
 }
 
-# ast-grep marks every error message as a hint; classif judges each one and
-# only the messages it confirms become warnings. gra applies the rule's fix,
-# built from the syntax tree, and a second :Classif judges the fixed text.
+# vague-error-message marks every fmt.Errorf as a hint. :Classif opens a panel
+# with the rule's question and each call it matched, and fills in classif's
+# verdict on each: a vague message becomes a warning, a clear one gets a ✓.
+# gra applies the rule's fix, built from the syntax tree, and a second
+# :Classif asks the question again about the fixed text.
 triage() {
-	scene "1/5" "23G" "ast-grep marks each error message; syntax cannot judge it"
-	type_keys "23G"
-	pause 2
-	scene "2/5" ":Classif" "Ask the local model about every marked message"
+	scene "1/4" ":Classif" "Ask the rule's question about every call it matched"
 	classify
-	beat "line 23 cleared, line 53 confirmed"
-	pause 2.5
-	scene "3/5" "53G  ]d" "The confirmed message is a warning now"
+	beat "the panel: the question, each call, its verdict"
+	pause 5
+	scene "2/4" "53G  ]d" "The vague message is a warning now; ]d lands on it"
 	type_keys "53G"
 	pause 1
 	type_keys "]d"
 	pause 3
-	scene "4/5" "g r  a  Enter" "The rule's fix names the function, read from the tree"
+	scene "3/4" "g r  a  Enter" "The rule's fix puts the function name in the message"
 	type_keys "gr<Hold>a"
 	pause 1.5
 	beat "Enter ▸ apply the fix"
 	pause 1
 	type_keys "<CR>"
 	pause 2
-	scene "5/5" ":Classif" "Ask the model about the fixed message"
+	scene "4/4" ":Classif" "Ask again: does the fixed message name the operation?"
 	classify
-	beat "line 53 cleared: the fix answered the question"
-	pause 3
+	beat "both cleared: the fix answered the question"
+	pause 5
 }
 
 # Runs inside the floating card: plays the scenes, then closes the card.
