@@ -56,6 +56,16 @@ fix_file() {
 	content="${content%x}"
 	while IFS=$'\t' read -r _ start end fix; do
 		fix="$(base64 -d <<<"${fix}")"
+		# An empty fix removes a statement; when it stood alone on its line,
+		# the line goes with it, indentation and newline included.
+		if [[ -z ${fix} ]]; then
+			while ((start > 0)) && [[ ${content:start-1:1} == [[:blank:]] ]]; do
+				start=$((start - 1))
+			done
+			if ((start == 0)) || [[ ${content:start-1:1} == $'\n' ]] && [[ ${content:end:1} == $'\n' ]]; then
+				end=$((end + 1))
+			fi
+		fi
 		content="${content:0:start}${fix}${content:end}"
 	done < <(awk -F '\t' -v f="${file}" '$1 == f' "${edits}" | sort -t $'\t' -k2,2nr)
 	if [[ ${mode} == apply ]]; then
@@ -154,12 +164,16 @@ while IFS= read -r group; do
 		printf '  \e[32m✓\e[0m \e[36m%s\e[0m  %s  \e[38;2;128;128;128m%s %s\e[0m\n' "${where}" "${text}" "${label}" "${p}"
 		continue
 	fi
+	# ✓ a fix lands and no person is needed; ✗ the call stays for a person.
 	${answered} || p="${p} unsure"
-	printf '  \e[31m✗\e[0m \e[36m%s\e[0m  %s  \e[33m%s %s\e[0m\n' "${where}" "${text}" "${label:-none}" "${p}"
+	mark='\e[31m✗'
+	[[ ${fix} == null ]] || mark='\e[32m✓'
+	printf "  ${mark}\\e[0m \\e[36m%s\\e[0m  %s  \\e[33m%s %s\\e[0m\\n" "${where}" "${text}" "${label:-none}" "${p}"
 	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(head -1 <<<"${context}")"
 	[[ ${fix} == null ]] && continue
 	if [[ ${mode} == rows ]]; then
-		printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "$(jq -r . <<<"${fix}")"
+		fix="$(jq -r . <<<"${fix}")"
+		printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "${fix:-(the line is removed)}"
 	else
 		jq -r '[.file,
 			(.replacementOffsets.start // .range.byteOffset.start),

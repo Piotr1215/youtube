@@ -1,0 +1,13 @@
+id: log-error
+snapshots:
+  "log.Printf(\"login failed: %v\", err)":
+    fixed: slog.Error("login failed", "err", err)
+    labels:
+    - source: "log.Printf(\"login failed: %v\", err)"
+      style: primary
+      start: 0
+      end: 35
+    - source: "log.Printf(\"login failed: %v\", err)"
+      style: secondary
+      start: 0
+      end: 35
