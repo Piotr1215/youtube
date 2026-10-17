@@ -46,10 +46,10 @@ steps() {
 		;;
 	triage)
 		printf '%s\n' \
-			':Classif|the question and its answer appear above each call' \
+			':Classif|a yes/no question above each call; the answer gates the fix' \
 			'u, then Ctrl-r|undo shows the call before the fix; redo puts it back' \
-			':Classif|ask again: the fixed call is left as is' \
-			'Enter in the list, then gra|jump onto a call; gra lists its fixes'
+			':Classif pick|classif picks one fix for saveUser among the rules' \
+			'Enter in the list, then gra|jump onto a call; gra lists every rule'"'"'s fix'
 		;;
 	esac
 }

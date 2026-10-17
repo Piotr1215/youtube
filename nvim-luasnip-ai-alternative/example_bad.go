@@ -25,7 +25,7 @@ func processUser(id string) (*User, error) {
 
 	// Pattern 3: Ignored error
 	logActivity(user.ID, "processed")
-
+	saveUser(user)
 	// Pattern 4: Panic on error
 	file, err := os.Open("config.json")
 	if err != nil {
@@ -95,4 +95,9 @@ func logActivity(userID, action string) error {
 func updateCache(user *User) (bool, error) {
 	// Implementation
 	return true, nil
+}
+
+func saveUser(user *User) error {
+	// Implementation
+	return nil
 }

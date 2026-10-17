@@ -4,7 +4,8 @@ severity: hint
 message: Say which operation failed
 metadata:
   ask: Does this error message tell a reader which operation failed?
-  keep: "no"
+  fix_on: "no"
+  clear_on: "yes"
 rule:
   pattern: fmt.Errorf($MSG, $$$ARGS)
   inside:

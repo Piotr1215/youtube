@@ -1,0 +1,18 @@
+id: ignored-error-return
+valid:
+  - |
+    func f() error {
+    	saveUser(user)
+    	return nil
+    }
+  - |
+    func f() (*User, error) {
+    	err := saveUser(user)
+    	return nil, err
+    }
+invalid:
+  - |
+    func f() (*User, error) {
+    	saveUser(user)
+    	return nil, nil
+    }

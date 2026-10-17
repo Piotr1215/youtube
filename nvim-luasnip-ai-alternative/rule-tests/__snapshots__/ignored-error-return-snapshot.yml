@@ -1,0 +1,33 @@
+id: ignored-error-return
+snapshots:
+  "func f() (*User, error) {\n\tsaveUser(user)\n\treturn nil, nil\n}\n":
+    fixed: |
+      func f() (*User, error) {
+      	if err := saveUser(user); err != nil { return nil, fmt.Errorf("f: %w", err) }
+      	return nil, nil
+      }
+    labels:
+    - source: saveUser(user)
+      style: primary
+      start: 27
+      end: 41
+    - source: saveUser(user)
+      style: secondary
+      start: 27
+      end: 41
+    - source: f
+      style: secondary
+      start: 5
+      end: 6
+    - source: (*User, error)
+      style: secondary
+      start: 9
+      end: 23
+    - source: |-
+        func f() (*User, error) {
+        	saveUser(user)
+        	return nil, nil
+        }
+      style: secondary
+      start: 0
+      end: 60

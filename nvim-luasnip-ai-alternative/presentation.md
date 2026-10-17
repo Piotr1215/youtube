@@ -483,9 +483,9 @@ ast-grep scan --json=stream --include-metadata --filter '^vague-' \
 > Watch the model's answer decide which call the rule rewrites.
 
 ```bash +exec_replace
-paint cyan '  :Classif    ' plain 'asks each call the rule'"'"'s question; a no applies the rule'"'"'s fix'
-paint cyan '  above call  ' plain 'the question classif asks, then its answer and what it did'
-paint cyan '  u           ' plain 'shows the code before the fix'
+paint cyan '  :Classif       ' plain 'a yes/no question per call; the answer gates the rule'"'"'s fix'
+paint cyan '  :Classif pick  ' plain 'classif picks one fix per call among the rules that match'
+paint cyan '  above call     ' plain 'the question classif asks, then its answer and what it did'
 ```
 
 ```bash +exec
@@ -497,10 +497,9 @@ paint cyan '  u           ' plain 'shows the code before the fix'
 ## Triage Demo Result
 
 ```bash +exec_replace
-paint green '  ✓  ' plain 'classif answered no for line 53 and yes for line 23'
-paint green '  ✓  ' plain 'only line 53 got the rule'"'"'s fix; line 23 was left as is'
+paint green '  ✓  ' plain 'the gate fixed lines 27 and 53, left 23, and kept saveUser as a warning'
+paint green '  ✓  ' plain 'pick gave saveUser the return fix and logActivity the ignore fix'
 paint green '  ✓  ' plain 'each call showed the question above it, then the answer'
-paint green '  ✓  ' plain 'asking again left the fixed call as is'
 paint
 paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
 ```

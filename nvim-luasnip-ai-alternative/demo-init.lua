@@ -61,17 +61,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
--- vague-error-message reports every error message as a hint: whether one
--- names the failed operation is a judgment, not syntax. :Classif scans the
--- buffer and pipes the matches through triage.sh, which asks classif each
--- rule's question about each call, and the answer decides: where it equals
--- the rule's keep label the rule's fix lands on the call, anywhere else the
--- call is left as is, and with no answer the call only gets a warning. Two
--- lines above each call show the question and the answer; the quickfix list
--- at the bottom repeats them, then ast-grep's other findings. u shows the
--- code before the fix. The
--- buffer goes through a temp copy because saves to example_bad.go are
--- dropped.
+-- Some rules match calls that only meaning can tell apart, so their fix is
+-- right for some and wrong for others. :Classif scans the buffer and pipes
+-- the matches through triage.sh, which asks classif about each call. Plain
+-- :Classif is a gate: each rule's yes/no question, where the answer named by
+-- fix_on lands the rule's fix, clear_on leaves the call as is, and anything
+-- else keeps it as a warning. :Classif pick has classif pick one fix among
+-- the rules that match the same call, each offering one option. Two lines
+-- above each call show the question and the answer; the quickfix list at the
+-- bottom repeats them, then ast-grep's other findings. u shows the code before
+-- the fix. The buffer goes through a temp copy because saves to
+-- example_bad.go are dropped.
 local classif_ns = vim.api.nvim_create_namespace("classif")
 local verdict_ns = vim.api.nvim_create_namespace("classif-verdict")
 Demo = {}
@@ -97,11 +97,12 @@ local function mark(bufnr, r)
 	local hl, says, says_hl = "Visual", "…", "Comment"
 	local verdict = string.format("%s %s", r.label or "", r.p or "")
 	if r.fixed then
-		hl, says, says_hl = "DiffChange", verdict .. " → the rule's fix applied", "DiagnosticInfo"
+		local which = r.pick and ("the " .. r.label .. " fix") or "the rule's fix"
+		hl, says, says_hl = "DiffChange", verdict .. " → " .. which .. " applied", "DiagnosticInfo"
 	elseif r.label and not r.answered then
 		hl, says, says_hl = "DiffDelete", "no answer → a warning, no fix", "DiagnosticWarn"
 	elseif r.kept then
-		hl, says, says_hl = "DiffDelete", verdict .. " → a warning; the rule has no fix", "DiagnosticWarn"
+		hl, says, says_hl = "DiffDelete", verdict .. " → a warning, no fix", "DiagnosticWarn"
 	elseif r.label then
 		hl, says, says_hl = "DiffAdd", verdict .. " → left as is", "DiagnosticOk"
 	end
@@ -122,11 +123,11 @@ end
 -- Says what an answer did to its call, for the quickfix entry.
 local function outcome(r)
 	if r.fixed then
-		return "fixed by the rule: " .. r.fix
+		return "fixed by " .. r.rule .. ": " .. r.fix
 	elseif not r.answered then
 		return "no answer, so a warning and no fix"
 	elseif r.kept then
-		return "kept as a warning; the rule has no fix"
+		return "a warning, no fix"
 	end
 	return "left as is"
 end
@@ -168,7 +169,9 @@ local function show_list(bufnr, rows)
 	vim.cmd("wincmd p")
 end
 
-vim.api.nvim_create_user_command("Classif", function()
+vim.api.nvim_create_user_command("Classif", function(cmd)
+	local pick = cmd.args == "pick"
+	local key = pick and "choose" or "ask"
 	local bufnr = vim.api.nvim_get_current_buf()
 	vim.diagnostic.reset(classif_ns, bufnr)
 	vim.api.nvim_buf_clear_namespace(bufnr, verdict_ns, 0, -1)
@@ -182,11 +185,16 @@ vim.api.nvim_create_user_command("Classif", function()
 	)
 		:wait()
 	vim.fn.delete(copy)
-	local rows = {}
+	-- One row per call and question: triage.sh asks once for the rules that
+	-- match the same call, and a pick offers each of their fixes.
+	local rows, seen = {}, {}
 	for line in vim.gsplit(scan.stdout or "", "\n", { trimempty = true }) do
 		local f = vim.json.decode(line)
-		if type(f.metadata) == "table" and f.metadata.ask then
-			local r = { rule = f.ruleId, ask = f.metadata.ask, start = f.range.byteOffset.start }
+		local ask = type(f.metadata) == "table" and f.metadata[key]
+		local id = ask and f.range.byteOffset.start .. ask
+		if ask and not seen[id] then
+			seen[id] = true
+			local r = { rule = f.ruleId, ask = ask, start = f.range.byteOffset.start, pick = pick }
 			r.line, r.col = position(lines, f.range.byteOffset.start)
 			r.end_line, r.end_col = position(lines, f.range.byteOffset["end"])
 			table.insert(rows, r)
@@ -200,19 +208,19 @@ vim.api.nvim_create_user_command("Classif", function()
 	end
 	vim.notify(string.format("classif: asking about %d %s", #rows, #rows == 1 and "call" or "calls"))
 	vim.system(
-		{ dir .. "/triage.sh", "--json" },
+		{ dir .. "/triage.sh", "--json", pick and "--pick" or nil },
 		{ cwd = dir, text = true, stdin = scan.stdout },
 		vim.schedule_wrap(function(out)
 			local fixes = {}
 			for line in vim.gsplit(out.stdout or "", "\n", { trimempty = true }) do
 				local v = vim.json.decode(line)
 				for _, r in ipairs(rows) do
-					if r.start == v.start then
+					if r.start == v.start and r.ask == v.ask then
 						r.label, r.p, r.kept, r.message, r.answered = v.label, v.p, v.kept, v.message, v.answered
 						-- A finding kept for want of an answer is never fixed: a
 						-- model that is down must rewrite nothing.
 						if v.kept and v.answered and v.fix ~= vim.NIL then
-							r.fix, r.fix_start, r.fix_end = v.fix, v.fix_start, v.fix_end
+							r.rule, r.fix, r.fix_start, r.fix_end = v.rule, v.fix, v.fix_start, v.fix_end
 							table.insert(fixes, r)
 						end
 					end
@@ -259,7 +267,13 @@ vim.api.nvim_create_user_command("Classif", function()
 			Demo.classified = Demo.classified + 1
 		end)
 	)
-end, { desc = "Ask classif each rule's question and apply the rule's fix where the answer keeps the finding" })
+end, {
+	nargs = "?",
+	complete = function()
+		return { "pick" }
+	end,
+	desc = "Ask classif about each call and apply the fix its answer names; pick chooses among fixes",
+})
 
 -- Number of ast-grep findings in the current buffer, so demo.sh can wait for
 -- the language server before the first scene.
@@ -278,6 +292,7 @@ Demo.rules = {
 	"direct-http-error-return",
 	"fmt-errorf-without-wrap",
 	"ignored-error",
+	"ignored-error-return",
 	"panic-on-error",
 	"vague-error-message",
 }
