@@ -255,6 +255,17 @@ end_line: 24
 
 <!-- end_slide -->
 
+## From the Rule to classif
+
+```bash +exec
+/// rule() { python3 -c 'import sys, yaml; print(yaml.safe_load(open(f"rules/{sys.argv[1]}.yml"))["metadata"][sys.argv[2]])' "$1" "$2"; }
+classif "$(rule log-debug choose)" \
+  -e "$(rule log-debug option)" -e "$(rule log-info option)" \
+  -t "$(rule log-debug min_p)" <<<'log.Printf("got here %v", r.URL)'
+```
+
+<!-- end_slide -->
+
 ## A Second Question
 
 ```file
