@@ -1,0 +1,17 @@
+digraph syntax_tree {
+  rankdir=LR;
+  node [shape=box];
+
+  ifs [label="if_statement"];
+  cond [label="condition\nerr != nil"];
+  body [label="consequence\n{ return nil, err }"];
+  left [label="identifier\nerr"];
+  right [label="nil"];
+  ret [label="return_statement\nnil, err"];
+
+  ifs -> cond;
+  ifs -> body;
+  cond -> left;
+  cond -> right;
+  body -> ret;
+}

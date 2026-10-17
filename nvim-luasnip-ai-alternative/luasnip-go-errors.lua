@@ -133,4 +133,9 @@ func (e {}Error) Unwrap() error {{
 			}
 		)
 	),
+}, {
+	-- Ahead of any other iferr, such as one in your own snippets; key makes a
+	-- reload replace these instead of adding them twice.
+	key = "go-errors",
+	override_priority = 2000,
 })
