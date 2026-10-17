@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Opens one Neovim demo with a list of steps beside it.
 #
-#   ./demo.sh tree | search | diagnostics
+#   ./demo.sh tree | rules
 #
 # The slides call this. It rebuilds the demo session (your Neovim with
 # demo-init.lua on top), switches the presenter's client to it, and opens a
@@ -12,7 +12,7 @@ set -euo pipefail
 
 session="ast-grep-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-segments="tree|search|diagnostics"
+segments="tree|rules"
 # Each launch gets its own demo nvim socket; the card receives it as --card's
 # second argument. setup-demo.sh says why the path is never reused.
 sock="${XDG_RUNTIME_DIR:-/tmp}/ast-grep-demo-$$.sock"
@@ -24,25 +24,19 @@ steps() {
 	case "$1" in
 	tree)
 		printf '%s\n' \
-			']d|jump to the bare return from First Look' \
-			':InspectTree|open the syntax tree of this buffer' \
+			':e logs/main.go|open the login service' \
+			'/got here, then Enter|jump to the leftover debug line' \
+			':InspectTree|its syntax tree, beside the code' \
 			'j j j j|walk the nodes; the code under each lights up' \
 			'q|close the tree' \
-			'v an an an an|select the node, then each parent'
+			'v an an an|select a node, then each one around it'
 		;;
-	search)
+	rules)
 		printf '%s\n' \
-			'Space s g|open grug-far with the ast-grep engine' \
-			'fmt.Errorf($MSG, $$$ARGS)|type it; the matches update as it grows' \
-			'Esc cc|clear the pattern line' \
-			'if $ERR != nil { return nil, $ERR }|one pattern, three lines per match'
-		;;
-	diagnostics)
-		printf '%s\n' \
-			']d|next finding, its message under the cursor' \
-			']d|a %v where the rule wants %w' \
-			'gra|the code actions: each matching rule'"'"'s fix' \
-			'Enter|apply the first, the %w fix'
+			':e logs/main.go|open the login service' \
+			']d|jump to the first line a rule flags' \
+			'gra|the rule'"'"'s fix, offered as a code action' \
+			'Enter|apply it: the line becomes slog.Error'
 		;;
 	esac
 }
@@ -139,8 +133,8 @@ launch() {
 	done < <(steps "${segment}")
 
 	# The window takes the client's size on switch, so measure it after.
-	# The card sits bottom right, above the statusline: code and the grug-far
-	# inputs live at the top, and long lines rarely reach that corner.
+	# The card sits bottom right, above the statusline: code lives at the top,
+	# and long lines rarely reach that corner.
 	width="$(tmux display-message -p -t "${demo_pane}" '#{window_width}')"
 	height="$(tmux display-message -p -t "${demo_pane}" '#{window_height}')"
 	card_y=$((height - card_height - 4))
