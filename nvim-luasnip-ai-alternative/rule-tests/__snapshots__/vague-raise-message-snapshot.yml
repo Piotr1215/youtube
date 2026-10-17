@@ -1,0 +1,21 @@
+id: vague-raise-message
+snapshots:
+  "def fetch_user():\\n    raise RuntimeError(\"fetch failed\")":
+    fixed: "def fetch_user():\\n    raise RuntimeError(\"fetch_user: fetch failed\")"
+    labels:
+    - source: RuntimeError("fetch failed")
+      style: primary
+      start: 29
+      end: 57
+    - source: raise RuntimeError("fetch failed")
+      style: secondary
+      start: 23
+      end: 57
+    - source: fetch_user
+      style: secondary
+      start: 4
+      end: 14
+    - source: def fetch_user():\n    raise RuntimeError("fetch failed")
+      style: secondary
+      start: 0
+      end: 57

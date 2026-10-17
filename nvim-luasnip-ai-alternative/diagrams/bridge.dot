@@ -1,0 +1,12 @@
+digraph bridge {
+  rankdir=LR;
+  node [shape=box];
+
+  rule [label="ast-grep rule\nfinds the code"];
+  model [label="classif\njudges meaning"];
+  fix [label="gra\napplies the fix"];
+
+  rule -> model [label="hint"];
+  model -> fix [label="no"];
+  fix -> model [label="fixed text"];
+}

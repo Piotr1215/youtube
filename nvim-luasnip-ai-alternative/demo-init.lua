@@ -1,7 +1,7 @@
 -- Loaded on top of your own Neovim config by setup-demo.sh (nvim -S), so the
--- demo shows your colors, which-key, and snippet keys. It adds only what this
--- video is about: the ast-grep language server against sgconfig.yml and the
--- Go snippets. demo.sh drives it over RPC through the Demo table below.
+-- demo shows your colors and which-key. It adds only what this video is about:
+-- the ast-grep language server against sgconfig.yml, grug-far, and :Classif.
+-- demo.sh drives it over RPC through the Demo table below.
 vim.opt.runtimepath:prepend(vim.fn.stdpath("data") .. "/lazy/nvim-lspconfig")
 
 -- The live scans in the deck read example_bad.go, so a save during a demo
@@ -35,32 +35,10 @@ vim.lsp.enable("ast_grep")
 vim.cmd.edit()
 
 local dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h")
-dofile(dir .. "/luasnip-go-errors.lua")
-dofile(dir .. "/luasnip-python-bash.lua")
-
--- Your snippet keys from config/luasnip.lua. mappings.lua loads later and maps
--- <A-l> in insert mode and <A-j> in visual mode, which shadows two of them, so
--- the demo sets all three again.
-local ls = require("luasnip")
-vim.keymap.set({ "i", "s" }, "<M-l>", function()
-	if ls.expand_or_jumpable() then
-		ls.expand_or_jump()
-	end
-end, { desc = "snippet: expand or jump" })
-vim.keymap.set({ "i", "s" }, "<M-h>", function()
-	if ls.jumpable(-1) then
-		ls.jump(-1)
-	end
-end, { desc = "snippet: jump back" })
-vim.keymap.set({ "i", "s" }, "<M-j>", function()
-	if ls.choice_active() then
-		ls.change_choice(1)
-	end
-end, { desc = "snippet: next choice" })
 
 -- grug-far, cloned and pinned by setup-demo.sh, searches with ast-grep as you
 -- type. Space s g sits next to your other search keys.
-vim.opt.runtimepath:append((vim.env.XDG_DATA_HOME or vim.fn.expand("~/.local/share")) .. "/luasnip-demo/grug-far.nvim")
+vim.opt.runtimepath:append((vim.env.XDG_DATA_HOME or vim.fn.expand("~/.local/share")) .. "/ast-grep-demo/grug-far.nvim")
 vim.keymap.set("n", "<leader>sg", function()
 	require("grug-far").open({ engine = "astgrep", transient = true, prefills = { filesFilter = "*.go" } })
 end, { desc = "Search with ast-grep (grug-far)" })
@@ -85,25 +63,32 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 -- vague-error-message reports every error message as a hint: whether one
 -- names the failed operation is a judgment, not syntax. :Classif runs
--- triage.sh over the file on disk, which asks classif about each match; a
--- message the model confirms becomes a warning, one it clears gets a ✓.
+-- triage.sh over the buffer, which asks classif about each match; a message
+-- the model confirms becomes a warning, one it clears gets a ✓. The rule's
+-- fix stays on gra, so a confirmed message is one keypress from fixed, and a
+-- second :Classif judges the fixed text. The buffer goes through a temp copy
+-- because saves to example_bad.go are dropped.
 local classif_ns = vim.api.nvim_create_namespace("classif")
 local cleared_ns = vim.api.nvim_create_namespace("classif-cleared")
 Demo = {}
-Demo.classified = false
+-- Counts finished :Classif runs. demo.sh reads it before typing :Classif and
+-- waits for it to grow; a flag could still hold the previous run's true.
+Demo.classified = 0
 vim.api.nvim_create_user_command("Classif", function()
 	local bufnr = vim.api.nvim_get_current_buf()
-	Demo.classified = false
 	vim.diagnostic.reset(classif_ns, bufnr)
 	vim.api.nvim_buf_clear_namespace(bufnr, cleared_ns, 0, -1)
 	vim.notify("classif: asking the local model")
+	local copy = vim.fn.tempname() .. "." .. vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":e")
+	vim.fn.writefile(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), copy)
 	local scan = "ast-grep scan --json=stream --include-metadata "
-		.. vim.fn.shellescape(vim.api.nvim_buf_get_name(bufnr))
+		.. vim.fn.shellescape(copy)
 		.. " | ./triage.sh --json"
 	vim.system(
 		{ "sh", "-c", scan },
 		{ cwd = dir, text = true },
 		vim.schedule_wrap(function(out)
+			vim.fn.delete(copy)
 			local diags = {}
 			for line in vim.gsplit(out.stdout or "", "\n", { trimempty = true }) do
 				local v = vim.json.decode(line)
@@ -125,7 +110,7 @@ vim.api.nvim_create_user_command("Classif", function()
 				end
 			end
 			vim.diagnostic.set(classif_ns, bufnr, diags)
-			Demo.classified = true
+			Demo.classified = Demo.classified + 1
 		end)
 	)
 end, { desc = "Ask classif about ast-grep findings whose rule carries a question" })
