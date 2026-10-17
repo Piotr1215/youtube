@@ -3,15 +3,15 @@ digraph syntax_tree {
   node [shape=box];
 
   ifs [label="if_statement"];
-  cond [label="condition\nerr != nil"];
-  body [label="consequence\n{ return nil, err }"];
+  cond [label="binary_expression\nerr != nil"];
+  body [label="block\n{ ... }"];
   left [label="identifier\nerr"];
   right [label="nil"];
   ret [label="return_statement\nnil, err"];
 
-  ifs -> cond;
-  ifs -> body;
-  cond -> left;
-  cond -> right;
+  ifs -> cond [label="condition"];
+  ifs -> body [label="consequence"];
+  cond -> left [label="left"];
+  cond -> right [label="right"];
   body -> ret;
 }

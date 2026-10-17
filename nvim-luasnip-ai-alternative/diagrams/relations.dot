@@ -1,0 +1,13 @@
+digraph relations {
+  rankdir=LR;
+  node [shape=box];
+
+  check [label="if err != nil {\nreturn nil, err\n}"];
+  body [label="function body\nan ancestor"];
+  call [label="resp, err := http.Get(...)\nthe statement before"];
+  err [label="err\na descendant"];
+
+  check -> body [label="inside"];
+  check -> call [label="follows"];
+  check -> err [label="has"];
+}

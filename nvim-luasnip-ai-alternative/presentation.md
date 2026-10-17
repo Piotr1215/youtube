@@ -54,19 +54,38 @@ time ast-grep scan --report-style short example_bad.go
 
 <!-- end_slide -->
 
-## Syntax Tree
+## Parsing
 
 > A parser reads code into nested parts, like clauses in a sentence.
 
 ```bash +exec_replace
+just digraph parsing | awk '
+{
+  gsub(/tree-sitter|syntax tree/, "\033[1;33m&\033[0m")
+  gsub(/Neovim|ast-grep/, "\033[1;36m&\033[0m")
+  gsub(/:InspectTree|patterns/, "\033[35m&\033[0m")
+  print "  " $0
+}'
+paint
+paint yellow '  Neovim and ast-grep both parse with tree-sitter, one grammar per language.'
+```
+
+<!-- end_slide -->
+
+## Syntax Tree
+
+> Kinds name each node; fields name its parts.
+
+```bash +exec_replace
 just digraph syntax-tree | awk '
 {
-  gsub(/if_statement|consequence|return_statement|condition|identifier/, "\033[1;36m&\033[0m")
+  gsub(/if_statement|binary_expression|block|return_statement|identifier/, "\033[1;36m&\033[0m")
+  gsub(/consequence|condition|left|right/, "\033[1;33m&\033[0m")
   if ($0 ~ /^│ +nil +│$/) gsub(/nil/, "\033[1;36m&\033[0m")
   print "  " $0
 }'
 paint
-paint yellow '  Compilers, linters, and Neovim highlighting all read code this way.'
+paint yellow '  Rules name both: kind: if_statement, field: condition.'
 ```
 
 <!-- end_slide -->
@@ -89,15 +108,32 @@ paint green '  ✓  ' cyan 'ast-grep   ' plain '6 matches in example_bad.go: the
 
 ## Tree in Neovim
 
-> Neovim parses with tree-sitter, the library ast-grep is built on.
+> Neovim shows the tree it parsed and selects code by it.
 
 ```bash +exec_replace
 paint cyan '  :InspectTree   ' plain 'the buffer'"'"'s syntax tree, beside the code'
 paint cyan '  j / k          ' plain 'walk the nodes; the code under each one lights up'
+paint cyan '  v an           ' plain 'select the node at the cursor, then each parent'
 ```
 
 ```bash +exec
 ./demo.sh tree
+```
+
+<!-- end_slide -->
+
+## Pattern Matching
+
+> A pattern is parsed like code, then compared with every node in the file.
+
+```bash +exec_replace
+just digraph pattern-match | awk '
+{
+  gsub(/\$\$\$ARGS|\$MSG/, "\033[1;35m&\033[0m")
+  gsub(/parse|compare with every node/, "\033[33m&\033[0m")
+  gsub(/call_expression/, "\033[1;36m&\033[0m")
+  print "  " $0
+}'
 ```
 
 <!-- end_slide -->
@@ -107,8 +143,7 @@ paint cyan '  j / k          ' plain 'walk the nodes; the code under each one li
 > --debug-query prints the tree ast-grep builds from a pattern.
 
 ```bash +exec
-code='if err != nil { return nil, err }'
-echo "$code" | ast-grep run --stdin -l go --debug-query=ast -p "$code"
+ast-grep run -l go --debug-query=pattern -p 'fmt.Errorf($MSG, $$$ARGS)' example_bad.go
 ```
 
 <!-- end_slide -->
@@ -174,6 +209,21 @@ ast-grep scan -r rules/panic-on-error.yml --report-style short example_bad.go
 
 <!-- end_slide -->
 
+## Relations
+
+> A relational rule checks the nodes around a match.
+
+```bash +exec_replace
+just digraph relations | awk '
+{
+  gsub(/inside|follows|has/, "\033[1;33m&\033[0m")
+  gsub(/an ancestor|the statement before|a descendant/, "\033[90m&\033[0m")
+  print "  " $0
+}'
+```
+
+<!-- end_slide -->
+
 ## Relational Rules
 
 > follows: the match must come right after this statement.
@@ -215,11 +265,16 @@ ast-grep test
 > The same rules, inside the editor.
 
 ```bash +exec_replace
-paint 'bold cyan' '  sgconfig.yml' gray ' ──▶ ' 'bold cyan' 'ast-grep lsp' gray ' ──▶ ' 'bold yellow' 'Neovim'
+just digraph editor-lsp | awk '
+{
+  gsub(/rules\/\*\.yml|sgconfig\.yml/, "\033[36m&\033[0m")
+  gsub(/ast-grep lsp/, "\033[1;33m&\033[0m")
+  gsub(/Neovim/, "\033[1;36m&\033[0m")
+  gsub(/diagnostics|code actions|gra/, "\033[35m&\033[0m")
+  print "  " $0
+}'
 paint
-paint cyan '  diagnostics    ' plain 'every rule, inline in the buffer'
-paint cyan '  code actions   ' plain 'each fix: on gra'
-paint cyan '  setup          ' plain 'vim.lsp.enable("ast_grep"), config from nvim-lspconfig'
+paint yellow '  vim.lsp.enable("ast_grep"), with the config from nvim-lspconfig.'
 ```
 
 ```bash +exec
@@ -252,34 +307,16 @@ ast-grep scan --report-style short example_bad.py example_bad.sh
 
 <!-- end_slide -->
 
-## Snippet Lookup
-
-> LuaSnip keeps snippets per filetype and expands the one the trigger names.
-
-```bash +exec_replace
-just digraph snippet-lookup | awk '
-{
-  gsub(/snippet files|add_snippets\(\)/, "\033[36m&\033[0m")
-  gsub(/go \+ all|trigger/, "\033[1;33m&\033[0m")
-  gsub(/top priority/, "\033[1;35m&\033[0m")
-  print "  " $0
-}'
-paint
-paint yellow '  iferr is defined twice here: your config at 1000, the demo at 2000.'
-```
-
-<!-- end_slide -->
-
 ## Snippet Expansion
 
-> A trigger word becomes a template, and M-l walks its fields.
+> M-l looks up the word before the cursor and expands the snippet it names.
 
 ```bash +exec_replace
 just digraph snippet-expansion | awk '
 {
   gsub(/iferr/, "\033[1;33m&\033[0m")
   gsub(/M-[lj]/, "\033[1;35m&\033[0m")
-  gsub(/trigger|expand|fields|next|choice|last field/, "\033[36m&\033[0m")
+  gsub(/go snippets|top priority|fields|next|choice|done/, "\033[36m&\033[0m")
   print "  " $0
 }'
 paint
@@ -290,7 +327,7 @@ paint yellow '  Typing over a selected field replaces it; M-l keeps its default.
 
 ## Snippet Nodes
 
-> iferr expands, then Tab jumps between the parts you fill in.
+> iferr expands into three fields, and rep(1) copies the first.
 
 ```bash +exec_replace
 paint plain '  if ' 'bold yellow' 'err' plain ' != nil {'
@@ -301,38 +338,6 @@ paint 'bold yellow' '  1  ' cyan 'insert node   ' plain 'the error name'
 paint 'bold magenta' '  2  ' cyan 'choice node   ' plain '"nil, " or nothing, for single-value returns'
 paint 'bold cyan' '  3  ' cyan 'insert node   ' plain 'the context the error message needs'
 paint yellow '     ' cyan 'rep(1)        ' plain 'repeats node 1 as you type it'
-```
-
-<!-- end_slide -->
-
-## Snippet Lifecycle
-
-> An expanded snippet stays live until you jump or move out of it.
-
-```bash +exec_replace
-just digraph snippet-lifecycle | awk '
-{
-  gsub(/expand|active|exit/, "\033[1;33m&\033[0m")
-  gsub(/M-[lhj]/, "\033[1;35m&\033[0m")
-  gsub(/extmarks|i\(0\)/, "\033[36m&\033[0m")
-  print "  " $0
-}'
-paint
-paint cyan '  extmarks      ' plain 'track where each node starts and ends while you type'
-paint cyan '  CursorMoved   ' plain 'your config ends the snippet once the cursor leaves it'
-```
-
-<!-- end_slide -->
-
-## Snippet Source
-
-> fmt() keeps the snippet readable as the Go it produces.
-
-```file
-path: luasnip-go-errors.lua
-language: lua
-start_line: 15
-end_line: 29
 ```
 
 <!-- end_slide -->
@@ -406,32 +411,52 @@ paint yellow '  Each problem showed up the first time the tools ran.'
 
 <!-- end_slide -->
 
-## Semantic Checks
+## Questions in Rules
 
-> ast-grep reads syntax; a local model can answer what syntax cannot.
+> ast-grep picks the code; classif answers a question about it.
 
 ```bash +exec_replace
-paint cyan '  ast-grep  ' gray 'line 27  ' plain 'logActivity(...): check whether this call returns an error'
-```
-
-```bash +exec
-ast-grep run -p 'func logActivity($$$) $$$' example_bad.go |
-  classif "does this Go function declare error as a return type?"
+just digraph triage | awk '
+{
+  gsub(/metadata\.ask|fmt\.Errorf\(\.\.\.\)/, "\033[36m&\033[0m")
+  gsub(/classif/, "\033[1;33m&\033[0m")
+  gsub(/no: warning/, "\033[31m&\033[0m")
+  gsub(/yes: cleared/, "\033[32m&\033[0m")
+  print "  " $0
+}'
+paint
+paint yellow '  Syntax finds every error message; the model judges what each one says.'
 ```
 
 <!-- end_slide -->
 
-## Semantic Check in Neovim
+## Triage
 
-> The tree picks the function; the model answers the question.
+> The question lives in the rule, next to the pattern it asks about.
 
-```bash +exec_replace
-paint cyan '  v an an       ' plain 'climb the syntax tree from a name to its function'
-paint cyan '  :w !classif   ' plain 'send the selected lines to the local model'
+```file
+path: rules/vague-error-message.yml
+language: yaml
 ```
 
 ```bash +exec
-./demo.sh classif
+ast-grep scan --json=stream --include-metadata \
+  -r rules/vague-error-message.yml example_bad.go | ./triage.sh
+```
+
+<!-- end_slide -->
+
+## Triage in Neovim
+
+> Hints from ast-grep, verdicts from the model, in one buffer.
+
+```bash +exec_replace
+paint cyan '  hint        ' plain 'ast-grep: every error message, judged or not'
+paint cyan '  :Classif    ' plain 'runs triage.sh; a confirmed message becomes a warning'
+```
+
+```bash +exec
+./demo.sh triage
 ```
 
 <!-- end_slide -->
@@ -444,7 +469,7 @@ paint cyan '  :w !classif   ' plain 'send the selected lines to the local model'
 paint cyan '  AI          ' plain 'drafts rules and snippets from patterns in your code'
 paint cyan '  ast-grep    ' plain 'checks a file in milliseconds, the same way every run'
 paint cyan '  LuaSnip     ' plain 'types the fix in the shape the rules expect'
-paint cyan '  classif     ' plain 'answers yes or no questions on a local model'
+paint cyan '  classif     ' plain 'judges each match a rule asks it about'
 paint cyan '  you         ' plain 'write the context each error message needs'
 paint
 paint yellow '  Trees and snippets do the repeat work; the model answers the rest.'
@@ -472,7 +497,7 @@ paint gray '             or npm i -g @ast-grep/cli, or brew install ast-grep'
 paint cyan '  LuaSnip    ' plain '{ "L3MON4D3/LuaSnip", version = "v2.*" }'
 paint cyan '  Neovim     ' plain '0.12 or newer for v an; nvim-lspconfig for the LSP'
 paint cyan '  grug-far   ' plain 'optional, ast-grep search and replace in a buffer'
-paint cyan '  classif    ' plain 'optional, needs Ollama and a local model'
+paint cyan '  classif    ' plain 'optional, needs Ollama and a local model; triage.sh uses jq'
 paint
 paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 ```

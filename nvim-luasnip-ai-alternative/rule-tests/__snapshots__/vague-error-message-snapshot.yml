@@ -1,0 +1,14 @@
+id: vague-error-message
+snapshots:
+  errors.New("boom"):
+    labels:
+    - source: errors.New("boom")
+      style: primary
+      start: 0
+      end: 18
+  "fmt.Errorf(\"bad status: %d\", code)":
+    labels:
+    - source: "fmt.Errorf(\"bad status: %d\", code)"
+      style: primary
+      start: 0
+      end: 34

@@ -1,0 +1,14 @@
+digraph triage {
+  rankdir=LR;
+  node [shape=box];
+
+  rule [label="rule\nmetadata.ask"];
+  match [label="each match\nfmt.Errorf(...)"];
+  model [label="classif\nlocal model"];
+  keep [label="no: warning"];
+  drop [label="yes: cleared"];
+
+  rule -> match -> model;
+  model -> keep;
+  model -> drop;
+}
