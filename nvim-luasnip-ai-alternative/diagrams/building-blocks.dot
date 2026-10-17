@@ -1,0 +1,13 @@
+digraph building_blocks {
+  rankdir=LR;
+  node [shape=box];
+
+  tree [label="syntax tree\ncode as nodes"];
+  rule [label="ast-grep rule\nfinds a shape"];
+  snip [label="LuaSnip snippet\ntypes the fix"];
+  model [label="classif\njudges meaning"];
+
+  tree -> rule;
+  rule -> snip [label="fix"];
+  rule -> model [label="unsure"];
+}
