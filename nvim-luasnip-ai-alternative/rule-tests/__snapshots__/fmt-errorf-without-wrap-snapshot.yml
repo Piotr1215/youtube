@@ -1,0 +1,32 @@
+id: fmt-errorf-without-wrap
+snapshots:
+  "fmt.Errorf(\"load %s: %v\", name, err)":
+    fixed: "fmt.Errorf(\"load %s: %w\", name, err)"
+    labels:
+    - source: "fmt.Errorf(\"load %s: %v\", name, err)"
+      style: primary
+      start: 0
+      end: 36
+    - source: err
+      style: secondary
+      start: 32
+      end: 35
+    - source: err
+      style: secondary
+      start: 32
+      end: 35
+  "fmt.Errorf(\"marshal user: %v\", err)":
+    fixed: "fmt.Errorf(\"marshal user: %w\", err)"
+    labels:
+    - source: "fmt.Errorf(\"marshal user: %v\", err)"
+      style: primary
+      start: 0
+      end: 35
+    - source: err
+      style: secondary
+      start: 31
+      end: 34
+    - source: err
+      style: secondary
+      start: 31
+      end: 34

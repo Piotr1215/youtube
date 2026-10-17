@@ -23,7 +23,7 @@ sleep 1
 tmux new-window -t error-handling-demo -n "ast-grep"
 tmux send-keys -t error-handling-demo:ast-grep "clear" C-m
 tmux send-keys -t error-handling-demo:ast-grep "echo -e '${GREEN}Finding error handling issues...${NC}'" C-m
-tmux send-keys -t error-handling-demo:ast-grep "sg scan -r ast-grep-rules.yml example_bad.go" C-m
+tmux send-keys -t error-handling-demo:ast-grep "ast-grep scan example_bad.go" C-m
 
 # Window 3: Show LuaSnip config
 tmux new-window -t error-handling-demo -n "snippets"

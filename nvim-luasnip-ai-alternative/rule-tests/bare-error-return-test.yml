@@ -1,0 +1,27 @@
+id: bare-error-return
+valid:
+  - |
+    func f() (int, error) {
+    	v, err := g()
+    	if err != nil {
+    		return 0, fmt.Errorf("g: %w", err)
+    	}
+    	return v, nil
+    }
+  - |
+    func f() (*http.Response, error) {
+    	resp, err := http.Get(url)
+    	if err != nil {
+    		return nil, err
+    	}
+    	return resp, nil
+    }
+invalid:
+  - |
+    func f() (int, error) {
+    	v, err := g()
+    	if err != nil {
+    		return 0, err
+    	}
+    	return v, nil
+    }

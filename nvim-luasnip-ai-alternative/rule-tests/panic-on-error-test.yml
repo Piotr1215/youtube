@@ -1,0 +1,17 @@
+id: panic-on-error
+valid:
+  - |
+    func f() error {
+    	if err := g(); err != nil {
+    		return fmt.Errorf("g: %w", err)
+    	}
+    	return nil
+    }
+invalid:
+  - |
+    func f() {
+    	err := g()
+    	if err != nil {
+    		panic(err)
+    	}
+    }
