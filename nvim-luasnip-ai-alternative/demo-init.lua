@@ -66,9 +66,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- buffer and pipes the matches through triage.sh, which asks classif each
 -- rule's question about each call, and the answer decides: where it equals
 -- the rule's keep label the rule's fix lands on the call, anywhere else the
--- call is left as is, and with no answer the call only gets a warning. The
--- quickfix list at the bottom shows the question, each answer and what it
--- did, then ast-grep's other findings. u shows the code before the fix. The
+-- call is left as is, and with no answer the call only gets a warning. Two
+-- lines above each call show the question and the answer; the quickfix list
+-- at the bottom repeats them, then ast-grep's other findings. u shows the
+-- code before the fix. The
 -- buffer goes through a temp copy because saves to example_bad.go are
 -- dropped.
 local classif_ns = vim.api.nvim_create_namespace("classif")
@@ -88,26 +89,33 @@ local function position(lines, offset)
 	return row, offset
 end
 
--- Marks a judged call in the code: grey while the model answers, then red
--- where it kept the finding, green with a ✓ where it cleared it, and blue
--- where the rule's fix landed.
+-- Marks a judged call in the code, with the question and the answer on two
+-- lines above it: grey while the model answers, then blue where the rule's
+-- fix landed, red where the finding stays a warning, green where the call is
+-- left as is.
 local function mark(bufnr, r)
-	local hl, note = "Visual", nil
-	if r.label then
-		local verdict = string.format("classif: %s %s", r.label, r.p)
-		if r.fixed then
-			hl, note = "DiffChange", { "› fixed, " .. verdict, "DiagnosticInfo" }
-		elseif r.kept then
-			hl = "DiffDelete"
-		else
-			hl, note = "DiffAdd", { "✓ " .. verdict, "DiagnosticOk" }
-		end
+	local hl, says, says_hl = "Visual", "…", "Comment"
+	local verdict = string.format("%s %s", r.label or "", r.p or "")
+	if r.fixed then
+		hl, says, says_hl = "DiffChange", verdict .. " → the rule's fix applied", "DiagnosticInfo"
+	elseif r.label and not r.answered then
+		hl, says, says_hl = "DiffDelete", "no answer → a warning, no fix", "DiagnosticWarn"
+	elseif r.kept then
+		hl, says, says_hl = "DiffDelete", verdict .. " → a warning; the rule has no fix", "DiagnosticWarn"
+	elseif r.label then
+		hl, says, says_hl = "DiffAdd", verdict .. " → left as is", "DiagnosticOk"
 	end
+	local line = vim.api.nvim_buf_get_lines(bufnr, r.line, r.line + 1, false)[1] or ""
+	local indent = string.rep(" ", vim.fn.strdisplaywidth(line:match("^%s*")))
 	vim.api.nvim_buf_set_extmark(bufnr, verdict_ns, r.line, r.col, {
 		end_row = r.end_line,
 		end_col = r.end_col,
 		hl_group = hl,
-		virt_text = note and { note } or nil,
+		virt_lines = {
+			{ { indent .. "classif asks: ", "Comment" }, { r.ask, "Question" } },
+			{ { indent .. "classif says: ", "Comment" }, { says, says_hl } },
+		},
+		virt_lines_above = true,
 	})
 end
 
@@ -168,7 +176,11 @@ vim.api.nvim_create_user_command("Classif", function()
 	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 	local tick = vim.b[bufnr].changedtick
 	vim.fn.writefile(lines, copy)
-	local scan = vim.system({ "ast-grep", "scan", "--json=stream", "--include-metadata", copy }, { cwd = dir, text = true }):wait()
+	local scan = vim.system(
+		{ "ast-grep", "scan", "--json=stream", "--include-metadata", copy },
+		{ cwd = dir, text = true }
+	)
+		:wait()
 	vim.fn.delete(copy)
 	local rows = {}
 	for line in vim.gsplit(scan.stdout or "", "\n", { trimempty = true }) do

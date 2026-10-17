@@ -483,7 +483,7 @@ ast-grep scan --json=stream --include-metadata --filter '^vague-' \
 
 ```bash +exec_replace
 paint cyan '  :Classif    ' plain 'asks each call the rule'"'"'s question; a no applies the rule'"'"'s fix'
-paint cyan '  quickfix    ' plain 'the question, each answer, and what it did to the call'
+paint cyan '  above call  ' plain 'the question classif asks, then its answer and what it did'
 paint cyan '  u           ' plain 'shows the code before the fix'
 ```
 
@@ -498,7 +498,7 @@ paint cyan '  u           ' plain 'shows the code before the fix'
 ```bash +exec_replace
 paint green '  ✓  ' plain 'classif answered no for line 53 and yes for line 23'
 paint green '  ✓  ' plain 'only line 53 got the rule'"'"'s fix; line 23 was left as is'
-paint green '  ✓  ' plain 'the quickfix list showed the question, each answer, and what it did'
+paint green '  ✓  ' plain 'each call showed the question above it, then the answer'
 paint green '  ✓  ' plain 'asking again left the fixed call as is'
 paint
 paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
