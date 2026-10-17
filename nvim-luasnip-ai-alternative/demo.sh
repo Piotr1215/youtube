@@ -46,10 +46,10 @@ steps() {
 		;;
 	triage)
 		printf '%s\n' \
-			':Classif|ask the rule'"'"'s question about each call it matched' \
-			'53G ]d|the vague message is a warning now' \
-			'gra Enter|apply the rule'"'"'s fix: the function name' \
-			':Classif|ask again about the fixed message'
+			':Classif|ask the rule'"'"'s question; the list opens below' \
+			':Classif!|ask again, and fix every call the model kept' \
+			':Classif|ask about the fixed message' \
+			'Enter in the list|jump to a finding'
 		;;
 	esac
 }
@@ -111,7 +111,7 @@ finish() {
 }
 
 launch() {
-	local segment="$1" demo_pane width height card_width card_height card_pane keys text
+	local segment="$1" demo_pane width height card_width card_height card_y card_pane keys text
 	if ! [[ ${segment} =~ ^(${segments})$ ]]; then
 		printf 'usage: demo.sh %s\n' "${segments}" >&2
 		exit 2
@@ -147,12 +147,16 @@ launch() {
 
 	# The window takes the client's size on switch, so measure it after.
 	# The card sits bottom right, above the statusline: code and the grug-far
-	# inputs live at the top, and long lines rarely reach that corner.
+	# inputs live at the top, and long lines rarely reach that corner. In the
+	# triage demo the quickfix list fills the bottom, so the card goes top
+	# right, beside the short package and import lines.
 	width="$(tmux display-message -p -t "${demo_pane}" '#{window_width}')"
 	height="$(tmux display-message -p -t "${demo_pane}" '#{window_height}')"
+	card_y=$((height - card_height - 4))
+	[[ ${segment} == triage ]] && card_y=1
 	card_pane="$(tmux new-pane -d -P -F '#{pane_id}' -t "${demo_pane}" \
 		-x "${card_width}" -y "${card_height}" \
-		-X "$((width - card_width - 2))" -Y "$((height - card_height - 4))" \
+		-X "$((width - card_width - 2))" -Y "${card_y}" \
 		"'${dir}/demo.sh' --card '${segment}' '${sock}'")"
 	# new-pane takes no -T since tmux 3.7, so the title is set afterwards.
 	# select-pane also makes the card current, so focus goes back to nvim.

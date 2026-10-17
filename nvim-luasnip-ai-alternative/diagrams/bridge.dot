@@ -4,7 +4,7 @@ digraph bridge {
 
   rule [label="ast-grep rule\nfinds the code"];
   model [label="classif\njudges meaning"];
-  fix [label="gra\napplies the fix"];
+  fix [label="the rule's fix\non every no"];
 
   rule -> model [label="hint"];
   model -> fix [label="no"];
