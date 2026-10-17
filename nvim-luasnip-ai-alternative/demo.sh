@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Opens one Neovim demo with a list of steps beside it.
 #
-#   ./demo.sh tree | search | diagnostics | triage
+#   ./demo.sh tree | search | diagnostics
 #
 # The slides call this. It rebuilds the demo session (your Neovim with
 # demo-init.lua on top), switches the presenter's client to it, and opens a
@@ -12,7 +12,7 @@ set -euo pipefail
 
 session="ast-grep-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-segments="tree|search|diagnostics|triage"
+segments="tree|search|diagnostics"
 # Each launch gets its own demo nvim socket; the card receives it as --card's
 # second argument. setup-demo.sh says why the path is never reused.
 sock="${XDG_RUNTIME_DIR:-/tmp}/ast-grep-demo-$$.sock"
@@ -43,13 +43,6 @@ steps() {
 			']d|a %v where the rule wants %w' \
 			'gra|the code actions: each matching rule'"'"'s fix' \
 			'Enter|apply the first, the %w fix'
-		;;
-	triage)
-		printf '%s\n' \
-			':Classif|a yes/no question above each call; the answer gates the fix' \
-			'u, then Ctrl-r|undo shows the call before the fix; redo puts it back' \
-			':Classif pick|classif picks one fix for record among the rules' \
-			'Enter in the list, then gra|jump onto a call; gra lists every rule'"'"'s fix'
 		;;
 	esac
 }
@@ -147,13 +140,10 @@ launch() {
 
 	# The window takes the client's size on switch, so measure it after.
 	# The card sits bottom right, above the statusline: code and the grug-far
-	# inputs live at the top, and long lines rarely reach that corner. In the
-	# triage demo the quickfix list fills the bottom, so the card goes top
-	# right, beside the short package and import lines.
+	# inputs live at the top, and long lines rarely reach that corner.
 	width="$(tmux display-message -p -t "${demo_pane}" '#{window_width}')"
 	height="$(tmux display-message -p -t "${demo_pane}" '#{window_height}')"
 	card_y=$((height - card_height - 4))
-	[[ ${segment} == triage ]] && card_y=1
 	card_pane="$(tmux new-pane -d -P -F '#{pane_id}' -t "${demo_pane}" \
 		-x "${card_width}" -y "${card_height}" \
 		-X "$((width - card_width - 2))" -Y "${card_y}" \

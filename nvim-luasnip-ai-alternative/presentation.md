@@ -1,6 +1,6 @@
 # Code Intelligence
 
-> How Neovim sees your code, and what a local model adds
+> Find code by its structure, rewrite it by its meaning
 
 <!-- new_lines: 3 -->
 
@@ -20,36 +20,49 @@ echo "ast-grep + classif" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Goal
+## Migration
 
-> Learn what the tools see, even when they do the typing.
+> Eight log calls, one shape: each gets the fix its meaning calls for.
 
 ```bash +exec_replace
-paint 'bold yellow' '  learn  ' cyan 'syntax trees     ' plain 'what Neovim and ast-grep see in your code'
-paint plain '         ' cyan 'rules            ' plain 'how a shape in the tree becomes a finding and a fix'
-paint plain '         ' cyan 'classif          ' plain 'what a local model adds where the tree stops'
-paint
-paint 'bold yellow' '  then   ' plain 'let AI write the rules, and read what it wrote'
+paint gray '  log.Printf to log/slog, on a copy: ast-grep rewrites, classif picks, Go checks.'
+```
+
+```bash +exec
+./migrate.sh
 ```
 
 <!-- end_slide -->
 
-## Building Blocks
+## Levels
 
-> Each chapter adds one piece; this is how they connect.
+> Each level adds one step to the migration you just saw.
 
 ```bash +exec_replace
-just digraph building-blocks | awk '
-{
-  gsub(/syntax tree/, "\033[1;33m&\033[0m")
-  gsub(/ast-grep rule/, "\033[1;36m&\033[0m")
-  gsub(/gra/, "\033[1;35m&\033[0m")
-  gsub(/classif/, "\033[1;32m&\033[0m")
-  gsub(/fix:|ask:/, "\033[38;2;128;128;128m&\033[0m")
-  print "  " $0
-}'
-paint
-paint yellow '  classif decides which findings stay and where the fix lands; the rule writes it.'
+paint 'bold yellow' '  1  ' cyan 'find text         ' plain 'grep             ' gray 'every log.Printf, by its characters'
+paint 'bold yellow' '  2  ' cyan 'find structure    ' plain 'ast-grep         ' gray 'the calls that log err, by syntax'
+paint 'bold yellow' '  3  ' cyan 'judge meaning     ' plain '+ classif        ' gray 'what each other call is for'
+paint 'bold yellow' '  4  ' cyan 'act on judgment   ' plain '+ go build, vet  ' gray 'the fix for that answer, checked'
+```
+
+<!-- end_slide -->
+
+## Find Text
+
+> What can a text search tell you?
+
+```bash +exec_replace
+./journey.sh 2
+```
+
+<!-- end_slide -->
+
+## Log Calls
+
+> grep finds every call; it cannot say what any of them is for.
+
+```bash +exec
+rg -n 'log\.Printf' logs/main.go
 ```
 
 <!-- end_slide -->
@@ -70,26 +83,26 @@ paint green '  ✓  ' cyan 'ast-grep   ' plain '6 matches: it compares syntax tr
 
 <!-- end_slide -->
 
-## First Look
-
-> One scan flags every error-handling problem in the file.
-
-```bash +exec_replace
-paint gray '  Each line names a rule and where it matched; the next chapters show how.'
-```
-
-```bash +exec +expect:failure
-time ast-grep scan --report-style short example_bad.go
-```
-
-<!-- end_slide -->
-
 ## Syntax Trees
 
 > What do these tools see that grep does not?
 
 ```bash +exec_replace
-./journey.sh 2
+./journey.sh 3
+```
+
+<!-- end_slide -->
+
+## First Look
+
+> One ast-grep scan flags every error-handling problem in a file.
+
+```bash +exec_replace
+paint gray '  Each line names a rule and where it matched; the next slides show how.'
+```
+
+```bash +exec +expect:failure
+time ast-grep scan --report-style short example_bad.go
 ```
 
 <!-- end_slide -->
@@ -126,7 +139,7 @@ just digraph parsing | awk '
   print "  " $0
 }'
 paint
-paint yellow '  One grammar per language: the same rules work on Go, Python, and Bash.'
+paint yellow '  One parser, a grammar per language: each rule names the language it reads.'
 ```
 
 <!-- end_slide -->
@@ -164,7 +177,7 @@ paint yellow '  ast-grep matches patterns against this same kind of tree.'
 > How do you search by shape instead of text?
 
 ```bash +exec_replace
-./journey.sh 3
+./journey.sh 4
 ```
 
 <!-- end_slide -->
@@ -233,7 +246,7 @@ paint yellow '  A pattern is a query; a rule turns it into a review comment.'
 > How does a review comment become a rule?
 
 ```bash +exec_replace
-./journey.sh 4
+./journey.sh 5
 ```
 
 <!-- end_slide -->
@@ -342,164 +355,163 @@ paint yellow '  One rule file serves the shell, the editor, and its own tests.'
 
 <!-- end_slide -->
 
-## Rules with Questions
+## Syntax Fix
 
-> What can a rule ask that syntax cannot answer?
+> A call that logs err belongs in slog.Error; syntax alone says so.
 
 ```bash +exec_replace
-./journey.sh 5
+paint gray '  rules/log-error.yml   log.Printf($FMT, err)  ›  slog.Error($MSG, "err", err)'
+```
+
+```bash +exec
+ast-grep scan --filter '^log-error$' logs
 ```
 
 <!-- end_slide -->
 
-## Syntax Limits
+## Structure Limits
 
-> Same shape to ast-grep; only one tells you what failed.
+> The other six share one pattern; the right fix depends on what each is for.
 
 ```bash +exec_replace
-paint cyan '  pattern   ' plain 'fmt.Errorf(' 'bold magenta' '$MSG' plain ', ' 'bold magenta' '$$$ARGS' plain ')'
+paint cyan '  pattern   ' plain 'log.Printf(' 'bold magenta' '$FMT' plain ', ' 'bold magenta' '$ARG' plain ')'
 paint
-paint green '  ✓  ' plain 'fmt.Errorf("' 'bold green' 'fetch user' plain ': %w", err)'
-paint red '  ✗  ' plain 'fmt.Errorf("' 'bold red' 'bad status' plain ': %d", resp.StatusCode)'
+paint plain '  log.Printf("got here %v", r.URL)            ' yellow 'debug       ' plain 'remove the line'
+paint plain '  log.Printf("listening on %s", addr)         ' yellow 'info        ' plain 'slog.Info'
+paint plain '  log.Printf("login request: %+v", creds)     ' yellow 'sensitive   ' plain 'a person decides'
 paint
-paint yellow '  A pattern can match the message; judging it means reading it.'
+paint yellow '  A rule carries one fix, and any one of these is wrong for the other two.'
+```
+
+<!-- end_slide -->
+
+## Judge Meaning
+
+> What can a rule ask that syntax cannot answer?
+
+```bash +exec_replace
+./journey.sh 6
 ```
 
 <!-- end_slide -->
 
 ## classif
 
-> A local model answers one yes/no question about a piece of text.
+> A local model picks one option for a piece of text.
 
 ```bash +exec_replace
-paint cyan '  text       ' plain 'fmt.Errorf("bad status: %d", resp.StatusCode)'
-paint cyan '  question   ' plain 'Does this error message tell a reader which operation failed?'
+paint cyan '  text       ' plain 'log.Printf("got here %v", r.URL)'
+paint cyan '  question   ' plain 'What is this log line for?'
+paint cyan '  options    ' yellow 'debug      ' plain 'temporary output a developer left while debugging'
+paint plain '             ' yellow 'info       ' plain 'an event someone operating the service wants'
+paint plain '             ' yellow 'sensitive  ' plain 'can print a secret or personal data'
 paint gray '               │'
 paint gray '               ▼'
-paint cyan '  model      ' plain 'scores the next token; classif reads the scores of ' green 'yes' plain ' and ' red 'no'
+paint cyan '  model      ' plain 'scores the next token; classif reads the score of each option'
 paint gray '               │'
 paint gray '               ▼'
-paint cyan '  answer     ' 'bold red' 'no 1.00' plain '    exit 1 for no, 0 for yes, so a script can branch'
+paint cyan '  answer     ' 'bold yellow' 'debug 0.92'
 paint
-paint yellow '  One token per answer: fast enough for every finding, and it runs locally.'
+paint yellow '  p is the model'"'"'s probability for that token, not how often it is right.'
 ```
 
 <!-- end_slide -->
 
-## Confidence
+## Rules as Options
 
-> classif each asks one question of many texts and ranks them by p(yes).
-
-```bash +exec
-classif each "Does this error message tell a reader which operation failed?" \
-  'fmt.Errorf("fetch user: %w", err)' \
-  'fmt.Errorf("failed to marshal user: %v", err)' \
-  'RuntimeError("fetch failed")' \
-  'fmt.Errorf("bad status: %d", resp.StatusCode)' \
-  'errors.New("something went wrong")'
-```
-
-<!-- end_slide -->
-
-## Rule with a Question
-
-> metadata.ask carries the question; keep says which answer keeps the finding.
-
-```file
-path: rules/vague-error-message.yml
-language: yaml
-start_line: 1
-end_line: 9
-```
+> Three rules match the same call; each offers one answer and its fix.
 
 ```bash +exec_replace
-paint yellow '  ast-grep passes metadata through; triage.sh hands each match and ask to classif.'
-paint yellow '  The model reads the whole match; the bare string "fetch user: %w" scored no.'
+paint gray '  each rule      ' plain 'log.Printf($FMT, $ARG)   ' gray 'choose: What is this log line for?'
+paint
+paint cyan '  log-debug      ' yellow 'debug       ' plain 'fix: ' green "''" gray '   the line goes'
+paint cyan '  log-info       ' yellow 'info        ' plain 'fix: ' green 'slog.Info($MSG, "$ARG", $ARG)'
+paint cyan '  log-sensitive  ' yellow 'sensitive   ' gray 'no fix: a person decides'
+paint
+paint yellow '  triage.sh hands the options to classif -e; the chosen rule'"'"'s fix lands.'
+paint yellow '  min_p 0.9 came from a few runs; a real threshold needs labeled rows.'
 ```
 
 <!-- end_slide -->
 
-## Fix from the Tree
+## Judged Calls
 
-> The same fix mechanism, with the function name read from the tree.
-
-```bash +exec_replace
-paint gray '  rules/vague-error-message.yml'
-paint
-paint yellow '  1  match      ' plain 'fmt.Errorf(' 'bold magenta' '$MSG' plain ', ' 'bold magenta' '$$$ARGS' plain ')' gray '   inside a function'
-paint plain '                fmt.Errorf("bad status: %d", resp.StatusCode)'
-paint
-paint yellow '  2  capture    ' 'bold magenta' '$MSG    ' green '"bad status: %d"'
-paint plain '                ' 'bold magenta' '$FN     ' green 'fetchUser' gray '   the name of that function'
-paint
-paint yellow '  3  transform  ' 'bold magenta' '$REST   ' plain '$MSG without its opening quote'
-paint
-paint yellow '  4  fix        ' plain 'fmt.Errorf("' 'bold magenta' '$FN' plain ': ' 'bold magenta' '$REST' plain ', ' 'bold magenta' '$$$ARGS' plain ')'
-paint plain '                fmt.Errorf("' 'bold green' 'fetchUser: ' plain 'bad status: %d", resp.StatusCode)'
-paint
-paint yellow '  inside climbs to the enclosing function; has captures its name as $FN.'
-```
-
-<!-- end_slide -->
-
-## Bridge
-
-> ast-grep finds and fixes by syntax; classif decides in between, by meaning.
+> classif answers for each call; nothing is written yet.
 
 ```bash +exec_replace
-just digraph bridge | awk '
-{
-  gsub(/ast-grep rule/, "\033[1;36m&\033[0m")
-  gsub(/classif/, "\033[1;32m&\033[0m")
-  gsub(/the rule.s fix/, "\033[1;35m&\033[0m")
-  gsub(/hint| no |fixed text/, "\033[38;2;128;128;128m&\033[0m")
-  print "  " $0
-}'
-paint cyan '     syntax tree                 ' green 'local model                      ' magenta 'syntax tree'
-paint
-paint yellow '  classif writes no code: its answer decides where the rule'"'"'s fix lands.'
-```
-
-<!-- end_slide -->
-
-## Decision Engine
-
-> The model's answer decides where the rule's fix lands.
-
-```bash +exec_replace
-paint gray '  --apply writes these fixes, :Classif applies them in Neovim; no answer, no fix.'
-paint gray '  gra and scan -U never ask the model: they apply every fix.'
+paint gray '  ✓ the answer'"'"'s fix lands    ✗ sensitive, or below min_p: a person looks'
 ```
 
 ```bash +exec
-ast-grep scan --json=stream --include-metadata --filter '^vague-' \
-  example_bad.go example_bad.py | ./triage.sh --diff
+ast-grep scan --filter '^log-' --json=stream --include-metadata logs \
+  | ./triage.sh --pick
 ```
 
 <!-- end_slide -->
 
-## Triage in Neovim
+## Act on Judgment
 
-> Watch the model's answer decide which call the rule rewrites.
+> What keeps it safe to let the answer pick the fix?
 
 ```bash +exec_replace
-paint cyan '  :Classif       ' plain 'a yes/no question per call; the answer gates the rule'"'"'s fix'
-paint cyan '  :Classif pick  ' plain 'classif picks one fix per call among the rules that match'
-paint cyan '  above call     ' plain 'the question classif asks, then its answer and what it did'
-```
-
-```bash +exec
-./demo.sh triage
+./journey.sh 7
 ```
 
 <!-- end_slide -->
 
-## Triage Demo Result
+## Pipeline
+
+> migrate.sh runs the levels in order, on a copy of the package.
 
 ```bash +exec_replace
-paint green '  ✓  ' plain 'the gate fixed lines 27 and 53, left 23, and kept record as a warning'
-paint green '  ✓  ' plain 'pick gave record the return fix and notify the ignore fix'
-paint green '  ✓  ' plain 'each call showed the question above it, then the answer'
+paint 'bold yellow' '  1  ' cyan 'syntax    ' plain 'ast-grep    ' gray 'log.Printf(…, err) becomes slog.Error, no model'
+paint 'bold yellow' '  2  ' cyan 'meaning   ' plain 'classif     ' gray 'picks each other call'"'"'s rule; its fix lands'
+paint 'bold yellow' '  3  ' cyan 'verify    ' plain 'Go          ' gray 'goimports, go build, go vet must pass'
+paint 'bold yellow' '  4  ' cyan 'write     ' plain '--apply     ' gray 'copies the files back, only after 3 passed'
+paint
+paint yellow '  An unsure answer lands nothing; a failed check writes nothing.'
+```
+
+<!-- end_slide -->
+
+## Failed Check
+
+> A right answer can still break the build; then nothing is written.
+
+```bash +exec_replace
+paint gray '  a run on a copy where the debug line logs a variable used nowhere else'
+paint
+paint plain '  path := r.URL.Path'
+paint plain '  log.Printf("got here %v", path)     ' yellow 'debug 0.96   ' plain 'the line is removed'
+paint
+paint cyan '  3  verify   ' red './main.go:28:2: path declared and not used'
+paint plain '              ' red 'verification failed; the package is unchanged'
+```
+
+<!-- end_slide -->
+
+## Where It Fits
+
+> classif earns its place where all four hold.
+
+```bash +exec_replace
+paint green '  ✓  ' plain 'a fixed set of actions, each one a rule'"'"'s fix'
+paint green '  ✓  ' plain 'syntax and types cannot tell which one a match needs'
+paint green '  ✓  ' plain 'the text in front of the model holds the answer'
+paint green '  ✓  ' plain 'a wrong or missing answer stays for a person, or fails the build'
+paint
+paint red '  ✗  ' plain 'an error message judged against its function: one comment flipped it'
+```
+
+<!-- end_slide -->
+
+## Migration Result
+
+```bash +exec_replace
+paint green '  ✓  ' cyan 'syntax      ' plain '2 calls logging err moved to slog.Error'
+paint green '  ✓  ' cyan 'meaning     ' plain '2 events moved to slog.Info; the debug line went'
+paint green '  ✓  ' cyan 'a person    ' plain '2 sensitive calls and 1 unsure call, left as they were'
+paint green '  ✓  ' cyan 'verify      ' plain 'goimports added log/slog; go build and go vet passed'
 paint
 paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
 ```
@@ -511,7 +523,7 @@ paint yellow '  The model adds meaning between two deterministic steps and repla
 > What do you need to try it?
 
 ```bash +exec_replace
-./journey.sh 6
+./journey.sh 8
 ```
 
 <!-- end_slide -->
@@ -523,9 +535,10 @@ paint yellow '  The model adds meaning between two deterministic steps and repla
 ```bash +exec_replace
 paint cyan '  ast-grep   ' plain 'cargo install ast-grep --locked'
 paint gray '             or npm i -g @ast-grep/cli, or brew install ast-grep'
+paint cyan '  classif    ' plain 'needs Ollama and a local model; triage.sh uses jq'
+paint cyan '  goimports  ' plain 'go install golang.org/x/tools/cmd/goimports@latest'
 paint cyan '  Neovim     ' plain '0.12 or newer for v an; nvim-lspconfig for the LSP'
 paint cyan '  grug-far   ' plain 'optional, ast-grep search and replace in a buffer'
-paint cyan '  classif    ' plain 'optional, needs Ollama and a local model; triage.sh uses jq'
 paint
 paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 ```
@@ -535,9 +548,9 @@ paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 ## Takeaways
 
 ```bash +exec_replace
-paint green '  ✓  ' cyan 'syntax trees      ' plain 'one tree in Neovim and ast-grep; findings update as you type'
-paint green '  ✓  ' cyan 'rule + question   ' plain 'syntax finds the code; a local model picks where fixes land'
-paint 'bold yellow' '  ▶  ' cyan 'next              ' plain 'open :InspectTree on your own code and read its tree'
+paint green '  ✓  ' cyan 'structure   ' plain 'ast-grep finds code by its tree and rewrites it with a rule'"'"'s fix'
+paint green '  ✓  ' cyan 'meaning     ' plain 'classif picks the rule where syntax cannot; unsure means no fix'
+paint 'bold yellow' '  ▶  ' cyan 'next        ' plain 'find a rule of yours whose fix is right for only some matches'
 ```
 
 <!-- end_slide -->
@@ -548,6 +561,7 @@ paint 'bold yellow' '  ▶  ' cyan 'next              ' plain 'open :InspectTree
 ast-grep rules:   https://ast-grep.github.io/guide/rule-config.html
 Rule tests:       https://ast-grep.github.io/guide/test-rule.html
 Playground:       https://ast-grep.github.io/playground.html
+log/slog:         https://pkg.go.dev/log/slog
 grug-far:         https://github.com/MagicDuck/grug-far.nvim
 Code actions:     :help gra
 Tree selection:   :help treesitter-incremental-selection
