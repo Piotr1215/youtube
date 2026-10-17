@@ -1,6 +1,6 @@
 # Code Intelligence
 
-> Flag repeat mistakes and type the fix, locally, in milliseconds
+> Syntax trees and snippets first, then AI on top
 
 <!-- new_lines: 3 -->
 
@@ -54,9 +54,57 @@ time ast-grep scan --report-style short example_bad.go
 
 <!-- end_slide -->
 
+## Syntax Tree
+
+> A parser reads code into nested parts, like clauses in a sentence.
+
+```bash +exec_replace
+just digraph syntax-tree | awk '
+{
+  gsub(/if_statement|consequence|return_statement|condition|identifier/, "\033[1;36m&\033[0m")
+  if ($0 ~ /^│ +nil +│$/) gsub(/nil/, "\033[1;36m&\033[0m")
+  print "  " $0
+}'
+paint
+paint yellow '  Compilers, linters, and Neovim highlighting all read code this way.'
+```
+
+<!-- end_slide -->
+
 ## Text and Tree
 
-> ast-grep matches the syntax tree, not the characters.
+> grep compares characters; ast-grep compares trees.
+
+```bash +exec_replace
+paint cyan '  pattern    ' plain 'if err != nil { return nil, err }'
+paint cyan '  code       ' plain 'if err != nil {'
+paint plain '                 return nil, err'
+paint plain '             }'
+paint
+paint red '  ✗  ' cyan 'grep       ' plain '0 matches in example_bad.go: the line breaks differ'
+paint green '  ✓  ' cyan 'ast-grep   ' plain '6 matches in example_bad.go: the trees agree'
+```
+
+<!-- end_slide -->
+
+## Tree in Neovim
+
+> Neovim parses with tree-sitter, the library ast-grep is built on.
+
+```bash +exec_replace
+paint cyan '  :InspectTree   ' plain 'the buffer'"'"'s syntax tree, beside the code'
+paint cyan '  j / k          ' plain 'walk the nodes; the code under each one lights up'
+```
+
+```bash +exec
+./demo.sh tree
+```
+
+<!-- end_slide -->
+
+## Debug Query
+
+> --debug-query prints the tree ast-grep builds from a pattern.
 
 ```bash +exec
 code='if err != nil { return nil, err }'
@@ -87,6 +135,16 @@ paint green '  ✓ return nil, e2 does not match: both $ERR must agree'
 
 ```bash +exec
 ast-grep run -p 'fmt.Errorf($MSG, $$$ARGS)' example_bad.go
+```
+
+<!-- end_slide -->
+
+## Editor Search
+
+> grug-far runs ast-grep as you type and lists the matches in a buffer.
+
+```bash +exec
+./demo.sh search
 ```
 
 <!-- end_slide -->
@@ -164,8 +222,8 @@ paint cyan '  code actions   ' plain 'each fix: on gra'
 paint cyan '  setup          ' plain 'vim.lsp.enable("ast_grep"), config from nvim-lspconfig'
 ```
 
-```bash +exec +acquire_terminal
-nvim -u demo-init.lua example_bad.go
+```bash +exec
+./demo.sh diagnostics
 ```
 
 <!-- end_slide -->
@@ -176,6 +234,24 @@ nvim -u demo-init.lua example_bad.go
 
 ```bash +exec_replace
 ./journey.sh 4
+```
+
+<!-- end_slide -->
+
+## Snippet Expansion
+
+> A trigger word becomes a template, and M-l walks its fields.
+
+```bash +exec_replace
+just digraph snippet-expansion | awk '
+{
+  gsub(/iferr/, "\033[1;33m&\033[0m")
+  gsub(/M-[lj]/, "\033[1;35m&\033[0m")
+  gsub(/trigger|expand|fields|next|choice|last field/, "\033[36m&\033[0m")
+  print "  " $0
+}'
+paint
+paint yellow '  Typing over a selected field replaces it; M-l keeps its default.'
 ```
 
 <!-- end_slide -->
@@ -215,13 +291,13 @@ end_line: 29
 > Replace a bare return with iferr and watch its warning go.
 
 ```bash +exec_replace
-paint cyan '  iferr Tab   ' plain 'expand the snippet'
-paint cyan '  Tab         ' plain 'next field, Shift-Tab goes back'
-paint cyan '  Ctrl-J      ' plain 'cycle the choice node'
+paint cyan '  iferr M-l   ' plain 'expand the snippet'
+paint cyan '  M-l / M-h   ' plain 'next field, previous field'
+paint cyan '  M-j         ' plain 'cycle the choice node'
 ```
 
-```bash +exec +acquire_terminal
-nvim -u demo-init.lua example_bad.go
+```bash +exec
+./demo.sh snippet
 ```
 
 <!-- end_slide -->
@@ -238,9 +314,9 @@ paint green '  ✓ every snippet expansion passes every rule'
 
 <!-- end_slide -->
 
-## AI in the Loop
+## AI on Top
 
-> Where does a model earn its place?
+> What does a model add once trees and snippets do the repeat work?
 
 ```bash +exec_replace
 ./journey.sh 5
@@ -274,8 +350,23 @@ paint cyan '  ast-grep  ' gray 'line 27  ' plain 'logActivity(...): check whethe
 ```
 
 ```bash +exec
-rg -A3 'func logActivity' example_bad.go |
+ast-grep run -p 'func logActivity($$$) $$$' example_bad.go |
   classif "does this Go function declare error as a return type?"
+```
+
+<!-- end_slide -->
+
+## Semantic Check in Neovim
+
+> The tree picks the function; the model answers the question.
+
+```bash +exec_replace
+paint cyan '  v an an       ' plain 'climb the syntax tree from a name to its function'
+paint cyan '  :w !classif   ' plain 'send the selected lines to the local model'
+```
+
+```bash +exec
+./demo.sh classif
 ```
 
 <!-- end_slide -->
@@ -291,7 +382,7 @@ paint cyan '  LuaSnip     ' plain 'types the fix in the shape the rules expect'
 paint cyan '  classif     ' plain 'answers yes or no questions on a local model'
 paint cyan '  you         ' plain 'write the context each error message needs'
 paint
-paint yellow '  Rules and snippets need no model; a local one adds judgment.'
+paint yellow '  Trees and snippets do the repeat work; the model answers the rest.'
 ```
 
 <!-- end_slide -->
@@ -314,7 +405,8 @@ paint yellow '  Rules and snippets need no model; a local one adds judgment.'
 paint cyan '  ast-grep   ' plain 'cargo install ast-grep --locked'
 paint gray '             or npm i -g @ast-grep/cli, or brew install ast-grep'
 paint cyan '  LuaSnip    ' plain '{ "L3MON4D3/LuaSnip", version = "v2.*" }'
-paint cyan '  Neovim     ' plain '0.11 or newer, with nvim-lspconfig'
+paint cyan '  Neovim     ' plain '0.12 or newer for v an; nvim-lspconfig for the LSP'
+paint cyan '  grug-far   ' plain 'optional, ast-grep search and replace in a buffer'
 paint cyan '  classif    ' plain 'optional, needs Ollama and a local model'
 paint
 paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
@@ -337,9 +429,9 @@ paint green '  ✓ ast-grep new project scaffolds the same layout'
 ## Takeaways
 
 ```bash +exec_replace
-paint green '  ✓  ' cyan 'repeat checks   ' plain 'a rule flags them in milliseconds, no model call'
-paint green '  ✓  ' cyan 'repeat fixes    ' plain 'a snippet types them the same way every time'
-paint 'bold yellow' '  ▶  ' cyan 'next            ' plain 'turn your most repeated review comment into a rule'
+paint green '  ✓  ' cyan 'syntax trees    ' plain 'a rule flags a repeat mistake in milliseconds'
+paint green '  ✓  ' cyan 'snippets        ' plain 'the fix arrives in the same shape every time'
+paint 'bold yellow' '  ▶  ' cyan 'next            ' plain 'put a model on top for what syntax cannot answer'
 ```
 
 <!-- end_slide -->
@@ -351,6 +443,8 @@ ast-grep rules:   https://ast-grep.github.io/guide/rule-config.html
 Rule tests:       https://ast-grep.github.io/guide/test-rule.html
 Playground:       https://ast-grep.github.io/playground.html
 LuaSnip:          https://github.com/L3MON4D3/LuaSnip/blob/master/DOC.md
+grug-far:         https://github.com/MagicDuck/grug-far.nvim
+Tree selection:   :help treesitter-incremental-selection
 classif:          https://github.com/Piotr1215/classif
 Channel:          youtube.com/@cloud-native-corner
 ```

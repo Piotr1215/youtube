@@ -6,7 +6,7 @@
 set -euo pipefail
 
 current="${1:?usage: journey.sh <chapter number>}"
-chapters=("repeated fixes" "syntax trees" "ast-grep rules" "luasnip snippets" "ai in the loop" "getting started")
+chapters=("repeated fixes" "syntax trees" "ast-grep rules" "luasnip snippets" "ai on top" "getting started")
 
 for i in "${!chapters[@]}"; do
 	n=$((i + 1))
