@@ -1,6 +1,6 @@
 # Code Intelligence
 
-> Rules that read syntax, and a local model for what syntax cannot judge
+> How Neovim sees your code, and what a local model adds
 
 <!-- new_lines: 3 -->
 
@@ -22,15 +22,14 @@ echo "ast-grep + classif" | figlet -f small -w 90
 
 ## Goal
 
-> Use the syntax tree the editor already has, and a local model for meaning.
+> Learn what the tools see, even when they do the typing.
 
 ```bash +exec_replace
-paint 'bold yellow' '  why    ' plain 'text search misses code that means the same thing'
-paint plain '         ' plain 'a tree shows shape; judging an error message needs its meaning'
+paint 'bold yellow' '  learn  ' cyan 'syntax trees     ' plain 'what Neovim and ast-grep see in your code'
+paint plain '         ' cyan 'rules            ' plain 'how a shape in the tree becomes a finding and a fix'
+paint plain '         ' cyan 'classif          ' plain 'what a local model adds where the tree stops'
 paint
-paint 'bold yellow' '  what   ' cyan 'syntax trees   ' plain 'the structure Neovim and ast-grep read'
-paint plain '         ' cyan 'rules          ' plain 'find a code shape, fix it on gra, as you type'
-paint plain '         ' cyan 'classif        ' plain 'a local model for what the tree cannot judge'
+paint 'bold yellow' '  then   ' plain 'let AI write the rules, and read what it wrote'
 ```
 
 <!-- end_slide -->
@@ -518,7 +517,7 @@ paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 ```bash +exec_replace
 paint green '  ✓  ' cyan 'syntax trees      ' plain 'one tree in Neovim and ast-grep; findings update as you type'
 paint green '  ✓  ' cyan 'rule + question   ' plain 'syntax finds the code, a local model judges, gra fixes'
-paint 'bold yellow' '  ▶  ' cyan 'next              ' plain 'turn a review comment into a rule, a question, and a fix'
+paint 'bold yellow' '  ▶  ' cyan 'next              ' plain 'open :InspectTree on your own code and read its tree'
 ```
 
 <!-- end_slide -->
