@@ -6,7 +6,7 @@
 set -euo pipefail
 
 current="${1:?usage: journey.sh <chapter number>}"
-chapters=("bulk code changes" "text search" "syntax trees" "judging meaning" "acting on answers" "where it fits")
+chapters=("bulk code changes" "text search" "syntax trees" "judging meaning" "acting on the answer" "your own codebase")
 
 for i in "${!chapters[@]}"; do
 	n=$((i + 1))

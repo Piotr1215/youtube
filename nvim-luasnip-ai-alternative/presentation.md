@@ -20,61 +20,45 @@ echo "ast-grep + classif" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Changing Code at Scale
+## Before and After
 
-> Every codebase eventually needs the same change in many places.
+```bash +exec_replace
+paint gray '  logs/main.go'
+paint
+./migrate.sh --diff | awk '/@@/ { hunk++; if (hunk > 2) print ""; next } hunk > 1'
+```
+
+<!-- end_slide -->
+
+## From log.Printf to log/slog
+
+```file
+path: examples/slog.go
+language: go
+start_line: 11
+end_line: 13
+```
+
+```bash +exec
+go run examples/slog.go
+```
+
+<!-- end_slide -->
+
+## The Log Lines in Our Service
+
+```bash +exec
+rg -n 'log\.Printf' logs/main.go
+```
+
+<!-- end_slide -->
+
+## The Usual Ways
 
 ```bash +exec_replace
 paint red '  ✗  ' cyan 'find and replace   ' plain 'sees only text: changes too much, misses the rest'
 paint red '  ✗  ' cyan 'by hand            ' plain 'careful, until there are a few hundred places'
-paint red '  ✗  ' cyan 'an AI assistant    ' plain 'reads the code, then writes new code you must review'
-```
-
-<!-- end_slide -->
-
-## Structured Logging
-
-> Since Go 1.21, log/slog gives every logged value a name you can filter on.
-
-```bash +exec_replace
-paint cyan '  before   ' plain 'log.Printf("login failed: %v", err)'
-paint gray '           2026/10/17 19:32:33 login failed: no password'
-paint
-paint cyan '  after    ' plain 'slog.Error("login failed", ' 'bold green' '"err", err' plain ')'
-paint gray '           2026/10/17 19:32:33 ERROR login failed ' green 'err="no password"'
-paint
-paint yellow '  Plenty of Go code still uses log.Printf, so this is a migration many teams face.'
-```
-
-<!-- end_slide -->
-
-## Different Lines
-
-> The log lines in one service need different changes.
-
-```bash +exec_replace
-paint plain '  log.Printf("login failed: %v", err)       ' green 'slog.Error'
-paint plain '  log.Printf("got here %v", r.URL)          ' red 'delete it: leftover debugging'
-paint plain '  log.Printf("listening on %s", addr)       ' green 'slog.Info: an event'
-paint plain '  log.Printf("login request: %+v", creds)   ' yellow 'a person decides: it prints a password'
-```
-
-<!-- end_slide -->
-
-## What a Tool Needs
-
-> The right change depends on what each line is for.
-
-```bash +exec_replace
-paint cyan '  recognize text         ' plain 'grep       ' gray 'but code is more than characters'
-paint gray '      │'
-paint cyan '  understand structure   ' plain 'ast-grep   ' gray 'but structure cannot see purpose'
-paint gray '      │'
-paint cyan '  judge meaning          ' plain 'classif    ' gray 'but a judgment should not edit code'
-paint gray '      │'
-paint cyan '  act on the judgment    ' plain 'rules      ' gray 'checked before your files change'
-paint
-paint yellow '  Each step exists because the one before it hits a wall.'
+paint red '  ✗  ' cyan 'an AI assistant    ' plain 'writes new code you must review line by line'
 ```
 
 <!-- end_slide -->
@@ -89,28 +73,21 @@ paint yellow '  Each step exists because the one before it hits a wall.'
 
 <!-- end_slide -->
 
-## Characters
-
-> grep finds every log.Printf instantly, but it only compares characters.
+## Finding Error Calls with grep
 
 ```bash +exec_replace
-paint cyan '  calls that log err   ' plain "rg 'log\.Printf\(.*, err\)'"
-paint
-paint red '  ✗  ' plain 'a call split over two lines: ' red 'missed'
-paint gray '       log.Printf('
-paint gray '           "server stopped: %v", err)'
-paint
-paint red '  ✗  ' plain 'a call that is commented out: ' red 'matched'
-paint gray '       // log.Printf("failed: %v", err)'
-paint
-paint yellow '  A regex can be patched for each layout, but it never knows what a call is.'
+bat --paging=never --color=always --style=numbers --line-range 12:16 examples/calls.go
+```
+
+```bash +exec
+rg -n 'log\.Printf\(.*, err\)' examples/calls.go
 ```
 
 <!-- end_slide -->
 
 ## Syntax Trees
 
-> How can a tool read code as code?
+> How do we see code as code, not characters?
 
 ```bash +exec_replace
 ./journey.sh 3
@@ -118,63 +95,35 @@ paint yellow '  A regex can be patched for each layout, but it never knows what 
 
 <!-- end_slide -->
 
-## Syntax Tree
-
-> To see code instead of characters, a tool reads it the way a compiler does.
+## A Pattern Written as Code
 
 ```bash +exec_replace
-paint gray '  log.Printf("got here %v", r.URL)'
+paint cyan '  we want    ' plain 'every log.Printf whose second argument is err'
+paint cyan '  we write   ' plain 'log.Printf(' 'bold magenta' '$FMT' plain ', err)'
 paint
-paint cyan '  call_expression'
-paint gray '  ├─ ' yellow 'function    ' cyan 'selector_expression             ' plain 'log.Printf'
-paint gray '  └─ ' yellow 'arguments   ' cyan 'argument_list'
-paint gray '                 ├─ ' cyan 'interpreted_string_literal   ' plain '"got here %v"'
-paint gray '                 └─ ' cyan 'selector_expression          ' plain 'r.URL'
-paint
-paint yellow '  Spacing and line breaks are gone; a comment becomes a comment node, not a call.'
+paint gray '  call_expression'
+paint gray '  ├─ ' yellow 'function    ' plain 'log.Printf       ' gray 'must be log.Printf'
+paint gray '  └─ ' yellow 'arguments'
+paint gray '     ├─ ' 'bold magenta' '$FMT                     ' gray 'any one expression'
+paint gray '     └─ ' plain 'err                      ' gray 'must be err'
 ```
 
 <!-- end_slide -->
 
-## Tree in Neovim
-
-> Your editor already builds this tree, to highlight and select code.
-
-```bash +exec_replace
-paint cyan '  :InspectTree   ' plain 'the syntax tree of the file, beside the code'
-paint cyan '  v an           ' plain 'select a node, then each one around it'
-```
+## Finding Error Calls by Structure
 
 ```bash +exec
-./demo.sh tree
+ast-grep run -p 'log.Printf($FMT, err)' examples/calls.go
 ```
 
 <!-- end_slide -->
 
-## Patterns
-
-> ast-grep searches that tree with patterns written as code.
-
-```bash +exec_replace
-paint cyan '  pattern   ' plain 'log.Printf(' 'bold magenta' '$FMT' plain ', err)' gray '      $FMT stands for any format string'
-paint
-paint green '  ✓  ' plain 'log.Printf("login failed: %v", err)'
-paint green '  ✓  ' plain 'log.Printf(' gray '                              line breaks make no difference'
-paint plain '         "server stopped: %v", err)'
-paint red '  ✗  ' plain '// log.Printf("failed: %v", err)' gray '         a comment is not a call'
-paint red '  ✗  ' plain 'log.Printf("user %v", name)' gray '              the argument is not err'
-```
-
-<!-- end_slide -->
-
-## Rewrite Rule
-
-> Finding is half the job: the placeholders remember what they matched.
+## Building the New Line from the Old
 
 ```bash +exec_replace
 paint yellow '  match      ' plain 'log.Printf("login failed: %v", err)'
 paint yellow '  remember   ' 'bold magenta' '$FMT  ' plain '"login failed: %v"'
-paint yellow '  reshape    ' 'bold magenta' '$MSG  ' plain '"login failed"' gray '   $FMT without the %v and the colon'
+paint yellow '  reshape    ' 'bold magenta' '$MSG  ' plain '"login failed"'
 paint yellow '  rewrite    ' plain 'slog.Error(' 'bold magenta' '$MSG' plain ', "err", err)'
 paint
 paint green '             slog.Error("login failed", "err", err)'
@@ -182,13 +131,22 @@ paint green '             slog.Error("login failed", "err", err)'
 
 <!-- end_slide -->
 
-## Rule Run
-
-> Running the rule shows a diff for every line that logs an error.
+## The Rewrite as a Rule
 
 ```bash +exec_replace
-paint gray '  These lines need no judgment: the code itself says they log an error.'
+paint gray '  rules/log-error.yml'
 ```
+
+```file {2,19}
+path: rules/log-error.yml
+language: yaml
+start_line: 10
+end_line: 28
+```
+
+<!-- end_slide -->
+
+## Every Error Line, Rewritten
 
 ```bash +exec
 ast-grep scan --filter '^log-error$' -C 1 logs
@@ -196,53 +154,21 @@ ast-grep scan --filter '^log-error$' -C 1 logs
 
 <!-- end_slide -->
 
-## Formatting Limit
-
-> slog keeps the value, but not printf formatting.
-
-```bash +exec_replace
-paint cyan '  printf   ' plain 'log.Printf("session %x", id)' gray '         prints  session 1f'
-paint cyan '  slog     ' plain 'slog.Info("session", "id", id)' gray '       prints  id=31'
-paint
-paint yellow '  A line like this is never rewritten; another rule flags it for a person.'
-```
-
-<!-- end_slide -->
-
-## Rules in Neovim
-
-> The same rules run inside your editor, with the fix one key away.
-
-```bash +exec_replace
-paint cyan '  ]d    ' plain 'jump to the next line a rule flags'
-paint cyan '  gra   ' plain 'the rule'"'"'s fix, offered as a code action'
-```
-
-```bash +exec
-./demo.sh rules
-```
-
-<!-- end_slide -->
-
-## Structure Limits
-
-> To ast-grep, the other lines are all the same: a message and one value.
+## Same Shape, Different Fixes
 
 ```bash +exec_replace
 paint cyan '  pattern   ' plain 'log.Printf(' 'bold magenta' '$FMT' plain ', ' 'bold magenta' '$ARG' plain ')'
 paint
-paint green '  ✓  ' plain 'log.Printf("got here %v", r.URL)          ' gray 'should be deleted'
-paint green '  ✓  ' plain 'log.Printf("listening on %s", addr)       ' gray 'should become slog.Info'
-paint green '  ✓  ' plain 'log.Printf("login request: %+v", creds)   ' gray 'needs a person'
-paint
-paint yellow '  A rule carries one fix, and what separates these lines is not in the tree.'
+paint green '  ✓  ' plain 'log.Printf("got here %v", r.URL)        ' gray 'should be deleted'
+paint green '  ✓  ' plain 'log.Printf("listening on %s", addr)     ' gray 'should become slog.Info'
+paint green '  ✓  ' plain 'log.Printf("retrying in %v", backoff)   ' gray 'could be either'
 ```
 
 <!-- end_slide -->
 
 ## Judging Meaning
 
-> How can a tool tell what a line is for, without writing code?
+> How can we tell what a line is for, without a model writing code?
 
 ```bash +exec_replace
 ./journey.sh 4
@@ -250,55 +176,52 @@ paint yellow '  A rule carries one fix, and what separates these lines is not in
 
 <!-- end_slide -->
 
-## Language Models
+## From Meaning to an Action
 
-> Reading a line for its purpose is what language models do well.
-
-```bash +exec_replace
-paint red '  ✗  ' cyan 'a chat model   ' plain 'answers in free text, and often rewrites the code too'
-paint green '  ✓  ' cyan 'what we want   ' plain 'its reading of the line, without the writing'
-```
-
-<!-- end_slide -->
-
-## classif
-
-> classif asks a local model one question and accepts only an answer you listed.
-
-```bash +exec_replace
-paint cyan '  line       ' plain 'log.Printf("got here %v", r.URL)'
-paint cyan '  question   ' plain 'What is this log line for?'
-paint cyan '  answers    ' yellow 'debug       ' plain 'temporary output left while debugging'
-paint plain '             ' yellow 'info        ' plain 'an event someone running the service wants'
-paint plain '             ' yellow 'sensitive   ' plain 'can print a secret or personal data'
-paint gray '               │'
-paint gray '               ▼'
-paint cyan '  classif    ' 'bold yellow' 'debug'
-```
-
-<!-- end_slide -->
-
-## Answer Scores
-
-> The model never writes: classif reads its probability for each answer.
+<!-- new_lines: 2 -->
 
 ```bash +exec_replace
 paint plain '  log.Printf("got here %v", r.URL)'
-paint yellow '    debug       ' green '██████████████████  ' plain '0.92'
-paint yellow '    info        ' gray '█                   ' plain '0.04'
-paint yellow '    sensitive   ' gray '█                   ' plain '0.03'
-paint
-paint plain '  log.Printf("retrying in %v", backoff)'
-paint yellow '    info        ' red '███████████         ' plain '0.55' red '   below 0.9: nothing changes'
-paint yellow '    debug       ' gray '█████████           ' plain '0.44'
-paint
-paint gray '  The number ranks the answers; it is not the chance the answer is right.'
-paint gray '  The 0.9 floor came from a few trial runs; labeled lines should set it.'
+paint gray '                 │'
+paint gray '                 ▼'
+paint 'bold magenta' '              classif'
+paint gray '                 │'
+paint gray '                 ▼'
+paint 'bold yellow' '               debug'
+paint gray '                 │'
+paint gray '                 ▼'
+paint green '          delete the line'
 ```
 
 <!-- end_slide -->
 
-## Acting on Answers
+## Same Shape, Different Answers
+
+```bash +exec
+ast-grep scan --filter '^log-' --include-metadata --json=stream examples/shape.go \
+  | ./triage.sh --pick
+```
+
+<!-- end_slide -->
+
+## Sure and Unsure
+
+<!-- new_lines: 2 -->
+
+```bash +exec_replace
+paint gray '  0.5                                     ' yellow '0.85' gray '                1'
+paint gray '  ├' red '─────────────────────────────────────────' yellow '┼' green '─────────────────' gray '┤'
+paint red '                            ▲' green '                            ▲'
+paint plain '                       retrying in                   got here'
+paint red '                    left for a person' green '               fix applied'
+paint
+paint
+paint gray '  A rule for when to act, not the chance that the answer is right.'
+```
+
+<!-- end_slide -->
+
+## Acting on the Answer
 
 > How can that answer change code safely?
 
@@ -308,81 +231,38 @@ paint gray '  The 0.9 floor came from a few trial runs; labeled lines should set
 
 <!-- end_slide -->
 
-## Answers and Rules
-
-> An answer alone changes nothing, so each answer has its own rule.
+## The Debug Rule
 
 ```bash +exec_replace
-paint yellow '  debug       ' gray '› ' plain 'delete the line'
-paint yellow '  info        ' gray '› ' plain 'rewrite as slog.Info, the value as a named field'
-paint yellow '  sensitive   ' gray '› ' plain 'no fix: the line waits for a person'
-paint
-paint yellow '  Every change is a rule you can read in advance; the model only chooses.'
+paint gray '  rules/log-debug.yml'
+```
+
+```file {2-6,16}
+path: rules/log-debug.yml
+language: yaml
+start_line: 9
+end_line: 24
 ```
 
 <!-- end_slide -->
 
-## Model Answers
+## A Second Question
 
-> Asked about every line, the model picks a rule or leaves the line for a person.
+```file
+path: rules/log-sensitive.yml
+language: yaml
+start_line: 12
+end_line: 15
+```
 
-```bash +exec_replace
-ast-grep scan --filter '^log-' --json=stream --include-metadata logs | ./triage.sh --pick
+```bash +exec
+ast-grep scan --filter '^log-' --include-metadata --json=stream examples/veto.go \
+  | ./triage.sh --pick
 ```
 
 <!-- end_slide -->
 
-## Checks
-
-> Before your files change, the result must pass the checks you would run.
-
-```bash +exec_replace
-paint cyan '  on a copy    ' plain 'the error rule, then the rules the model chose'
-paint gray '                 │'
-paint gray '                 ▼'
-paint cyan '  goimports    ' plain 'adds the log/slog import'
-paint gray '                 │'
-paint gray '                 ▼'
-paint cyan '  go build     ' plain 'the code must compile'
-paint cyan '  go vet       ' plain 'and pass the vet checks'
-paint gray '                 │'
-paint gray '                 ▼'
-paint cyan '  your files   ' plain 'replaced only after every check passed'
-```
-
-<!-- end_slide -->
-
-## Failed Build
-
-> The checks catch real mistakes, even after a right answer.
-
-```bash +exec_replace
-paint plain '  path := r.URL.Path'
-paint plain '  log.Printf("got here %v", path)     ' yellow 'debug' gray ' › ' plain 'delete the line'
-paint
-paint cyan '  go build   ' red './main.go:28:2: path declared and not used'
-paint cyan '  result     ' plain 'the checks failed, so your files stay as they were'
-```
-
-<!-- end_slide -->
-
-## Check Limits
-
-> The checks prove the code compiles, not that every change was right.
-
-```bash +exec_replace
-paint green '  ✓  ' cyan 'caught   ' plain 'a deletion that leaves a variable unused'
-paint red '  ✗  ' cyan 'missed   ' plain 'a line the model wrongly called debug: deleted, still builds'
-paint
-paint yellow '  So every change ends as a diff a person reads,'
-paint yellow '  and lines that can leak a secret get no fix at all.'
-```
-
-<!-- end_slide -->
-
-## Migration
-
-> Run together on a copy, the migration ends with code that still builds.
+## The Whole Service
 
 ```bash +exec_replace
 ./migrate.sh
@@ -390,9 +270,31 @@ paint yellow '  and lines that can leak a secret get no fix at all.'
 
 <!-- end_slide -->
 
-## Where It Fits
+## Every Edit These Rules Can Make
 
-> When is this worth doing, and how do you start?
+```bash +exec
+rg --sort path '^fix:' rules/log-*.yml
+```
+
+<!-- end_slide -->
+
+## A Right Answer That Breaks the Build
+
+```bash +exec_replace
+paint plain '  path := r.URL.Path'
+paint plain '  log.Printf("got here %v", path)     ' yellow 'debug' gray ' › ' plain 'delete the line'
+paint
+paint cyan '  go build   ' red './main.go:28:2: path declared and not used'
+paint cyan '  result     ' plain 'the checks failed, so your files stay as they were'
+paint
+paint red '  ✗  ' cyan 'missed     ' plain 'a line wrongly called debug: deleted, and it still builds'
+```
+
+<!-- end_slide -->
+
+## Your Own Codebase
+
+> When is this worth doing, and how do you try it on your code?
 
 ```bash +exec_replace
 ./journey.sh 6
@@ -400,9 +302,7 @@ paint yellow '  and lines that can leak a secret get no fix at all.'
 
 <!-- end_slide -->
 
-## Good Fit
-
-> This fits when a rule can make every change but cannot pick which one.
+## When a Model Should Pick the Change
 
 ```bash +exec_replace
 paint green '  ✓  ' plain 'every possible change can be written as a rule'
@@ -421,22 +321,19 @@ paint red '  ✗  ' plain 'when the deciding fact lives elsewhere, the model can
 
 ```bash +exec_replace
 paint green '  ✓  ' cyan 'the idea     ' plain 'a model chooses the change; rules make every edit'
-paint green '  ✓  ' cyan 'the recipe   ' plain 'a rule for each change, a model to pick, checks and a diff'
+paint green '  ✓  ' cyan 'the recipe   ' plain 'a rule per change, a model to pick, a veto, checks, a diff'
 paint 'bold yellow' '  ▶  ' cyan 'next step    ' plain 'a change in your code that is right for only some places'
 ```
 
 <!-- end_slide -->
 
-## Install
-
-> To try it you need ast-grep, a local model for classif, and Go's own tools.
+## Installing the Tools
 
 ```bash +exec_replace
 paint cyan '  ast-grep    ' plain 'cargo install ast-grep --locked'
 paint gray '              or npm i -g @ast-grep/cli, or brew install ast-grep'
 paint cyan '  classif     ' plain 'Ollama and a local model; jq for the scripts'
 paint cyan '  goimports   ' plain 'go install golang.org/x/tools/cmd/goimports@latest'
-paint cyan '  Neovim      ' plain '0.12 or newer, for v an'
 paint
 paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 ```
@@ -449,7 +346,7 @@ paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 ast-grep rules:   https://ast-grep.github.io/guide/rule-config.html
 Playground:       https://ast-grep.github.io/playground.html
 log/slog:         https://pkg.go.dev/log/slog
-Tree selection:   :help treesitter-incremental-selection
+Syntax tree:      :InspectTree in Neovim
 classif:          https://github.com/Piotr1215/classif
 Channel:          youtube.com/@cloud-native-corner
 ```
