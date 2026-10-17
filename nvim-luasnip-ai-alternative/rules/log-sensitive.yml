@@ -1,0 +1,20 @@
+id: log-sensitive
+language: go
+severity: hint
+message: Secret or personal data? Flag it for review
+# Every rule here matches the same structure, log.Printf with one verb and
+# one argument, so syntax alone cannot say what the line is for.
+# No fix: a person decides what this line may print.
+metadata:
+  choose: What is this log line for?
+  option: sensitive=the line can print a secret or personal data, like a password, a token, an email address or a whole credentials record
+  min_p: 0.9
+rule:
+  pattern: log.Printf($FMT, $ARG)
+  inside:
+    kind: expression_statement
+  not:
+    pattern: log.Printf($FMT, err)
+constraints:
+  FMT:
+    regex: '^"[^%]*%[-+# 0-9.]*[a-zA-Z][^%]*"$'

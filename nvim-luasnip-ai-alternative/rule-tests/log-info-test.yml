@@ -1,0 +1,8 @@
+id: log-info
+valid:
+  - 'log.Printf("login failed: %v", err)'
+  - 'log.Printf("%s took %v", name, d)'
+  - 'fmt.Printf("listening on %s", addr)'
+invalid:
+  - 'log.Printf("listening on %s", addr)'
+  - 'log.Printf("user %v logged in", creds.Email)'

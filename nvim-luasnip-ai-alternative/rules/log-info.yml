@@ -1,0 +1,31 @@
+id: log-info
+language: go
+severity: hint
+message: An event? Move it to slog.Info
+# Every rule here matches the same structure, log.Printf with one verb and
+# one argument, so syntax alone cannot say what the line is for.
+metadata:
+  choose: What is this log line for?
+  option: info=an event someone operating the service wants in the logs, like startup, a request outcome or a duration
+  min_p: 0.9
+rule:
+  pattern: log.Printf($FMT, $ARG)
+  inside:
+    kind: expression_statement
+  not:
+    pattern: log.Printf($FMT, err)
+constraints:
+  FMT:
+    regex: '^"[^%]*%[-+# 0-9.]*[a-zA-Z][^%]*"$'
+transform:
+  BARE:
+    replace:
+      source: $FMT
+      replace: '\s*%[-+# 0-9.]*[a-zA-Z]'
+      by: ''
+  MSG:
+    replace:
+      source: $BARE
+      replace: ':"$'
+      by: '"'
+fix: 'slog.Info($MSG, "$ARG", $ARG)'

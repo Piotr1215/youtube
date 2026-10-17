@@ -1,0 +1,26 @@
+id: log-error
+language: go
+severity: info
+message: An error goes to slog.Error
+# Every rule here matches the same structure, log.Printf with one verb and
+# one argument, so syntax alone cannot say what the line is for.
+# This one needs no model: the argument is err, and syntax can see that.
+rule:
+  pattern: log.Printf($FMT, err)
+  inside:
+    kind: expression_statement
+constraints:
+  FMT:
+    regex: '^"[^%]*%[-+# 0-9.]*[a-zA-Z][^%]*"$'
+transform:
+  BARE:
+    replace:
+      source: $FMT
+      replace: '\s*%[-+# 0-9.]*[a-zA-Z]'
+      by: ''
+  MSG:
+    replace:
+      source: $BARE
+      replace: ':"$'
+      by: '"'
+fix: 'slog.Error($MSG, "err", err)'

@@ -1,0 +1,6 @@
+id: log-error
+valid:
+  - 'log.Printf("listening on %s", addr)'
+  - 'log.Printf("failed: %v %v", err, id)'
+invalid:
+  - 'log.Printf("login failed: %v", err)'

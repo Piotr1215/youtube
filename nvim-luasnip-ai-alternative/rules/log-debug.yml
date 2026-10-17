@@ -1,0 +1,20 @@
+id: log-debug
+language: go
+severity: hint
+message: Debug output? Remove it
+# Every rule here matches the same structure, log.Printf with one verb and
+# one argument, so syntax alone cannot say what the line is for.
+metadata:
+  choose: What is this log line for?
+  option: debug=temporary output a developer left while debugging, of no use to someone running the service
+  min_p: 0.9
+rule:
+  pattern: log.Printf($FMT, $ARG)
+  inside:
+    kind: expression_statement
+  not:
+    pattern: log.Printf($FMT, err)
+constraints:
+  FMT:
+    regex: '^"[^%]*%[-+# 0-9.]*[a-zA-Z][^%]*"$'
+fix: ''

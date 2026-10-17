@@ -1,0 +1,24 @@
+id: log-debug
+snapshots:
+  "log.Printf(\"listening on %s\", addr)":
+    fixed: ""
+    labels:
+    - source: log.Printf("listening on %s", addr)
+      style: primary
+      start: 0
+      end: 35
+    - source: log.Printf("listening on %s", addr)
+      style: secondary
+      start: 0
+      end: 35
+  "log.Printf(\"user %v logged in\", creds.Email)":
+    fixed: ""
+    labels:
+    - source: log.Printf("user %v logged in", creds.Email)
+      style: primary
+      start: 0
+      end: 44
+    - source: log.Printf("user %v logged in", creds.Email)
+      style: secondary
+      start: 0
+      end: 44
