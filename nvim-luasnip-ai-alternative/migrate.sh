@@ -3,9 +3,9 @@
 # every call and builds every fix, classif decides which fix each call gets,
 # and Go's own tools check the result.
 #
-#   ./migrate.sh [--apply] [DIR]
+#   ./migrate.sh [--diff | --apply] [DIR]
 #
-# The work happens on a copy of DIR (default: logs), in four steps:
+# The work happens on a copy of DIR (default: logs), in three steps:
 #
 #   1  syntax   ast-grep applies the fixes no model needs: a call logging err
 #               moves to slog.Error
@@ -14,16 +14,16 @@
 #               event moves to slog.Info, and a sensitive or unsure line stays
 #               for a person
 #   3  verify   goimports, go build and go vet must pass on the copy
-#   4  result   the diff against DIR
 #
-# Without --apply nothing outside the copy changes. With --apply the copy's
-# files replace DIR's, and only after step 3 passed.
+# Without a flag nothing outside the copy changes. --diff then prints the diff
+# against DIR. --apply prints it and copies the files into DIR, only after
+# step 3 passed.
 set -euo pipefail
 
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-apply=false
-if [[ ${1:-} == --apply ]]; then
-	apply=true
+mode=check
+if [[ ${1:-} == --diff || ${1:-} == --apply ]]; then
+	mode="${1#--}"
 	shift
 fi
 pkg="$(cd -- "${1:-${dir}/logs}" && pwd)"
@@ -45,7 +45,9 @@ scan() {
 
 cd "${work}"
 step 1 'syntax: ast-grep applies the fixes no model needs'
-scan --filter '^log-error$' --json=stream | jq -r '"  \(.file):\(.range.start.line + 1)  \(.text)  › \(.replacement)"'
+scan --filter '^log-error$' --json=stream | jq -r '
+	"  \u001b[32m✓\u001b[0m \u001b[36m\(.file):\(.range.start.line + 1)\u001b[0m  \(.text)  \u001b[33msyntax\u001b[0m",
+	"    \u001b[38;2;128;128;128mfix ›\u001b[0m \u001b[32m\(.replacement)\u001b[0m"'
 scan --filter '^log-error$' -U >/dev/null
 
 step 2 'meaning: classif picks what each other line is for'
@@ -58,12 +60,13 @@ if ! { goimports -w . && go build -o /dev/null ./... && go vet ./...; }; then
 fi
 printf '  \e[32m✓ builds and vets\e[0m\n'
 
-step 4 'result'
+[[ ${mode} == check ]] && exit 0
+printf '\n'
 for file in ./*.go; do
 	file="${file#./}"
 	diff -U1 --color=always --label "a/${pkg##*/}/${file}" --label "b/${pkg##*/}/${file}" -- "${pkg}/${file}" "${file}" || true
 done
-if ${apply}; then
+if [[ ${mode} == apply ]]; then
 	cp -- ./*.go "${pkg}/"
 	printf '\n  \e[32mwritten to %s\e[0m\n' "${pkg}"
 fi

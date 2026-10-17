@@ -14,8 +14,8 @@
 # in metadata.choose. classif -e picks one name per call, and that rule's fix
 # lands; none keeps the call as a warning.
 #
-# Without a mode it prints one row per call: ✗ still a finding, ✓ cleared,
-# with the fix that would land. The modes:
+# It prints one row per call, ✗ still a finding or ✓ settled, with the fix
+# that lands. Without a mode nothing is written. The modes:
 #
 #   --json    one object per call, for demo-init.lua
 #   --diff    the rows, then a diff of the fixes that land
@@ -175,10 +175,8 @@ while IFS= read -r group; do
 	printf "  ${mark}\\e[0m \\e[36m%s\\e[0m  %s  \\e[33m%s %s\\e[0m\\n" "${where}" "${text}" "${label:-none}" "${p}"
 	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
 	[[ ${fix} == null ]] && continue
-	if [[ ${mode} == rows ]]; then
-		fix="$(jq -r . <<<"${fix}")"
-		printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "${fix:-(the line is removed)}"
-	else
+	printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "$(jq -r '. | if . == "" then "(the line is removed)" else . end' <<<"${fix}")"
+	if [[ ${mode} != rows ]]; then
 		jq -r '[.file,
 			(.replacementOffsets.start // .range.byteOffset.start),
 			(.replacementOffsets.end // .range.byteOffset.end),
