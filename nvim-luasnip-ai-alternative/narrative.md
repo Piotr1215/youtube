@@ -1,78 +1,145 @@
 # Narrative
 
-The story of the video, written before any slide. Each numbered beat is one moment of the story: what the presenter says, in two or three sentences. The story decides how many slides a beat needs. Each part becomes a chapter. The slides are the presenter's props, not the source of the story: a real file, real command output, a diagram or the chapter map, never what the presenter says aloud. A beat marked live has no slide; the presenter shows it in Neovim. When the slides and this file disagree, this file wins.
+The story of the video, written before any slide. Each numbered beat is one moment of the story: what the presenter says, in two or three sentences. The story decides how many slides a beat needs. Each part becomes a chapter. The slides are the presenter's props, not the source of the story: a real file, real command output, a diagram or the chapter map, never what the presenter says aloud. A beat marked live has no slide of its own; the presenter shows it in Neovim. When the slides and this file disagree, this file wins.
+
+The video climbs four levels: text search, structural search, rules, and a model's judgment on top. Level 3 is the payoff the viewer takes home. Level 4 is an experiment, shown with its limits.
 
 ## Journey
 
-- Problem the viewer knows: making the same change in many places of a codebase.
-- Why the usual ways fall short: find and replace sees only text, by hand does not scale, and an AI assistant writes new code that needs a line-by-line review.
-- What the viewer needs to understand: code tools can recognize text, understand structure, judge meaning, and act on that judgment, and each job can go to the tool that does it reliably.
-- How each step leads to the next: text search cannot see code, so syntax trees; structure cannot see meaning, so a model judges; a model should not edit code, so it only picks among rules written in advance; a right edit can still break the build, so the compiler checks before anything is written.
-- So what: a change that depends on what code means can be automated without a model writing any code.
-- Now what: write each possible change as a rule, let a model pick among them, and let the compiler check the result.
-- Then what: try it on a change in your own code that is right for only some places, and set the threshold from labeled examples.
-- What the viewer can do at the end: automate a change whose right edit differs from place to place, without a model writing code, with every edit a readable rule checked by the compiler.
+- Problem the viewer knows: making the same change in many places of a codebase, and keeping it made.
+- Why the usual ways fall short: find and replace sees only text, by hand does not scale, and an AI assistant writes hundreds of new edits that each need a review.
+- What the viewer needs to understand: code is a tree; you search the tree by writing code with placeholders; a rule captures a search and its rewrite so it runs the same way everywhere, from the shell or in the editor.
+- How each step leads to the next: text search cannot see code, so syntax trees; a search is gone once it has run, so rules; rules cannot tell apart code with the same shape, so a model answers one question about each match.
+- So what: a change you would make in a hundred places becomes one rule you can read, test and keep.
+- Now what: write the rule, or have an AI draft it and let its tests check the draft; run it across the code; keep it running in your editor.
+- Then what: where a rule needs a judgment structure cannot make, try a local model's answer as a suggestion, and trust it only as far as it proves right on your code.
+- What the viewer can do at the end: search and rewrite code by structure with ast-grep, write and test rules, use them in Neovim, and know where a model's judgment helps and where it cannot be trusted alone.
+
+## Subject and example
+
+- Subject: working with code by its structure, from search to tested rules in your editor, with a model for the judgments structure cannot make.
+- Example: moving a Go service from log.Printf to log/slog.
 
 ## Narration
 
 ### Opening
 
-1. We open on the result: a diff where some log lines became slog calls, one was deleted, and others were left alone, with no line of it written by a model. Your coding agent could do six lines; the end shows what this gives you that it does not. Every codebase eventually needs the same change in many places: a library swap, an API change, a new convention. Find and replace only sees text, doing it by hand does not scale, and an AI assistant writes new code that someone has to review line by line.
+1. We open on the result: a diff where every line in a service that logs an error became a structured slog call. An AI helped write the rule behind it, but no AI wrote these edits: the rule did, and it would do the same on the next thousand lines.
 
-2. Our example: since Go 1.21 the standard library has structured logging, log/slog, where every logged value has a name you can filter on. Moving a service from the older log.Printf to slog is a change many Go teams face.
+2. Every codebase eventually needs the same change in many places: a library swap, an API change, a new convention. Find and replace only sees text, doing it by hand does not scale, and an AI assistant writes hundreds of new edits that someone has to review one by one.
 
-3. The catch is that the log lines need different changes. An error becomes slog.Error, a leftover "got here" should be deleted, a startup message becomes slog.Info, and a line that prints a password needs a person to decide.
+3. Our example: since Go 1.21 the standard library has structured logging, log/slog, where every logged value has a name you can filter on. Moving a service from log.Printf to slog is a change many Go teams face.
 
-4. So the right change depends on what each line is for. To automate it we have to find every log line, see its structure, judge what each line is for, and apply the right change, and each of those steps exists because the one before it hits a wall.
+### Text search
 
-### Text
+4. grep finds every log.Printf instantly, but it only compares characters. Ask it for the calls that log an error and it misses one split over two lines and matches one inside a comment. Every new layout needs another patch to the regex, because a regex never knows what a call is.
 
-5. grep finds every log.Printf instantly, but it only compares characters. Ask it for the calls that log err and it misses one split over two lines and matches one inside a comment. A smarter regex can patch each case, but every new layout needs another patch, and the regex never knows what a call or an argument is.
+### Syntax trees
 
-### Structure
+5. To see code instead of characters, we read it the way a compiler does, as a syntax tree: a call, the function it calls, its arguments. Your editor already builds this tree. In Neovim you can open it beside the code and watch the split call light up as one call, and the comment as a comment. Live in Neovim.
 
-6. To see code instead of characters, we read it the way a compiler does, as a syntax tree: a call, the function it calls, its arguments. Spacing and line breaks are gone, and a comment becomes a comment node, never a call.
+6. ast-grep searches that tree, and you write the search as code: the code you want to find, with a placeholder where it may differ. The pattern becomes a tree too, so it matches by shape: the split call is found and the comment is skipped.
 
-7. Your editor already builds this kind of tree, with tree-sitter, to highlight and select code. In Neovim you can open it beside the code and watch each part light up. Live in Neovim, no slide.
+### Rules
 
-8. We search the tree by writing the code we want to find, with a placeholder where it may differ: log.Printf($FMT, err). The pattern becomes a tree too, so ast-grep matches by shape: it finds every call whose second argument is err, whatever the line breaks, and a commented-out call is not a call.
+7. Finding is half the job. The placeholders remember what they matched, so the new line is built from the old one: the message without its format verb, and the error as a named field.
 
-9. Finding is half the job: we want every error line rewritten the same way, without hand edits. The placeholders remember what they matched, so the new line is built from the old one: our first rule turns each error line into slog.Error, with the error as a named field. Captured as a rule, with a pattern to find, a transform to reshape the message and a fix to write, the change runs the same way on every line, every time.
+8. Written down as a rule, the search, the reshaping and the rewrite live in one small file you can read, commit and share. Its tests list code the rule must flag and code it must leave alone, so an edit to the rule that breaks either fails before it touches your code.
 
-10. Running the rule prints that rewrite as a diff for every line that logs an error; with -U, ast-grep writes it into the files. These lines need no judgment: the code itself says they log an error.
+9. Run across the service, the rule rewrites every line that logs an error, and shows the change as a diff first.
 
-11. Not every line can be rewritten this way, because a rewrite must never change what a log says. slog keeps the value but not printf formatting: a %x line that printed session 1f would print id=31, and a search for the hex id would find nothing. So no rule rewrites such a line; another rule flags it for a person, so no line is skipped without a word. Said in passing, no slide.
+10. The same rule runs in your editor. Neovim talks to ast-grep's language server, so every match is underlined as you read and its fix is one code action away. Write a new log.Printf with an error tomorrow and it is flagged as you type: the change is made once and stays made. Live in Neovim.
 
-12. The same rules run inside your editor: each line is flagged as you read it, and the rule's fix is one key away. Optional, live in Neovim, no slide.
+11. Writing rules takes practice, and this is where an AI assistant earns its place. Describe the change in a sentence and it drafts the rule and its tests. You do not trust the draft: you run its tests and read twenty lines, instead of reviewing three hundred edits. From then on the rule makes every edit, the same way every time, with no model involved.
 
-13. The remaining lines each need a different fix: delete the debug print, move the event to slog.Info, leave the password line for a person. To automate them we must pick the right fix for each line, but by structure they all look the same, a call with a message and one value. A rule carries one fix, and what picks the right one is what the line means, which is not in the tree.
+12. Not every line can be rewritten by a rule. slog keeps the value but not printf formatting, so a %x line would lose its hex, and a second rule flags those lines for a person instead. Said in passing, no slide.
 
-### Meaning
+### Semantic checks
 
-14. Understanding what a line means, beyond its structure, is what language models do well, but a chat model answers in free text and often rewrites the code too. We want the understanding without the writing.
+13. The lines left over look the same to the tree: a call with a message and a value. One is a debug print someone forgot, one is a startup event, one prints an email address. What sets them apart is what each line means, and no pattern can see that.
 
-15. classif asks a model on your own machine one question, "What is this log line for?", and accepts only an answer from your list: debug or info. For "got here" it answers debug.
+14. Telling what text means is what language models do well, but a chat model answers in free text and rewrites code along the way. classif asks a small model on your own machine one question about each match, and the model may only answer from your list: debug or info, yes or no. Each answer comes with a score.
 
-16. Why trust an answer like that? classif never lets the model write: it reads the probability the model gives each of your answers and takes the highest. That number ranks the answers; it is not the chance the answer is right, which only checking the model against lines with known answers can tell you. The 0.85 floor here, below which nothing changes, came from a few trial runs, and the scores move a little from run to run.
+15. The question lives in the rule, next to the fix each answer points to, so ast-grep asks it of every match and the answer picks which fix to suggest. In Neovim the question and the answer appear above each call, and you take the fix or leave it. Live in Neovim.
 
-### Action
+16. A second question looks at the same lines from another side: does this value hold a secret or personal data? A yes means no fix is suggested at all, and the line waits for a person.
 
-17. An answer on its own changes nothing, so each answer gets its own ast-grep rule file, with the question and the answer next to its fix: debug deletes the line and info writes slog.Info. A second question, asked of every line on its own, checks whether the value is a secret or personal data, because a useful event can still print an email address; a yes stops any fix, and the line waits for a person. Every possible change is a rule you can read before the model runs, and the model only chooses.
+17. This is an experiment, and its limits are real. The score ranks the answers; it is not the chance of being right. On forty test lines from code the model had never seen, the small model chose right about six times in ten, and some wrong answers came with high scores. A larger model on a laptop was right four times in five, but rarely sure. So the answers are suggestions you read, never edits that land on their own.
 
-18. ast-grep finds every line and reads the question from the rule files, and classif answers. Asked about every line, the model sends the events to slog.Info and the debug print to deletion. It leaves the lines that print a password or an email address for a person, and a retry message it was unsure about.
-
-19. Before your files change, the result has to pass the checks you would run yourself. The changes run on a copy, goimports adds the import, and go build and go vet must pass.
-
-20. Those checks catch real mistakes. If the debug line was the only use of a variable, deleting it is right, but Go refuses to compile, and your files stay as they were.
-
-21. They also have a limit: they prove the code compiles, not that every change was right. A line the model wrongly called debug would be deleted and still build, so every change ends as a diff a person reads, and lines that can leak a secret get no fix at all.
-
-22. Run together, the rules move errors and events to slog, remove the debug print, leave the risky lines for a person, and end with code that builds.
+18. That still leaves an interesting possibility: a structural match plus one question a local model answers in about a third of a second, without your code leaving the machine. The question is yours to write, and the tree decides what the model reads.
 
 ### Close
 
-23. This fits when every possible change can be written as a rule, structure cannot pick between them, the deciding fact is in the text the model sees, and a wrong answer is easy to catch in the diff.
+19. Rules fit any change you can describe by its shape: a library swap, a review comment you keep writing, a pattern your team has banned. A model's question fits only where a person would decide by reading the code in front of them, and where a wrong answer costs a look, not a broken file.
 
-24. The model adds meaning between two deterministic steps and replaces neither. Start with a change in your own code that is right for only some of the places it matches.
+20. Let the tree find and the rule rewrite; let a model suggest only where meaning decides. Start with a review comment you keep writing, and make it a rule.
 
-25. To try it you need ast-grep, Ollama with a local model for classif, and Go's own tools.
+21. To try it you need ast-grep, Neovim with its language server, and for the experiment, Ollama with a local model for classif.
+
+## Sources for beat 17
+
+Measured on 2026-10-17 with the deck's own question and answers, the function around each line as context, and the 0.85 floor. Twenty pairs of identical lines in different functions, written by an agent that did not see the rules; its intent for each line is the answer key, not a person's label. Small model, winnow 12B: 25 of 40 right, and 6 wrong answers scored above the floor. Larger model, ornith 35B on the Mac: 32 of 40 right, and 6 answers of the 40 scored above the floor, one of them wrong.
+
+## Slides
+
+Each line: the slide, the question the viewer has when it appears, and its state. Keep means the slide exists and stays; new needs building; cut leaves the deck.
+
+### Opening
+
+- Code Intelligence: title. Keep.
+- Bulk Code Changes: why is changing code in many places still hard? Keep.
+- Before and After: what does the end look like? Change: the diff from the error rule alone.
+- From log.Printf to log/slog: what change, and why make it? Keep.
+- The Log Lines in Our Service: how many places? Keep.
+- The Usual Ways: surely a find and replace? Keep; the AI row says hundreds of edits to review.
+
+### Text search
+
+- Text Search: what does a text search see in code? Keep.
+- Finding Error Calls with grep: would grep do? Keep.
+
+### Syntax trees
+
+- Syntax Trees: how do we see code as code? Keep.
+- The Syntax Tree, Live: what does a tree look like? Keep, live in Neovim.
+- A Pattern Written as Code: how do I search a tree? Keep.
+- Finding Error Calls by Structure: does it get that file right? Keep.
+
+### Rules
+
+- Rules: how does a search become a change you keep? New divider.
+- Building the New Line from the Old: can it change them too? Keep.
+- The Rewrite as a Rule: where does that live? Keep.
+- Rule Tests: how do I know the rule is right? New: the test file, then the test run.
+- Every Error Line, Rewritten: what happens across the service? Keep.
+- Rules in Neovim: does this live only in the shell? New, live: diagnostics and the code action.
+- A Rule Drafted by an AI: do I have to learn to write these? New, live or replayed: one sentence, the draft, its tests.
+
+### Semantic checks
+
+- Semantic Checks: what can a model add where the tree cannot decide? Divider, renamed from Judging Meaning.
+- Same Shape, Different Fixes: what is left? Keep, moved here.
+- From Meaning to an Action: how could anything decide? Keep; it ends on the suggested fix.
+- From the Rule to classif: where does the question come from? Keep, merged with The Debug Rule: the rule file, then the call it makes.
+- Same Shape, Different Answers: does it tell them apart? Keep.
+- classif in Neovim: what does that look like while I work? New, live: the question and answer above each call.
+- A Second Question: what about the email line? Keep.
+- Limits: can I trust it? New: the measured numbers.
+
+### Your own codebase
+
+- Your Own Codebase: when is this worth doing? Keep.
+- Where Rules and Questions Fit: which of my changes fit? Rewritten from When a Model Should Pick the Change.
+- Takeaways: what do I keep? Rewritten.
+- Installing the Tools: how do I start? Keep; Neovim's language server row comes back.
+- Resources, That's All Folks: keep.
+
+### Cut
+
+Sure and Unsure, The Debug Rule (merged), Acting on the Answer, The Whole Service, Every Edit These Rules Can Make, A Right Answer That Breaks the Build.
+
+### To verify before building
+
+- ast-grep's language server in Neovim, flagging and fixing in the deck's service.
+- An AI drafting a rule that passes its tests from one sentence; if it needs tries, the slide replays a recorded run.
+- The :Classif view, restored from git history (commit d892da5 deleted it).
