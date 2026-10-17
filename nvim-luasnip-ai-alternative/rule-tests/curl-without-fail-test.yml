@@ -1,0 +1,6 @@
+id: curl-without-fail
+valid:
+  - curl -fsSL https://example.com
+  - curl --fail-with-body https://example.com
+invalid:
+  - curl -sSL https://example.com -o out

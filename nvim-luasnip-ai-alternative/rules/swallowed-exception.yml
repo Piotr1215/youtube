@@ -1,0 +1,9 @@
+id: swallowed-exception
+language: python
+severity: error
+message: pass hides the failure
+rule:
+  kind: except_clause
+  has:
+    kind: block
+    regex: ^pass$

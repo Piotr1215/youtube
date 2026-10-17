@@ -1,0 +1,12 @@
+digraph snippet_lifecycle {
+  rankdir=LR;
+  node [shape=box];
+
+  expand [label="expand\ntrigger, M-l"];
+  active [label="active\nextmarks hold\neach node"];
+  exit [label="exit\nlast jump, i(0)\nor cursor leaves"];
+
+  expand -> active;
+  active -> active [label="M-l M-h M-j"];
+  active -> exit;
+}

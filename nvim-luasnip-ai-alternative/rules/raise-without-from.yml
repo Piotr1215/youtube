@@ -1,0 +1,20 @@
+id: raise-without-from
+language: python
+severity: warning
+message: Chain the cause with from
+rule:
+  pattern: raise $EXC
+  not:
+    has:
+      field: cause
+      pattern: $CAUSE
+  inside:
+    kind: except_clause
+    stopBy: end
+    has:
+      field: value
+      kind: as_pattern
+      has:
+        field: alias
+        pattern: $ERR
+fix: raise $EXC from $ERR

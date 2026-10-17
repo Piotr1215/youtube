@@ -1,0 +1,13 @@
+id: swallowed-exception
+valid:
+  - |
+    try:
+        deploy()
+    except CalledProcessError as err:
+        log(err)
+invalid:
+  - |
+    try:
+        deploy()
+    except CalledProcessError:
+        pass

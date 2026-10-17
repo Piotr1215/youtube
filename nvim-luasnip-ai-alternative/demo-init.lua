@@ -14,13 +14,29 @@ vim.api.nvim_create_autocmd("BufWriteCmd", {
 	end,
 })
 
+-- Your colorschemes.lua dims the background on FocusLost. The caption card
+-- holds focus while it waits for Space, so the demo drops that dimming.
+for _, au in ipairs(vim.api.nvim_get_autocmds({ event = "FocusLost" })) do
+	if type(au.callback) == "function" then
+		local source = debug.getinfo(au.callback, "S").source
+		if source:find("colorschemes.lua", 1, true) then
+			vim.api.nvim_del_autocmd(au.id)
+		end
+	end
+end
+
 -- -S runs after the file has loaded, past the FileType event that attaches a
--- server, so the buffer is read again once ast_grep is enabled.
+-- server, so the buffer is read again once ast_grep is enabled. nvim-lspconfig
+-- lists bash but not sh, the filetype Neovim gives a .sh file.
+vim.lsp.config("ast_grep", {
+	filetypes = vim.list_extend(vim.deepcopy(vim.lsp.config.ast_grep.filetypes), { "sh" }),
+})
 vim.lsp.enable("ast_grep")
 vim.cmd.edit()
 
 local dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h")
 dofile(dir .. "/luasnip-go-errors.lua")
+dofile(dir .. "/luasnip-python-bash.lua")
 
 -- Your snippet keys from config/luasnip.lua. mappings.lua loads later and maps
 -- <A-l> in insert mode and <A-j> in visual mode, which shadows two of them, so

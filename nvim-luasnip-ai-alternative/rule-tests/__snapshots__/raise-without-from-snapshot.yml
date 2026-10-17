@@ -1,0 +1,27 @@
+id: raise-without-from
+snapshots:
+  "try:\n    fetch()\nexcept ConnectionError as err:\n    raise RuntimeError(\"fetch failed\")\n":
+    fixed: |
+      try:
+          fetch()
+      except ConnectionError as err:
+          raise RuntimeError("fetch failed") from err
+    labels:
+    - source: raise RuntimeError("fetch failed")
+      style: primary
+      start: 52
+      end: 86
+    - source: err
+      style: secondary
+      start: 43
+      end: 46
+    - source: ConnectionError as err
+      style: secondary
+      start: 24
+      end: 46
+    - source: |-
+        except ConnectionError as err:
+            raise RuntimeError("fetch failed")
+      style: secondary
+      start: 17
+      end: 86

@@ -1,0 +1,11 @@
+id: curl-without-fail
+language: bash
+severity: warning
+message: Fail on HTTP errors with --fail
+rule:
+  pattern: curl $$$ARGS
+  not:
+    has:
+      field: argument
+      regex: ^(--fail.*|-[a-zA-Z]*f[a-zA-Z]*)$
+fix: curl --fail $$$ARGS

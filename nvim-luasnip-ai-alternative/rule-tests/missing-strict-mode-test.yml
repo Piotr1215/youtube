@@ -1,0 +1,10 @@
+id: missing-strict-mode
+valid:
+  - |
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo ready
+invalid:
+  - |
+    #!/usr/bin/env bash
+    echo ready
