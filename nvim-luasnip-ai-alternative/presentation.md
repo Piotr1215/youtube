@@ -38,10 +38,10 @@ paint red '  ✗  ' cyan 'an AI assistant    ' plain 'reads the code, then write
 
 ```bash +exec_replace
 paint cyan '  before   ' plain 'log.Printf("login failed: %v", err)'
-paint gray '           login failed: no password'
+paint gray '           2026/10/17 19:32:33 login failed: no password'
 paint
 paint cyan '  after    ' plain 'slog.Error("login failed", ' 'bold green' '"err", err' plain ')'
-paint gray '           ERROR login failed ' green 'err="no password"'
+paint gray '           2026/10/17 19:32:33 ERROR login failed ' green 'err="no password"'
 paint
 paint yellow '  Plenty of Go code still uses log.Printf, so this is a migration many teams face.'
 ```
@@ -94,6 +94,8 @@ paint yellow '  Each step exists because the one before it hits a wall.'
 > grep finds every log.Printf instantly, but it only compares characters.
 
 ```bash +exec_replace
+paint cyan '  calls that log err   ' plain "rg 'log\.Printf\(.*, err\)'"
+paint
 paint red '  ✗  ' plain 'a call split over two lines: ' red 'missed'
 paint gray '       log.Printf('
 paint gray '           "server stopped: %v", err)'
@@ -101,8 +103,7 @@ paint
 paint red '  ✗  ' plain 'a call that is commented out: ' red 'matched'
 paint gray '       // log.Printf("failed: %v", err)'
 paint
-paint red '  ✗  ' plain 'calls whose argument is err: ' red 'no way to ask'
-paint gray '       to grep there are no arguments, only characters'
+paint yellow '  To grep there are no calls or arguments, only characters on a line.'
 ```
 
 <!-- end_slide -->
