@@ -2,8 +2,10 @@ id: log-sensitive
 language: go
 severity: hint
 message: Secret or personal data? Flag it for review
-# Every rule here matches the same structure, log.Printf with one verb and
-# one argument, so syntax alone cannot say what the line is for.
+# Every rule here matches the same structure, log.Printf with one plain verb
+# (%v, %+v, %s or %d) and one argument, so syntax alone cannot say what the line
+# is for. slog keeps the value but not printf formatting, so a %x or a width
+# would be lost: those lines match no rule and stay as they are.
 # No fix: a person decides what this line may print.
 metadata:
   choose: What is this log line for?
@@ -17,4 +19,4 @@ rule:
     pattern: log.Printf($FMT, err)
 constraints:
   FMT:
-    regex: '^"[^%]*%[-+# 0-9.]*[a-zA-Z][^%]*"$'
+    regex: '^"[^%]*%(\+v|[vsd])[^%]*"$'

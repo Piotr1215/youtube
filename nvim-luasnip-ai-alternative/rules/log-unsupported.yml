@@ -1,0 +1,24 @@
+id: log-unsupported
+language: go
+severity: info
+message: slog cannot keep this formatting; a person decides
+# The other log rules take one argument with a plain %v, %+v, %s or %d. Any
+# other log.Printf, such as a %x or two arguments, matches none of them, so
+# this rule flags it for a person instead of letting it pass unseen. It needs
+# no model and offers no fix.
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: ^log\.Printf$
+  inside:
+    kind: expression_statement
+  not:
+    all:
+      - pattern: log.Printf($FMT, $ARG)
+      - has:
+          field: arguments
+          has:
+            kind: interpreted_string_literal
+            nthChild: 1
+            regex: '^"[^%]*%(\+v|[vsd])[^%]*"$'

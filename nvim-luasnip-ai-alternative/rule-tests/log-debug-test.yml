@@ -3,6 +3,7 @@ valid:
   - 'log.Printf("login failed: %v", err)'
   - 'log.Printf("%s took %v", name, d)'
   - 'fmt.Printf("listening on %s", addr)'
+  - 'log.Printf("got here %5d", n)'
 invalid:
   - 'log.Printf("listening on %s", addr)'
   - 'log.Printf("user %v logged in", creds.Email)'

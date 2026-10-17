@@ -44,21 +44,24 @@ scan() {
 }
 
 cd "${work}"
-step 1 'syntax: ast-grep applies the fixes no model needs'
+step 1 'Lines that log an error: the rule rewrites them, no model needed'
 scan --filter '^log-error$' --json=stream | jq -r '
-	"  \u001b[32m✓\u001b[0m \u001b[36m\(.file):\(.range.start.line + 1)\u001b[0m  \(.text)  \u001b[33msyntax\u001b[0m",
+	"  \u001b[32m✓\u001b[0m \u001b[36m\(.file):\(.range.start.line + 1)\u001b[0m  \(.text)  \u001b[33mno model\u001b[0m",
 	"    \u001b[38;2;128;128;128mfix ›\u001b[0m \u001b[32m\(.replacement)\u001b[0m"'
-scan --filter '^log-error$' -U >/dev/null
+scan --filter '^log-error$' -U >/dev/null 2>&1
+scan --filter '^log-unsupported$' --json=stream | jq -r '
+	"  \u001b[31m✗\u001b[0m \u001b[36m\(.file):\(.range.start.line + 1)\u001b[0m  \(.text)  \u001b[33mno model\u001b[0m",
+	"    \u001b[38;2;128;128;128mleft for a person: slog cannot keep this formatting\u001b[0m"'
 
-step 2 'meaning: classif picks what each other line is for'
+step 2 'The other lines: the model says what each is for, and its answer picks the rule'
 scan --filter '^log-' --json=stream --include-metadata | "${dir}/triage.sh" --pick --apply
 
-step 3 'verify: goimports, go build, go vet'
+step 3 'Checks: goimports, then the code must build and pass go vet'
 if ! { goimports -w . && go build -o /dev/null ./... && go vet ./...; }; then
-	printf '  \e[31mverification failed; %s is unchanged\e[0m\n' "${pkg}" >&2
+	printf '  \e[31mthe checks failed, so %s is unchanged\e[0m\n' "${pkg}" >&2
 	exit 1
 fi
-printf '  \e[32m✓ builds and vets\e[0m\n'
+printf '  \e[32m✓ the code builds and passes go vet\e[0m\n'
 
 [[ ${mode} == check ]] && exit 0
 printf '\n'
