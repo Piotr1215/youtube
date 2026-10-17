@@ -95,6 +95,15 @@ rg -n 'log\.Printf\(.*, err\)' examples/calls.go
 
 <!-- end_slide -->
 
+## The Syntax Tree, Live
+
+```bash +exec
+/// nvim() { tmux new-window -c "${PWD}" -n tree nvim -i NONE --cmd 'set noswapfile' --cmd 'let g:copilot_enabled = v:false' "$1" '+normal! ^' "${@:2}" '+vertical resize 50' '+wincmd p' '+set nowrap'; }
+nvim +13 examples/calls.go +InspectTree
+```
+
+<!-- end_slide -->
+
 ## A Pattern Written as Code
 
 ```bash +exec_replace
