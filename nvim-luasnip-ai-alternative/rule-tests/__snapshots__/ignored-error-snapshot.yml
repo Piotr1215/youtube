@@ -1,6 +1,10 @@
 id: ignored-error
 snapshots:
   "func f() {\n\tlogActivity(id, \"processed\")\n}\n":
+    fixed: |
+      func f() {
+      	_ = logActivity(id, "processed")
+      }
     labels:
     - source: logActivity(id, "processed")
       style: primary
@@ -11,6 +15,10 @@ snapshots:
       start: 12
       end: 40
   "func f() {\n\tos.Remove(path)\n}\n":
+    fixed: |
+      func f() {
+      	_ = os.Remove(path)
+      }
     labels:
     - source: os.Remove(path)
       style: primary

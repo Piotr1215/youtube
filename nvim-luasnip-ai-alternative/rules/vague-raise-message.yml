@@ -7,7 +7,8 @@ message: Say which operation failed
 # fix prefixes it with the enclosing function's name.
 metadata:
   ask: Does this error message tell a reader which operation failed?
-  keep: "no"
+  fix_on: "no"
+  clear_on: "yes"
 rule:
   pattern: $EXC($MSG)
   all:

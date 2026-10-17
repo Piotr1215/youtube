@@ -1,0 +1,32 @@
+id: ignored-error-return
+language: go
+severity: hint
+message: Or return its error
+# The same calls as ignored-error, with the other fix. nil is the zero value of
+# a pointer, so the fix is offered only in a function returning (*T, error).
+metadata:
+  choose: How should the caller handle the error this call returns?
+  option: return=the caller depends on the call succeeding, like saving, writing or committing data, so the failure must reach the caller
+rule:
+  pattern: $CALL
+  kind: call_expression
+  not:
+    has:
+      field: function
+      regex: ^(panic|print|println|close|delete|fmt\.Print(f|ln)?|log\.\w+)$
+  all:
+    - inside:
+        kind: expression_statement
+    - inside:
+        any:
+          - kind: function_declaration
+          - kind: method_declaration
+        stopBy: end
+        all:
+          - has:
+              field: name
+              pattern: $FN
+          - has:
+              field: result
+              regex: ^\(\*\w+, error\)$
+fix: 'if err := $CALL; err != nil { return nil, fmt.Errorf("$FN: %w", err) }'

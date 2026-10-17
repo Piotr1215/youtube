@@ -4,7 +4,14 @@ severity: info
 message: Check whether this call returns an error
 # A call standing alone as a statement discards every return value. ast-grep
 # sees syntax, not types, so calls that never return an error are skipped by name.
+# ignored-error-return offers the other fix; classif picks one per call.
+metadata:
+  ask: Is this call best-effort, like logging, metrics or cache upkeep, so its failure need not stop the caller?
+  fix_on: "yes"
+  choose: How should the caller handle the error this call returns?
+  option: ignore=the call is best-effort, like logging, metrics or cache upkeep, and its failure must not stop the caller
 rule:
+  pattern: $CALL
   kind: call_expression
   inside:
     kind: expression_statement
@@ -12,3 +19,4 @@ rule:
     has:
       field: function
       regex: ^(panic|print|println|close|delete|fmt\.Print(f|ln)?|log\.\w+)$
+fix: _ = $CALL
