@@ -1,0 +1,20 @@
+id: log-printf-err
+language: go
+severity: warning
+message: Log errors structurally with slog.Error
+# Matches only a message that ends in ": %v" (or %s) with a bare err argument.
+# Other shapes keep their printf form.
+rule:
+  pattern: log.Printf($FMT, err)
+  inside:
+    kind: expression_statement
+constraints:
+  FMT:
+    regex: '^"[^%]*:\s*%[vs]"$'
+transform:
+  MSG:
+    replace:
+      source: $FMT
+      replace: ':\s*%[vs]"$'
+      by: '"'
+fix: 'slog.Error($MSG, "err", err)'
