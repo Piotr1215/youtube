@@ -1,0 +1,59 @@
+diff --git a/nvim-luasnip-ai-alternative/triage.sh b/nvim-luasnip-ai-alternative/triage.sh
+index 4c2d097..93da561 100755
+--- a/nvim-luasnip-ai-alternative/triage.sh
++++ b/nvim-luasnip-ai-alternative/triage.sh
+@@ -29,7 +29,8 @@
+ # such as FN for the function around the match or CALLEE for the one a call
+ # names. The model reads that function's declaration before the match: the
+ # tree finds it and the comment above it, in the same file, so the answer
+-# rests on what the function does. A rule with metadata.min_p lands a fix
++# rests on what the function does. A metavariable that holds a whole function,
++# such as FUNC captured around the match, is read as it is. A rule with metadata.min_p lands a fix
+ # only on an answer that sure.
+ #
+ # A call with no answer, or one below min_p, is never fixed, so a model that
+@@ -103,6 +104,11 @@ rule:
+ 		NR == n { sub(/[[:space:]]*\{.*$/, ""); printf "%s%s\n", doc, $0; exit }' "${file}"
+ }
+ 
++# Prints the first func line of a declaration on stdin, without its body.
++signature() {
++	awk '/^[[:space:]]*func / { sub(/[[:space:]]*\{.*$/, ""); sub(/^[[:space:]]+/, ""); print; exit }'
++}
++
+ # The question each finding answers to, and the findings grouped by call:
+ # rules that match the same code with the same question are asked once.
+ if ${pick}; then
+@@ -123,8 +129,12 @@ while IFS= read -r group; do
+ 	context=""
+ 	var="$(jq -r '.[0].metadata.context // empty' <<<"${group}")"
+ 	if [[ -n ${var} ]]; then
+-		context="$(declaration "$(jq -r '.[0].file' <<<"${group}")" \
+-			"$(jq -r --arg v "${var}" '.[0].metaVariables.single[$v].text // empty' <<<"${group}")")"
++		value="$(jq -r --arg v "${var}" '.[0].metaVariables.single[$v].text // empty' <<<"${group}")"
++		if [[ ${value} =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
++			context="$(declaration "$(jq -r '.[0].file' <<<"${group}")" "${value}")"
++		else
++			context="${value}"
++		fi
+ 	fi
+ 	[[ -n ${context} ]] && args+=(-c "${context}")
+ 	min_p="$(jq -r '.[0].metadata.min_p // empty' <<<"${group}")"
+@@ -177,7 +187,7 @@ while IFS= read -r group; do
+ 	where="$(jq -r '"\(.file):\(.range.start.line + 1)"' <<<"${finding}")"
+ 	if ${cleared}; then
+ 		printf '  \e[32m✓\e[0m \e[36m%s\e[0m  %s  \e[38;2;128;128;128m%s %s\e[0m\n' "${where}" "${text}" "${label}" "${p}"
+-		[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
++		[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(signature <<<"${context}")"
+ 		continue
+ 	fi
+ 	# ✓ a fix lands and no person is needed; ✗ the call stays for a person.
+@@ -185,7 +195,7 @@ while IFS= read -r group; do
+ 	mark='\e[31m✗'
+ 	[[ ${fix} == null ]] || mark='\e[32m✓'
+ 	printf "  ${mark}\\e[0m \\e[36m%s\\e[0m  %s  \\e[33m%s %s\\e[0m\\n" "${where}" "${text}" "${label:-none}" "${p}"
+-	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
++	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(signature <<<"${context}")"
+ 	if [[ ${fix} == null ]]; then
+ 		if [[ -n ${veto} ]]; then
+ 			printf '    \e[31m%s\e[0m \e[38;2;128;128;128m› left for a person\e[0m\n' "${veto}"
