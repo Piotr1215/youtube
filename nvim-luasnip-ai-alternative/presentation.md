@@ -49,7 +49,7 @@ just digraph building-blocks | awk '
   print "  " $0
 }'
 paint
-paint yellow '  classif decides which findings stay; the fix always comes from the rule.'
+paint yellow '  classif decides which findings stay and where the fix lands; the rule writes it.'
 ```
 
 <!-- end_slide -->
@@ -451,13 +451,28 @@ just digraph bridge | awk '
 {
   gsub(/ast-grep rule/, "\033[1;36m&\033[0m")
   gsub(/classif/, "\033[1;32m&\033[0m")
-  gsub(/gra/, "\033[1;35m&\033[0m")
+  gsub(/the rule.s fix/, "\033[1;35m&\033[0m")
   gsub(/hint| no |fixed text/, "\033[38;2;128;128;128m&\033[0m")
   print "  " $0
 }'
 paint cyan '     syntax tree                 ' green 'local model                      ' magenta 'syntax tree'
 paint
-paint yellow '  classif writes no code: it decides which findings stay; the rule'"'"'s fix edits.'
+paint yellow '  classif writes no code: its answer decides where the rule'"'"'s fix lands.'
+```
+
+<!-- end_slide -->
+
+## Decision Engine
+
+> The model's answer decides where the rule's fix lands.
+
+```bash +exec_replace
+paint gray '  --apply writes the same fixes; a finding with no answer is never fixed.'
+```
+
+```bash +exec
+ast-grep scan --json=stream --include-metadata --filter '^vague-' \
+  example_bad.go example_bad.py | ./triage.sh --diff
 ```
 
 <!-- end_slide -->
@@ -467,9 +482,9 @@ paint yellow '  classif writes no code: it decides which findings stay; the rule
 > Watch a hint become a verdict, then a fix on gra, then a verdict again.
 
 ```bash +exec_replace
-paint cyan '  :Classif    ' plain 'asks the rule'"'"'s question about each call it matched'
-paint cyan '  panel       ' plain 'the question, each call, and classif'"'"'s verdict on it'
-paint cyan '  gra         ' plain 'applies the rule'"'"'s fix; a second :Classif judges it'
+paint cyan '  :Classif    ' plain 'asks the rule'"'"'s question; the quickfix list shows each verdict'
+paint cyan '  :Classif!   ' plain 'the same, and the rule'"'"'s fix lands on every call the model kept'
+paint cyan '  quickfix    ' plain 'every finding, ast-grep'"'"'s and classif'"'"'s, one Enter from its line'
 ```
 
 ```bash +exec
@@ -481,10 +496,10 @@ paint cyan '  gra         ' plain 'applies the rule'"'"'s fix; a second :Classif
 ## Triage Demo Result
 
 ```bash +exec_replace
-paint green '  ✓  ' plain 'the panel showed the rule'"'"'s question and both calls it matched'
-paint green '  ✓  ' plain 'classif cleared line 23 and turned line 53 into a warning'
-paint green '  ✓  ' plain 'gra applied the rule'"'"'s fix: fetchUser: bad status'
-paint green '  ✓  ' plain 'the second :Classif cleared the fixed message'
+paint green '  ✓  ' plain 'the quickfix list showed the question and every finding with its verdict'
+paint green '  ✓  ' plain 'classif cleared line 23 and kept line 53 as a warning'
+paint green '  ✓  ' plain ':Classif! fixed line 53 and left line 23 alone'
+paint green '  ✓  ' plain 'asking again cleared the fixed message'
 paint
 paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
 ```
@@ -521,7 +536,7 @@ paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
 
 ```bash +exec_replace
 paint green '  ✓  ' cyan 'syntax trees      ' plain 'one tree in Neovim and ast-grep; findings update as you type'
-paint green '  ✓  ' cyan 'rule + question   ' plain 'syntax finds the code, a local model judges, gra fixes'
+paint green '  ✓  ' cyan 'rule + question   ' plain 'syntax finds the code; a local model picks where fixes land'
 paint 'bold yellow' '  ▶  ' cyan 'next              ' plain 'open :InspectTree on your own code and read its tree'
 ```
 
