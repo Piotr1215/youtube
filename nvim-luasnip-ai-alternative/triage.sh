@@ -14,6 +14,11 @@
 # in metadata.choose. classif -e picks one name per call, and that rule's fix
 # lands; none keeps the call as a warning.
 #
+# A rule with metadata.veto asks its own yes/no question of every call it
+# matches, apart from the pick, since a line can be a useful event and still
+# print a secret. A yes keeps the call for a person whatever the pick, and so
+# does a veto the model cannot score.
+#
 # It prints one row per call, ✗ still a finding or ✓ settled, with the fix
 # that lands. Without a mode nothing is written. The modes:
 #
@@ -44,7 +49,10 @@ done
 # Fixes that land, one per line: file, start byte, end byte, and the
 # replacement in base64, since it may hold tabs or newlines.
 edits="$(mktemp)"
-trap 'rm -f "${edits}"' EXIT
+# The findings, read twice: once for the calls, once for their vetoes.
+input="$(mktemp)"
+trap 'rm -f "${edits}" "${input}"' EXIT
+cat >"${input}"
 
 # Splices every recorded fix for one file into its text, last offset first so
 # the earlier offsets stay valid, then prints the diff or writes the file.
@@ -131,6 +139,24 @@ while IFS= read -r group; do
 	sure=true
 	((status < 2)) || sure=false
 
+	# The first veto that answers yes, or gives no score, as its rule's message
+	# and the answer.
+	veto=""
+	if ${pick}; then
+		where_at="$(jq -c '.[0] | [.file, .range.byteOffset.start]' <<<"${group}")"
+		while IFS=$'\t' read -r veto_ask veto_message; do
+			veto_status=0
+			veto_verdict="$(printf '%s\n' "${text}" | classif "${veto_ask}" 2>/dev/null)" || veto_status=$?
+			read -r veto_label veto_p _ <<<"${veto_verdict}"
+			if [[ ${veto_label} == yes ]] || ((veto_status == 2)); then
+				veto="${veto_message}: ${veto_label:-no score} ${veto_p}"
+				break
+			fi
+		done < <(jq -r -s --argjson at "${where_at}" '
+			map(select(.metadata.veto != null and [.file, .range.byteOffset.start] == $at))
+			| unique_by(.metadata.veto) | .[] | [.metadata.veto, .message] | @tsv' "${input}")
+	fi
+
 	# The call's outcome: whether the model answered, which finding's fix lands
 	# (an index into the group, or null), and whether the finding is cleared.
 	outcome="$(jq -c --arg label "${label}" --argjson pick "${pick}" --argjson sure "${sure}" '
@@ -147,6 +173,7 @@ while IFS= read -r group; do
 	finding="$(jq -c ".[${lands:-0}]" <<<"${group}")"
 	fix="null"
 	[[ -n ${lands} ]] && fix="$(jq -c '.replacement' <<<"${finding}")"
+	[[ -z ${veto} ]] || fix="null"
 
 	if [[ ${mode} == json ]]; then
 		jq -c --arg ask "${ask}" --arg label "${label}" --arg p "${p}" --arg context "${context}" \
@@ -175,7 +202,11 @@ while IFS= read -r group; do
 	printf "  ${mark}\\e[0m \\e[36m%s\\e[0m  %s  \\e[33m%s %s\\e[0m\\n" "${where}" "${text}" "${label:-none}" "${p}"
 	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
 	if [[ ${fix} == null ]]; then
-		printf '    \e[38;2;128;128;128mleft for a person\e[0m\n'
+		if [[ -n ${veto} ]]; then
+			printf '    \e[31m%s\e[0m \e[38;2;128;128;128m› left for a person\e[0m\n' "${veto}"
+		else
+			printf '    \e[38;2;128;128;128mleft for a person\e[0m\n'
+		fi
 		continue
 	fi
 	printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "$(jq -r '. | if . == "" then "(the line is removed)" else . end' <<<"${fix}")"
@@ -185,7 +216,7 @@ while IFS= read -r group; do
 			(.replacementOffsets.end // .range.byteOffset.end),
 			(.replacement | @base64)] | @tsv' <<<"${finding}" >>"${edits}"
 	fi
-done < <(jq -c -s "map(select(${question} != null)) | group_by([.file, .range.byteOffset.start, ${question}]) | .[] | sort_by(.ruleId)")
+done < <(jq -c -s "map(select(${question} != null)) | group_by([.file, .range.byteOffset.start, ${question}]) | .[] | sort_by(.ruleId)" "${input}")
 
 if [[ ${mode} == diff || ${mode} == apply ]]; then
 	[[ ${mode} == diff ]] && printf '\n'
