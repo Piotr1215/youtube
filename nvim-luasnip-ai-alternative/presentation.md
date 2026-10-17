@@ -185,16 +185,6 @@ just digraph pattern-match | awk '
 
 <!-- end_slide -->
 
-## Debug Query
-
-> --debug-query prints the tree ast-grep builds from a pattern.
-
-```bash +exec
-ast-grep run -l go --debug-query=pattern -p 'fmt.Errorf($MSG, $$$ARGS)' example_bad.go
-```
-
-<!-- end_slide -->
-
 ## Metavariables
 
 > Metavariables capture the parts that change.
@@ -207,16 +197,6 @@ paint 'bold yellow' '  $ERR      ' plain 'one node, the same text everywhere it 
 paint 'bold magenta' '  $$$ARGS   ' plain 'any number of nodes, zero included'
 paint
 paint green '  ✓ return nil, e2 does not match: both $ERR must agree'
-```
-
-<!-- end_slide -->
-
-## Pattern Search
-
-> Search by the shape of the code, straight from the shell.
-
-```bash +exec
-ast-grep run -p 'fmt.Errorf($MSG, $$$ARGS)' example_bad.go
 ```
 
 <!-- end_slide -->
@@ -288,38 +268,25 @@ just digraph relations | awk '
 
 <!-- end_slide -->
 
-## Relational Rules
-
-> follows: the match must come right after this statement.
-
-```file
-path: rules/direct-http-error-return.yml
-language: yaml
-```
-
-```bash +exec
-ast-grep scan -r rules/direct-http-error-return.yml \
-  --report-style short example_bad.go
-```
-
-<!-- end_slide -->
-
 ## Autofix
 
-> fix: turns a finding into an edit, and scan -U applies it.
+> fix: rebuilds the matched code from the parts the pattern captured.
 
-```bash +exec
-ast-grep scan -r rules/fmt-errorf-without-wrap.yml example_bad.go
-```
-
-<!-- end_slide -->
-
-## Rule Tests
-
-> Valid and invalid cases pin down what a rule may flag.
-
-```bash +exec
-ast-grep test
+```bash +exec_replace
+paint gray '  rules/fmt-errorf-without-wrap.yml'
+paint
+paint yellow '  1  match      ' plain 'fmt.Errorf(' 'bold magenta' '$FMT' plain ', ' 'bold magenta' '$$$REST' plain ')'
+paint plain '                fmt.Errorf("failed to marshal user: %v", err)'
+paint
+paint yellow '  2  capture    ' 'bold magenta' '$FMT      ' green '"failed to marshal user: %v"'
+paint plain '                ' 'bold magenta' '$$$REST   ' green 'err'
+paint
+paint yellow '  3  transform  ' 'bold magenta' '$WRAPPED  ' plain '$FMT with %v" replaced by %w"'
+paint
+paint yellow '  4  fix        ' plain 'fmt.Errorf(' 'bold magenta' '$WRAPPED' plain ', ' 'bold magenta' '$$$REST' plain ')'
+paint plain '                fmt.Errorf("failed to marshal user: ' 'bold green' '%w' plain '", err)'
+paint
+paint yellow '  scan -U writes the new text over the matched call; the editor offers it on gra.'
 ```
 
 <!-- end_slide -->
@@ -370,20 +337,6 @@ paint yellow '  One rule file serves the shell, the editor, and its own tests.'
 
 <!-- end_slide -->
 
-## Python and Bash
-
-> The same rule format, two more syntax trees.
-
-```bash +exec_replace
-paint yellow '  shellcheck passes example_bad.sh; these rules encode team conventions.'
-```
-
-```bash +exec +expect:failure
-ast-grep scan --report-style short example_bad.py example_bad.sh
-```
-
-<!-- end_slide -->
-
 ## Rules with Questions
 
 > What can a rule ask that syntax cannot answer?
@@ -409,21 +362,36 @@ paint yellow '  A pattern can match the message; judging it means reading it.'
 
 <!-- end_slide -->
 
-## Questions in Rules
+## classif
 
-> ast-grep picks the code; classif answers a question about it.
+> A local model answers one yes/no question about a piece of text.
 
 ```bash +exec_replace
-just digraph triage | awk '
-{
-  gsub(/metadata\.ask|fmt\.Errorf\(\.\.\.\)/, "\033[36m&\033[0m")
-  gsub(/classif/, "\033[1;33m&\033[0m")
-  gsub(/no: warning/, "\033[31m&\033[0m")
-  gsub(/yes: cleared/, "\033[32m&\033[0m")
-  print "  " $0
-}'
+paint cyan '  text       ' plain 'fmt.Errorf("bad status: %d", resp.StatusCode)'
+paint cyan '  question   ' plain 'Does this error message tell a reader which operation failed?'
+paint gray '               │'
+paint gray '               ▼'
+paint cyan '  model      ' plain 'scores the next token; classif reads the scores of ' green 'yes' plain ' and ' red 'no'
+paint gray '               │'
+paint gray '               ▼'
+paint cyan '  answer     ' 'bold red' 'no 1.00' plain '    exit 1 for no, 0 for yes, so a script can branch'
 paint
-paint yellow '  Syntax finds every error message; the model judges what each one says.'
+paint yellow '  One token per answer: fast enough for every finding, and it runs locally.'
+```
+
+<!-- end_slide -->
+
+## Confidence
+
+> classif each asks one question of many texts and ranks them by p(yes).
+
+```bash +exec
+classif each "Does this error message tell a reader which operation failed?" \
+  'fmt.Errorf("fetch user: %w", err)' \
+  'fmt.Errorf("failed to marshal user: %v", err)' \
+  'RuntimeError("fetch failed")' \
+  'fmt.Errorf("bad status: %d", resp.StatusCode)' \
+  'errors.New("something went wrong")'
 ```
 
 <!-- end_slide -->
@@ -440,6 +408,7 @@ end_line: 9
 ```
 
 ```bash +exec_replace
+paint yellow '  ast-grep passes metadata through; triage.sh hands each match and ask to classif.'
 paint yellow '  The model reads the whole match; the bare string "fetch user: %w" scored no.'
 ```
 
@@ -447,50 +416,30 @@ paint yellow '  The model reads the whole match; the bare string "fetch user: %w
 
 ## Fix from the Tree
 
-> The fix reads the function name from the tree, so the message says what failed.
-
-```file
-path: rules/vague-error-message.yml
-language: yaml
-start_line: 8
-end_line: 26
-```
+> The same fix mechanism, with the function name read from the tree.
 
 ```bash +exec_replace
-paint yellow '  inside finds the enclosing function; has captures its name as $FN.'
-```
-
-<!-- end_slide -->
-
-## Triage
-
-> triage.sh asks classif about every match whose rule carries a question.
-
-```bash +exec
-ast-grep scan --json=stream --include-metadata --filter '^vague-' \
-  example_bad.go example_bad.py | ./triage.sh
-```
-
-<!-- end_slide -->
-
-## Confidence
-
-> classif returns a probability, so messages rank from clear to vague.
-
-```bash +exec
-classif each "Does this error message tell a reader which operation failed?" \
-  'fmt.Errorf("fetch user: %w", err)' \
-  'fmt.Errorf("failed to marshal user: %v", err)' \
-  'RuntimeError("fetch failed")' \
-  'fmt.Errorf("bad status: %d", resp.StatusCode)' \
-  'errors.New("something went wrong")'
+paint gray '  rules/vague-error-message.yml'
+paint
+paint yellow '  1  match      ' plain 'fmt.Errorf(' 'bold magenta' '$MSG' plain ', ' 'bold magenta' '$$$ARGS' plain ')' gray '   inside a function'
+paint plain '                fmt.Errorf("bad status: %d", resp.StatusCode)'
+paint
+paint yellow '  2  capture    ' 'bold magenta' '$MSG    ' green '"bad status: %d"'
+paint plain '                ' 'bold magenta' '$FN     ' green 'fetchUser' gray '   the name of that function'
+paint
+paint yellow '  3  transform  ' 'bold magenta' '$REST   ' plain '$MSG without its opening quote'
+paint
+paint yellow '  4  fix        ' plain 'fmt.Errorf("' 'bold magenta' '$FN' plain ': ' 'bold magenta' '$REST' plain ', ' 'bold magenta' '$$$ARGS' plain ')'
+paint plain '                fmt.Errorf("' 'bold green' 'fetchUser: ' plain 'bad status: %d", resp.StatusCode)'
+paint
+paint yellow '  inside climbs to the enclosing function; has captures its name as $FN.'
 ```
 
 <!-- end_slide -->
 
 ## Bridge
 
-> A deterministic rule, a judgment of meaning, and a deterministic fix again.
+> ast-grep finds and fixes by syntax; classif decides in between, by meaning.
 
 ```bash +exec_replace
 just digraph bridge | awk '
@@ -503,7 +452,7 @@ just digraph bridge | awk '
 }'
 paint cyan '     syntax tree                 ' green 'local model                      ' magenta 'syntax tree'
 paint
-paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
+paint yellow '  classif writes no code: it decides which findings stay; the rule'"'"'s fix edits.'
 ```
 
 <!-- end_slide -->
@@ -532,39 +481,7 @@ paint green '  ✓  ' plain 'classif cleared line 23 and turned line 53 into a w
 paint green '  ✓  ' plain 'gra applied the rule'"'"'s fix: fetchUser: bad status'
 paint green '  ✓  ' plain 'the second :Classif cleared the fixed message'
 paint
-paint yellow '  The rule found and fixed the message; the model judged it both times.'
-```
-
-<!-- end_slide -->
-
-## First Draft
-
-> An AI drafted these rules. Running them checked the draft.
-
-```bash +exec_replace
-paint red '  ✗  ' cyan 'rules: list             ' plain 'ast-grep reads one rule per YAML document'
-paint red '  ✗  ' cyan 'top-level pattern       ' plain 'patterns belong under rule:'
-paint red '  ✗  ' cyan 'two-statement pattern   ' plain 'one node per pattern; follows relates two'
-paint red '  ✗  ' cyan 'ignored-error           ' plain 'most hits were calls whose result was used'
-paint green '  ✓  ' cyan 'intent and structure    ' plain 'right from the start, and still in use'
-paint
-paint yellow '  Each problem showed up the first time the tools ran.'
-```
-
-<!-- end_slide -->
-
-## Division of Labor
-
-> Each step goes to the tool that does it best.
-
-```bash +exec_replace
-paint cyan '  ast-grep    ' plain 'finds every candidate in milliseconds, the same way every run'
-paint cyan '  classif     ' plain 'judges what a candidate means, on a local model'
-paint cyan '  gra         ' plain 'applies the rule'"'"'s fix where the model confirmed a problem'
-paint cyan '  AI          ' plain 'drafts rules from patterns in your code'
-paint cyan '  you         ' plain 'choose which review comments become rules and questions'
-paint
-paint yellow '  Each tool adds to the next; none of them replaces another.'
+paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
 ```
 
 <!-- end_slide -->
