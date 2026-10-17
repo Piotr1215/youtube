@@ -27,7 +27,7 @@ The story of the video, written before any slide. Each numbered beat is one mome
 
 ### Text
 
-5. grep finds every log.Printf instantly, but it only compares characters. It misses a call split over two lines, matches a call inside a comment, and cannot ask for calls whose argument is the error.
+5. grep finds every log.Printf instantly, but it only compares characters. Ask it for the calls that log err and it misses one split over two lines and matches one inside a comment: to grep there are no calls or arguments.
 
 ### Structure
 
