@@ -33,7 +33,7 @@ printf '\e[33m%s\e[0m\n' 'The painful step, in one yellow line.'
 
 ## First Look
 
-> Show the payoff before explaining it.
+> Show the payoff once the viewer knows the problem it solves.
 
 ```bash +exec
 tmux switchc -t demo
