@@ -1,0 +1,12 @@
+id: log-printf-err
+valid:
+  - 'log.Printf("listening on %s", addr)'
+  - 'log.Printf("login took %v", elapsed)'
+  - 'log.Printf("failed: %v", other)'
+  - 'log.Printf("failed: %x", err)'
+  - 'log.Printf("%v failed: %v", name, err)'
+  - 'log.Printf("failed: %v and more", err)'
+  - 'slog.Error("login failed", "err", err)'
+invalid:
+  - 'log.Printf("login failed: %v", err)'
+  - 'log.Printf("server stopped:  %s", err)'

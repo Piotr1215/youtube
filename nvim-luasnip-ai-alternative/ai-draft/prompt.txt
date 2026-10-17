@@ -1,0 +1,1 @@
+Write an ast-grep rule with tests that rewrites log.Printf("msg: %v", err) to slog.Error("msg", "err", err), and make ast-grep test pass.
