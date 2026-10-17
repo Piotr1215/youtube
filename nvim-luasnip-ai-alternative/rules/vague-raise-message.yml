@@ -2,13 +2,8 @@ id: vague-raise-message
 language: python
 severity: hint
 message: Say which operation failed
-# The Python twin of vague-error-message: syntax finds every raised message,
-# triage.sh asks classif whether each one names the failed operation, and the
-# fix prefixes it with the enclosing function's name.
-metadata:
-  ask: Does this error message tell a reader which operation failed?
-  fix_on: "no"
-  clear_on: "yes"
+# The Python twin of vague-error-message: the fix prefixes a raised message
+# with the enclosing function's name.
 rule:
   pattern: $EXC($MSG)
   all:

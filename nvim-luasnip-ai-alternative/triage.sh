@@ -21,10 +21,12 @@
 #   --diff    the rows, then a diff of the fixes that land
 #   --apply   the rows, then the same fixes written to the files
 #
-# A rule with metadata.context: callee has the model read the declaration of
-# the function the call names, $CALLEE, before the call: the tree finds it and
-# the comment above it, so the answer rests on what the function does, not on
-# its name. A rule with metadata.min_p lands a fix only on an answer that sure.
+# A rule with metadata.context names a metavariable that holds a function name,
+# such as FN for the function around the match or CALLEE for the one a call
+# names. The model reads that function's declaration before the match: the
+# tree finds it and the comment above it, in the same file, so the answer
+# rests on what the function does. A rule with metadata.min_p lands a fix
+# only on an answer that sure.
 #
 # A call with no answer, or one below min_p, is never fixed, so a model that
 # is down or unsure rewrites nothing.
@@ -112,9 +114,10 @@ while IFS= read -r group; do
 		done < <(jq -r '.[].metadata.option // empty' <<<"${group}")
 	fi
 	context=""
-	if [[ "$(jq -r '.[0].metadata.context // empty' <<<"${group}")" == callee ]]; then
+	var="$(jq -r '.[0].metadata.context // empty' <<<"${group}")"
+	if [[ -n ${var} ]]; then
 		context="$(declaration "$(jq -r '.[0].file' <<<"${group}")" \
-			"$(jq -r '.[0].metaVariables.single.CALLEE.text // empty' <<<"${group}")")"
+			"$(jq -r --arg v "${var}" '.[0].metaVariables.single[$v].text // empty' <<<"${group}")")"
 	fi
 	[[ -n ${context} ]] && args+=(-c "${context}")
 	min_p="$(jq -r '.[0].metadata.min_p // empty' <<<"${group}")"
@@ -162,6 +165,7 @@ while IFS= read -r group; do
 	where="$(jq -r '"\(.file):\(.range.start.line + 1)"' <<<"${finding}")"
 	if ${cleared}; then
 		printf '  \e[32m✓\e[0m \e[36m%s\e[0m  %s  \e[38;2;128;128;128m%s %s\e[0m\n' "${where}" "${text}" "${label}" "${p}"
+		[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
 		continue
 	fi
 	# ✓ a fix lands and no person is needed; ✗ the call stays for a person.
@@ -169,7 +173,7 @@ while IFS= read -r group; do
 	mark='\e[31m✗'
 	[[ ${fix} == null ]] || mark='\e[32m✓'
 	printf "  ${mark}\\e[0m \\e[36m%s\\e[0m  %s  \\e[33m%s %s\\e[0m\\n" "${where}" "${text}" "${label:-none}" "${p}"
-	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(head -1 <<<"${context}")"
+	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
 	[[ ${fix} == null ]] && continue
 	if [[ ${mode} == rows ]]; then
 		fix="$(jq -r . <<<"${fix}")"
