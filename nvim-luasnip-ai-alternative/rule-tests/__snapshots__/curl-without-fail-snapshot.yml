@@ -1,0 +1,9 @@
+id: curl-without-fail
+snapshots:
+  "curl -sSL https://example.com -o out":
+    fixed: curl --fail -sSL https://example.com -o out
+    labels:
+    - source: curl -sSL https://example.com -o out
+      style: primary
+      start: 0
+      end: 36

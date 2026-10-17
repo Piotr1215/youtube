@@ -228,12 +228,44 @@ paint cyan '  setup          ' plain 'vim.lsp.enable("ast_grep"), config from nv
 
 <!-- end_slide -->
 
+## Python and Bash
+
+> The same rule format, two more syntax trees.
+
+```bash +exec_replace
+paint yellow '  shellcheck passes example_bad.sh; these rules encode team conventions.'
+```
+
+```bash +exec +expect:failure
+ast-grep scan --report-style short example_bad.py example_bad.sh
+```
+
+<!-- end_slide -->
+
 ## LuaSnip Snippets
 
 > How do you type the fix the rule asks for?
 
 ```bash +exec_replace
 ./journey.sh 4
+```
+
+<!-- end_slide -->
+
+## Snippet Lookup
+
+> LuaSnip keeps snippets per filetype and expands the one the trigger names.
+
+```bash +exec_replace
+just digraph snippet-lookup | awk '
+{
+  gsub(/snippet files|add_snippets\(\)/, "\033[36m&\033[0m")
+  gsub(/go \+ all|trigger/, "\033[1;33m&\033[0m")
+  gsub(/top priority/, "\033[1;35m&\033[0m")
+  print "  " $0
+}'
+paint
+paint yellow '  iferr is defined twice here: your config at 1000, the demo at 2000.'
 ```
 
 <!-- end_slide -->
@@ -269,6 +301,25 @@ paint 'bold yellow' '  1  ' cyan 'insert node   ' plain 'the error name'
 paint 'bold magenta' '  2  ' cyan 'choice node   ' plain '"nil, " or nothing, for single-value returns'
 paint 'bold cyan' '  3  ' cyan 'insert node   ' plain 'the context the error message needs'
 paint yellow '     ' cyan 'rep(1)        ' plain 'repeats node 1 as you type it'
+```
+
+<!-- end_slide -->
+
+## Snippet Lifecycle
+
+> An expanded snippet stays live until you jump or move out of it.
+
+```bash +exec_replace
+just digraph snippet-lifecycle | awk '
+{
+  gsub(/expand|active|exit/, "\033[1;33m&\033[0m")
+  gsub(/M-[lhj]/, "\033[1;35m&\033[0m")
+  gsub(/extmarks|i\(0\)/, "\033[36m&\033[0m")
+  print "  " $0
+}'
+paint
+paint cyan '  extmarks      ' plain 'track where each node starts and ends while you type'
+paint cyan '  CursorMoved   ' plain 'your config ends the snippet once the cursor leaves it'
 ```
 
 <!-- end_slide -->
@@ -310,6 +361,20 @@ paint cyan '  M-j         ' plain 'cycle the choice node'
 just boxart local-loop | sed 's/^/  /'
 paint
 paint green '  ✓ every snippet expansion passes every rule'
+```
+
+<!-- end_slide -->
+
+## Python and Bash Snippets
+
+> Same s(), i() and c() nodes; only the filetype changes.
+
+```bash +exec_replace
+paint 'bold yellow' '  tryr     ' plain 'try, except OSError as err, raise ... from err'
+paint 'bold yellow' '  strict   ' plain 'bash shebang, then set -euo pipefail'
+paint 'bold yellow' '  curlf    ' plain 'curl --fail --silent --show-error --location'
+paint
+paint green '  ✓ ast-grep scan finds nothing in any of the three expansions'
 ```
 
 <!-- end_slide -->
@@ -410,18 +475,6 @@ paint cyan '  grug-far   ' plain 'optional, ast-grep search and replace in a buf
 paint cyan '  classif    ' plain 'optional, needs Ollama and a local model'
 paint
 paint yellow '  On Linux, sg can be the group switch command: type ast-grep.'
-```
-
-<!-- end_slide -->
-
-## Project Layout
-
-> sgconfig.yml marks the root for scan, test, and the LSP.
-
-```bash +exec_replace
-tree --noreport -I '__snapshots__' -P '*.yml' --prune . | sed 's/^/  /'
-paint
-paint green '  ✓ ast-grep new project scaffolds the same layout'
 ```
 
 <!-- end_slide -->

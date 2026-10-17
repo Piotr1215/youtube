@@ -1,0 +1,18 @@
+id: missing-strict-mode
+snapshots:
+  "#!/usr/bin/env bash\necho ready\n":
+    fixed: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      echo ready
+    labels:
+    - source: "#!/usr/bin/env bash"
+      style: primary
+      start: 0
+      end: 19
+    - source: |
+        #!/usr/bin/env bash
+        echo ready
+      style: secondary
+      start: 0
+      end: 31

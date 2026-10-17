@@ -1,0 +1,18 @@
+id: missing-strict-mode
+language: bash
+severity: warning
+message: Add set -euo pipefail
+rule:
+  # Anchored on the shebang, so the finding sits on line 1, not the whole file.
+  all:
+    - kind: comment
+    - regex: ^#!
+    - pattern: $SHEBANG
+    - inside:
+        kind: program
+        not:
+          has:
+            pattern: set -euo pipefail
+fix: |-
+  $SHEBANG
+  set -euo pipefail

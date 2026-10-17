@@ -1,0 +1,14 @@
+id: swallowed-exception
+snapshots:
+  "try:\n    deploy()\nexcept CalledProcessError:\n    pass\n":
+    labels:
+    - source: |-
+        except CalledProcessError:
+            pass
+      style: primary
+      start: 18
+      end: 53
+    - source: pass
+      style: secondary
+      start: 49
+      end: 53
