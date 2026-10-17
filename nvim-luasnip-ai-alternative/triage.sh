@@ -22,7 +22,6 @@
 # It prints one row per call, ✗ still a finding or ✓ settled, with the fix
 # that lands. Without a mode nothing is written. The modes:
 #
-#   --json    one object per call, for demo-init.lua
 #   --diff    the rows, then a diff of the fixes that land
 #   --apply   the rows, then the same fixes written to the files
 #
@@ -42,7 +41,7 @@ mode=rows
 for arg in "$@"; do
 	case ${arg} in
 	--pick) pick=true ;;
-	--json | --diff | --apply) mode="${arg#--}" ;;
+	--diff | --apply) mode="${arg#--}" ;;
 	esac
 done
 
@@ -175,20 +174,6 @@ while IFS= read -r group; do
 	[[ -n ${lands} ]] && fix="$(jq -c '.replacement' <<<"${finding}")"
 	[[ -z ${veto} ]] || fix="null"
 
-	if [[ ${mode} == json ]]; then
-		jq -c --arg ask "${ask}" --arg label "${label}" --arg p "${p}" --arg context "${context}" \
-			--argjson answered "${answered}" --argjson cleared "${cleared}" --argjson fix "${fix}" '{
-			rule: .ruleId, ask: $ask, context: $context,
-			line: .range.start.line, col: .range.start.column,
-			end_line: .range.end.line, end_col: .range.end.column,
-			start: .range.byteOffset.start, end: .range.byteOffset.end,
-			fix_start: (.replacementOffsets.start // .range.byteOffset.start),
-			fix_end: (.replacementOffsets.end // .range.byteOffset.end),
-			message, label: $label, p: $p, answered: $answered,
-			kept: ($cleared | not), fix: $fix
-		}' <<<"${finding}"
-		continue
-	fi
 	where="$(jq -r '"\(.file):\(.range.start.line + 1)"' <<<"${finding}")"
 	if ${cleared}; then
 		printf '  \e[32m✓\e[0m \e[36m%s\e[0m  %s  \e[38;2;128;128;128m%s %s\e[0m\n' "${where}" "${text}" "${label}" "${p}"
