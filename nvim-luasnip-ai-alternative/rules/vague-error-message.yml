@@ -3,9 +3,10 @@ language: go
 severity: hint
 message: Say which operation failed
 metadata:
-  ask: Does this error message tell a reader which operation failed?
-  fix_on: "no"
+  ask: Does this error message name the operation this function performs, in the same or other words?
+  context: FN
   clear_on: "yes"
+  min_p: 0.75
 rule:
   pattern: fmt.Errorf($MSG, $$$ARGS)
   inside:

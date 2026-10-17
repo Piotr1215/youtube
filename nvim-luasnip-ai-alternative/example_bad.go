@@ -103,3 +103,23 @@ func record(user *User) error {
 	// Implementation
 	return nil
 }
+
+func loadUser(id string) (*User, error) {
+	user, err := fetchUser(id)
+	if err != nil {
+		return nil, fmt.Errorf("fetch user: %w", err)
+	}
+	return user, nil
+}
+
+func deleteUser(id string) error {
+	req, err := http.NewRequest(http.MethodDelete, "https://api.example.com/users/"+id, nil)
+	if err != nil {
+		return fmt.Errorf("fetch user: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+	return resp.Body.Close()
+}

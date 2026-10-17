@@ -4,16 +4,7 @@ severity: info
 message: Check whether this call returns an error
 # A call standing alone as a statement discards every return value. ast-grep
 # sees syntax, not types, so calls that never return an error are skipped by name.
-# ignored-error-return offers the other fix; classif picks one per call.
-# triage.sh hands classif the declaration of the function the call names,
-# its doc comment and signature, and lands a fix only on an answer at min_p.
-metadata:
-  context: callee
-  min_p: 0.9
-  ask: Is this call best-effort, like logging, metrics or cache upkeep, so its failure need not stop the caller?
-  fix_on: "yes"
-  choose: How should the caller handle the error this call returns?
-  option: ignore=the call is best-effort, like logging, metrics or cache upkeep, and its failure must not stop the caller
+# ignored-error-return offers the other fix.
 rule:
   pattern: $CALLEE($$$ARGS)
   kind: call_expression

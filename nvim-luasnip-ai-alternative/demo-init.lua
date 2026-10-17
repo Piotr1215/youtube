@@ -223,7 +223,9 @@ vim.api.nvim_create_user_command("Classif", function(cmd)
 				for _, r in ipairs(rows) do
 					if r.start == v.start and r.ask == v.ask then
 						r.label, r.p, r.kept, r.message, r.answered = v.label, v.p, v.kept, v.message, v.answered
-						r.context = v.context ~= "" and vim.split(v.context, "\n")[1] or nil
+						-- The signature, the context's last line, says most in one line.
+						local context = vim.split(v.context, "\n")
+						r.context = v.context ~= "" and context[#context] or nil
 						-- A finding kept for want of an answer is never fixed: a
 						-- model that is down must rewrite nothing.
 						if v.kept and v.answered and v.fix ~= vim.NIL then
@@ -300,6 +302,10 @@ Demo.rules = {
 	"fmt-errorf-without-wrap",
 	"ignored-error",
 	"ignored-error-return",
+	"log-debug",
+	"log-error",
+	"log-info",
+	"log-sensitive",
 	"panic-on-error",
 	"vague-error-message",
 }
