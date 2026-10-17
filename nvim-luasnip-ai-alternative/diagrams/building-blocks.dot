@@ -4,11 +4,10 @@ digraph building_blocks {
 
   tree [label="syntax tree\ncode as nodes"];
   rule [label="ast-grep rule\nfinds a shape"];
-  model [label="classif\njudges it"];
-  fix [label="gra\nfixes it"];
+  fix [label="gra\napplies the fix"];
+  model [label="classif\nkeeps or clears"];
 
   tree -> rule;
   rule -> fix [label="fix:"];
   rule -> model [label="ask:"];
-  model -> fix [label="no"];
 }

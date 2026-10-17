@@ -10,9 +10,9 @@ echo "ast-grep + classif" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Repeated Fixes
+## Overview
 
-> Which review comments do you keep writing?
+> What does this video build, and why?
 
 ```bash +exec_replace
 ./journey.sh 1
@@ -20,23 +20,24 @@ echo "ast-grep + classif" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## Review Loop
+## Goal
 
-> The same error-handling comments come back on every pull request.
+> Use the syntax tree the editor already has, and a local model for meaning.
 
 ```bash +exec_replace
-paint 'bold cyan' '  write code' gray ' ──▶ ' 'bold cyan' 'open a PR' gray ' ──▶ ' 'bold yellow' 'same review comment' gray ' ──▶ ' 'bold cyan' 'fix by hand'
-paint gray '    ▲                                                       │'
-paint gray '    └───────────────────────────────────────────────────────┘'
+paint 'bold yellow' '  why    ' plain 'text search misses code that means the same thing'
+paint plain '         ' plain 'a tree shows shape; judging an error message needs its meaning'
 paint
-paint yellow '  A rule could leave that comment, and offer the fix with it.'
+paint 'bold yellow' '  what   ' cyan 'syntax trees   ' plain 'the structure Neovim and ast-grep read'
+paint plain '         ' cyan 'rules          ' plain 'find a code shape, fix it on gra, as you type'
+paint plain '         ' cyan 'classif        ' plain 'a local model for what the tree cannot judge'
 ```
 
 <!-- end_slide -->
 
 ## Building Blocks
 
-> Find the mistake, offer the fix, and ask a model only what syntax cannot tell.
+> Each chapter adds one piece; this is how they connect.
 
 ```bash +exec_replace
 just digraph building-blocks | awk '
@@ -45,11 +46,27 @@ just digraph building-blocks | awk '
   gsub(/ast-grep rule/, "\033[1;36m&\033[0m")
   gsub(/gra/, "\033[1;35m&\033[0m")
   gsub(/classif/, "\033[1;32m&\033[0m")
-  gsub(/fix:|ask:| no /, "\033[38;2;128;128;128m&\033[0m")
+  gsub(/fix:|ask:/, "\033[38;2;128;128;128m&\033[0m")
   print "  " $0
 }'
 paint
-paint yellow '  A plain rule goes straight to gra; a rule with a question asks classif first.'
+paint yellow '  classif decides which findings stay; the fix always comes from the rule.'
+```
+
+<!-- end_slide -->
+
+## Text Search
+
+> grep compares characters, so a line break hides the match.
+
+```bash +exec_replace
+paint cyan '  search     ' plain 'if err != nil { return nil, err }'
+paint cyan '  code       ' plain 'if err != nil {'
+paint plain '                 return nil, err'
+paint plain '             }'
+paint
+paint red '  ✗  ' cyan 'grep       ' plain '0 matches in example_bad.go'
+paint green '  ✓  ' cyan 'ast-grep   ' plain '6 matches: it compares syntax trees, not lines'
 ```
 
 <!-- end_slide -->
@@ -149,22 +166,6 @@ paint yellow '  ast-grep matches patterns against this same kind of tree.'
 
 ```bash +exec_replace
 ./journey.sh 3
-```
-
-<!-- end_slide -->
-
-## Text and Tree
-
-> grep compares characters; ast-grep compares trees.
-
-```bash +exec_replace
-paint cyan '  pattern    ' plain 'if err != nil { return nil, err }'
-paint cyan '  code       ' plain 'if err != nil {'
-paint plain '                 return nil, err'
-paint plain '             }'
-paint
-paint red '  ✗  ' cyan 'grep       ' plain '0 matches in example_bad.go: the line breaks differ'
-paint green '  ✓  ' cyan 'ast-grep   ' plain '6 matches in example_bad.go: the trees agree'
 ```
 
 <!-- end_slide -->
@@ -462,9 +463,9 @@ paint yellow '  classif writes no code: it decides which findings stay; the rule
 > Watch a hint become a verdict, then a fix on gra, then a verdict again.
 
 ```bash +exec_replace
-paint cyan '  hint        ' plain 'ast-grep: every error message, judged or not'
-paint cyan '  :Classif    ' plain 'asks the model; a confirmed message becomes a warning'
-paint cyan '  gra         ' plain 'applies the rule'"'"'s fix; :Classif judges the result'
+paint cyan '  :Classif    ' plain 'asks the rule'"'"'s question about each call it matched'
+paint cyan '  panel       ' plain 'the question, each call, and classif'"'"'s verdict on it'
+paint cyan '  gra         ' plain 'applies the rule'"'"'s fix; a second :Classif judges it'
 ```
 
 ```bash +exec
@@ -476,7 +477,7 @@ paint cyan '  gra         ' plain 'applies the rule'"'"'s fix; :Classif judges t
 ## Triage Demo Result
 
 ```bash +exec_replace
-paint green '  ✓  ' plain 'ast-grep marked both error messages as hints, unjudged'
+paint green '  ✓  ' plain 'the panel showed the rule'"'"'s question and both calls it matched'
 paint green '  ✓  ' plain 'classif cleared line 23 and turned line 53 into a warning'
 paint green '  ✓  ' plain 'gra applied the rule'"'"'s fix: fetchUser: bad status'
 paint green '  ✓  ' plain 'the second :Classif cleared the fixed message'

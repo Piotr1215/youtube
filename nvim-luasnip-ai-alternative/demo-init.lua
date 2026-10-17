@@ -62,36 +62,150 @@ vim.api.nvim_create_autocmd("LspAttach", {
 })
 
 -- vague-error-message reports every error message as a hint: whether one
--- names the failed operation is a judgment, not syntax. :Classif runs
--- triage.sh over the buffer, which asks classif about each match; a message
--- the model confirms becomes a warning, one it clears gets a ✓. The rule's
--- fix stays on gra, so a confirmed message is one keypress from fixed, and a
--- second :Classif judges the fixed text. The buffer goes through a temp copy
--- because saves to example_bad.go are dropped.
+-- names the failed operation is a judgment, not syntax. :Classif scans the
+-- buffer, opens a panel with each rule's question and the calls it matched,
+-- and pipes the matches through triage.sh, which asks classif about each one.
+-- A message the model confirms becomes a warning, one it clears gets a ✓, and
+-- the panel shows every verdict next to its call. The rule's fix stays on gra,
+-- and a second :Classif judges the fixed text. The buffer goes through a temp
+-- copy because saves to example_bad.go are dropped.
 local classif_ns = vim.api.nvim_create_namespace("classif")
 local cleared_ns = vim.api.nvim_create_namespace("classif-cleared")
+local match_ns = vim.api.nvim_create_namespace("classif-match")
+local panel_ns = vim.api.nvim_create_namespace("classif-panel")
+local panel = {}
 Demo = {}
 -- Counts finished :Classif runs. demo.sh reads it before typing :Classif and
 -- waits for it to grow; a flag could still hold the previous run's true.
 Demo.classified = 0
+
+-- Closes the panel and the highlights it put on the matched calls.
+local function close_panel()
+	if panel.win and vim.api.nvim_win_is_valid(panel.win) then
+		vim.api.nvim_win_close(panel.win, true)
+	end
+	if panel.code then
+		vim.api.nvim_buf_clear_namespace(panel.code, match_ns, 0, -1)
+	end
+	panel = {}
+end
+
+-- Draws the panel over the top of the window: for each rule, its name and
+-- question, then each matched call with classif's verdict, or "asking" while
+-- the model has not answered. The calls are highlighted in the code too.
+local function draw_panel(bufnr, rows)
+	local lines, marks, width = {}, {}, 0
+	for _, r in ipairs(rows) do
+		width = math.max(width, vim.fn.strdisplaywidth(r.text))
+	end
+	local function add(text, hls)
+		table.insert(lines, text)
+		for _, hl in ipairs(hls or {}) do
+			table.insert(marks, { #lines - 1, hl[1], hl[2], hl[3] })
+		end
+	end
+	local rule
+	for _, r in ipairs(rows) do
+		if r.rule ~= rule then
+			rule = r.rule
+			if #lines > 0 then
+				add("")
+			end
+			add(" rule   " .. r.rule, { { 1, 5, "Comment" }, { 8, 8 + #r.rule, "Identifier" } })
+			add(" asks   " .. r.ask, { { 1, 5, "Comment" }, { 8, 8 + #r.ask, "Title" } })
+			add("")
+		end
+		local mark, verdict, hl = "…", "asking the model", "Comment"
+		if r.label then
+			mark = r.kept and "✗" or "✓"
+			hl = r.kept and "DiagnosticWarn" or "DiagnosticOk"
+			verdict = string.format("%-3s %s  %s", r.label, r.p, r.kept and "warning" or "cleared")
+		end
+		local head = string.format(" %s %3d  ", mark, r.line + 1)
+		local text = r.text .. string.rep(" ", width - vim.fn.strdisplaywidth(r.text)) .. "   "
+		add(head .. text .. verdict, { { 1, 1 + #mark, hl }, { #head + #text, #head + #text + #verdict, hl } })
+		vim.api.nvim_buf_set_extmark(bufnr, match_ns, r.line, r.col, {
+			id = r.id,
+			end_row = r.end_line,
+			end_col = r.end_col,
+			hl_group = r.label and (r.kept and "DiffDelete" or "DiffAdd") or "Visual",
+		})
+	end
+	if not (panel.buf and vim.api.nvim_buf_is_valid(panel.buf)) then
+		panel.buf = vim.api.nvim_create_buf(false, true)
+	end
+	vim.api.nvim_buf_set_lines(panel.buf, 0, -1, false, lines)
+	vim.api.nvim_buf_clear_namespace(panel.buf, panel_ns, 0, -1)
+	for _, m in ipairs(marks) do
+		vim.api.nvim_buf_set_extmark(panel.buf, panel_ns, m[1], m[2], { end_col = m[3], hl_group = m[4] })
+	end
+	local config = {
+		relative = "editor",
+		row = 1,
+		col = 2,
+		width = math.min(vim.o.columns - 6, math.max(unpack(vim.tbl_map(vim.fn.strdisplaywidth, lines))) + 1),
+		height = #lines,
+		style = "minimal",
+		border = "rounded",
+		title = " classif ",
+		focusable = false,
+	}
+	if panel.win and vim.api.nvim_win_is_valid(panel.win) then
+		vim.api.nvim_win_set_config(panel.win, config)
+	else
+		panel.win = vim.api.nvim_open_win(panel.buf, false, config)
+		vim.wo[panel.win].wrap = false
+	end
+	panel.code = bufnr
+	-- Keep the cursor line out from under the panel.
+	if vim.fn.winline() <= #lines + 2 then
+		vim.cmd("normal! zz")
+	end
+end
+
 vim.api.nvim_create_user_command("Classif", function()
 	local bufnr = vim.api.nvim_get_current_buf()
+	close_panel()
 	vim.diagnostic.reset(classif_ns, bufnr)
 	vim.api.nvim_buf_clear_namespace(bufnr, cleared_ns, 0, -1)
-	vim.notify("classif: asking the local model")
 	local copy = vim.fn.tempname() .. "." .. vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":e")
 	vim.fn.writefile(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), copy)
-	local scan = "ast-grep scan --json=stream --include-metadata "
-		.. vim.fn.shellescape(copy)
-		.. " | ./triage.sh --json"
+	local scan = vim.system({ "ast-grep", "scan", "--json=stream", "--include-metadata", copy }, { cwd = dir, text = true }):wait()
+	vim.fn.delete(copy)
+	local rows = {}
+	for line in vim.gsplit(scan.stdout or "", "\n", { trimempty = true }) do
+		local f = vim.json.decode(line)
+		if type(f.metadata) == "table" and f.metadata.ask then
+			table.insert(rows, {
+				id = #rows + 1,
+				rule = f.ruleId,
+				ask = f.metadata.ask,
+				text = f.text,
+				line = f.range.start.line,
+				col = f.range.start.column,
+				end_line = f.range["end"].line,
+				end_col = f.range["end"].column,
+			})
+		end
+	end
+	if #rows == 0 then
+		vim.notify("classif: no rule here asks a question")
+		Demo.classified = Demo.classified + 1
+		return
+	end
+	draw_panel(bufnr, rows)
 	vim.system(
-		{ "sh", "-c", scan },
-		{ cwd = dir, text = true },
+		{ dir .. "/triage.sh", "--json" },
+		{ cwd = dir, text = true, stdin = scan.stdout },
 		vim.schedule_wrap(function(out)
-			vim.fn.delete(copy)
 			local diags = {}
 			for line in vim.gsplit(out.stdout or "", "\n", { trimempty = true }) do
 				local v = vim.json.decode(line)
+				for _, r in ipairs(rows) do
+					if r.line == v.line and r.col == v.col then
+						r.label, r.p, r.kept = v.label, v.p, v.kept
+					end
+				end
 				local verdict = string.format("classif: %s %s", v.label, v.p)
 				if v.kept then
 					table.insert(diags, {
@@ -110,6 +224,19 @@ vim.api.nvim_create_user_command("Classif", function()
 				end
 			end
 			vim.diagnostic.set(classif_ns, bufnr, diags)
+			draw_panel(bufnr, rows)
+			-- The panel stays until the cursor moves.
+			local at = vim.api.nvim_win_get_cursor(0)
+			vim.api.nvim_create_autocmd("CursorMoved", {
+				buffer = bufnr,
+				callback = function()
+					if vim.deep_equal(vim.api.nvim_win_get_cursor(0), at) then
+						return
+					end
+					close_panel()
+					return true
+				end,
+			})
 			Demo.classified = Demo.classified + 1
 		end)
 	)
