@@ -1,7 +1,7 @@
 id: direct-http-error-return
 language: go
 severity: warning
-message: Wrap HTTP errors with request context
+message: Add the request to the error
 rule:
   pattern: |
     if $ERR != nil {

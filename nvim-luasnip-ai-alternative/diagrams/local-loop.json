@@ -1,0 +1,26 @@
+{
+  "boxes": [
+    {
+      "title": "ast-grep",
+      "color": "cyan",
+      "inner": [
+        "rules",
+        "flag it"
+      ]
+    },
+    {
+      "title": "LuaSnip",
+      "color": "yellow",
+      "inner": [
+        "snippets",
+        "type the fix"
+      ]
+    }
+  ],
+  "connector": {
+    "top": "flags",
+    "bottom": "fixes",
+    "arrows": true
+  },
+  "footer": "Both run in the editor, with no network call"
+}

@@ -1,7 +1,7 @@
 id: panic-on-error
 language: go
 severity: error
-message: Don't panic on errors, return them properly
+message: Return the error instead of panicking
 rule:
   pattern: |
     if $ERR != nil {
