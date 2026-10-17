@@ -174,7 +174,10 @@ while IFS= read -r group; do
 	[[ ${fix} == null ]] || mark='\e[32m✓'
 	printf "  ${mark}\\e[0m \\e[36m%s\\e[0m  %s  \\e[33m%s %s\\e[0m\\n" "${where}" "${text}" "${label:-none}" "${p}"
 	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(tail -1 <<<"${context}")"
-	[[ ${fix} == null ]] && continue
+	if [[ ${fix} == null ]]; then
+		printf '    \e[38;2;128;128;128mleft for a person\e[0m\n'
+		continue
+	fi
 	printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "$(jq -r '. | if . == "" then "(the line is removed)" else . end' <<<"${fix}")"
 	if [[ ${mode} != rows ]]; then
 		jq -r '[.file,

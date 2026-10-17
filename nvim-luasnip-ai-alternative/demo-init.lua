@@ -4,13 +4,13 @@
 -- demo.sh drives it over RPC through the Demo table below.
 vim.opt.runtimepath:prepend(vim.fn.stdpath("data") .. "/lazy/nvim-lspconfig")
 
--- The live scans in the deck read example_bad.go, so a save during a demo
--- would change every later take. Writes to it are dropped.
+-- The live scans in the deck read example_bad.go and logs/main.go, so a save
+-- during a demo would change every later take. Writes to them are dropped.
 vim.api.nvim_create_autocmd("BufWriteCmd", {
-	pattern = "example_bad.go",
+	pattern = { "example_bad.go", "*/logs/main.go" },
 	callback = function()
 		vim.bo.modified = false
-		vim.notify("demo: example_bad.go stays unchanged")
+		vim.notify("demo: saves are dropped, the file stays as committed")
 	end,
 })
 
@@ -306,6 +306,7 @@ Demo.rules = {
 	"log-error",
 	"log-info",
 	"log-sensitive",
+	"log-unsupported",
 	"panic-on-error",
 	"vague-error-message",
 }

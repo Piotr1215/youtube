@@ -1,0 +1,11 @@
+id: log-unsupported
+valid:
+  - 'log.Printf("login failed: %v", err)'
+  - 'log.Printf("login request: %+v", creds)'
+  - 'log.Printf("listening on %s", addr)'
+  - 'log.Printf("retries %d", n)'
+invalid:
+  - 'log.Printf("token %x", token)'
+  - 'log.Printf("read failed: %q", err)'
+  - 'log.Printf("%s took %v", name, d)'
+  - 'log.Printf("%d of %d", i, n)'

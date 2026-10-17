@@ -1,0 +1,58 @@
+id: log-unsupported
+snapshots:
+  "log.Printf(\"%d of %d\", i, n)":
+    labels:
+    - source: log.Printf("%d of %d", i, n)
+      style: primary
+      start: 0
+      end: 28
+    - source: log.Printf("%d of %d", i, n)
+      style: secondary
+      start: 0
+      end: 28
+    - source: log.Printf
+      style: secondary
+      start: 0
+      end: 10
+  "log.Printf(\"%s took %v\", name, d)":
+    labels:
+    - source: log.Printf("%s took %v", name, d)
+      style: primary
+      start: 0
+      end: 33
+    - source: log.Printf("%s took %v", name, d)
+      style: secondary
+      start: 0
+      end: 33
+    - source: log.Printf
+      style: secondary
+      start: 0
+      end: 10
+  "log.Printf(\"read failed: %q\", err)":
+    labels:
+    - source: "log.Printf(\"read failed: %q\", err)"
+      style: primary
+      start: 0
+      end: 34
+    - source: "log.Printf(\"read failed: %q\", err)"
+      style: secondary
+      start: 0
+      end: 34
+    - source: log.Printf
+      style: secondary
+      start: 0
+      end: 10
+  "log.Printf(\"token %x\", token)":
+    labels:
+    - source: log.Printf("token %x", token)
+      style: primary
+      start: 0
+      end: 29
+    - source: log.Printf("token %x", token)
+      style: secondary
+      start: 0
+      end: 29
+    - source: log.Printf
+      style: secondary
+      start: 0
+      end: 10

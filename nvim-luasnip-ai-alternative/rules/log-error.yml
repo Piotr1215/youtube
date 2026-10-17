@@ -2,8 +2,10 @@ id: log-error
 language: go
 severity: info
 message: An error goes to slog.Error
-# Every rule here matches the same structure, log.Printf with one verb and
-# one argument, so syntax alone cannot say what the line is for.
+# Every rule here matches the same structure, log.Printf with one plain verb
+# (%v, %+v, %s or %d) and one argument, so syntax alone cannot say what the line
+# is for. slog keeps the value but not printf formatting, so a %x or a width
+# would be lost: those lines match no rule and stay as they are.
 # This one needs no model: the argument is err, and syntax can see that.
 rule:
   pattern: log.Printf($FMT, err)
@@ -11,7 +13,7 @@ rule:
     kind: expression_statement
 constraints:
   FMT:
-    regex: '^"[^%]*%[-+# 0-9.]*[a-zA-Z][^%]*"$'
+    regex: '^"[^%]*%(\+v|[vsd])[^%]*"$'
 transform:
   BARE:
     replace:
