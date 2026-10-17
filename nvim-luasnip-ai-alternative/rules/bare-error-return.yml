@@ -3,11 +3,31 @@ language: go
 severity: warning
 message: Wrap errors with context
 rule:
-  pattern: |
-    if $ERR != nil {
-      return $$$ARGS, $ERR
-    }
-  # direct-http-error-return owns the HTTP case, so one line gets one diagnostic
-  not:
-    follows:
-      pattern: $RESP, $ERR := http.$METHOD($$$CALL)
+  kind: identifier
+  pattern: $ERR
+  nthChild:
+    position: 1
+    reverse: true
+  all:
+    - inside:
+        kind: expression_list
+        inside:
+          kind: return_statement
+          inside:
+            kind: if_statement
+            stopBy: end
+            has:
+              field: condition
+              pattern: $ERR != nil
+            not:
+              follows:
+                pattern: $RESP, $ERR := http.$METHOD($$$CALL)
+    - inside:
+        any:
+          - kind: function_declaration
+          - kind: method_declaration
+        stopBy: end
+        has:
+          field: name
+          pattern: $FN
+fix: 'fmt.Errorf("$FN: %w", $ERR)'

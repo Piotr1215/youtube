@@ -1,15 +1,54 @@
 id: direct-http-error-return
 snapshots:
   "func f() (*http.Response, error) {\n\tresp, err := http.Get(url)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\treturn resp, nil\n}\n":
+    fixed: |
+      func f() (*http.Response, error) {
+      	resp, err := http.Get(url)
+      	if err != nil {
+      		return nil, fmt.Errorf("f: %w", err)
+      	}
+      	return resp, nil
+      }
     labels:
-    - source: |-
-        if err != nil {
-        		return nil, err
-        	}
+    - source: err
       style: primary
-      start: 64
-      end: 100
+      start: 94
+      end: 97
+    - source: err != nil
+      style: secondary
+      start: 67
+      end: 77
     - source: resp, err := http.Get(url)
       style: secondary
       start: 36
       end: 62
+    - source: |-
+        if err != nil {
+        		return nil, err
+        	}
+      style: secondary
+      start: 64
+      end: 100
+    - source: return nil, err
+      style: secondary
+      start: 82
+      end: 97
+    - source: nil, err
+      style: secondary
+      start: 89
+      end: 97
+    - source: f
+      style: secondary
+      start: 5
+      end: 6
+    - source: |-
+        func f() (*http.Response, error) {
+        	resp, err := http.Get(url)
+        	if err != nil {
+        		return nil, err
+        	}
+        	return resp, nil
+        }
+      style: secondary
+      start: 0
+      end: 120

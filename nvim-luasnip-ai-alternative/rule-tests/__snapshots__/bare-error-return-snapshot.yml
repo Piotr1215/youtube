@@ -1,11 +1,50 @@
 id: bare-error-return
 snapshots:
   "func f() (int, error) {\n\tv, err := g()\n\tif err != nil {\n\t\treturn 0, err\n\t}\n\treturn v, nil\n}\n":
+    fixed: |
+      func f() (int, error) {
+      	v, err := g()
+      	if err != nil {
+      		return 0, fmt.Errorf("f: %w", err)
+      	}
+      	return v, nil
+      }
     labels:
+    - source: err
+      style: primary
+      start: 68
+      end: 71
+    - source: err != nil
+      style: secondary
+      start: 43
+      end: 53
     - source: |-
         if err != nil {
         		return 0, err
         	}
-      style: primary
+      style: secondary
       start: 40
       end: 74
+    - source: return 0, err
+      style: secondary
+      start: 58
+      end: 71
+    - source: 0, err
+      style: secondary
+      start: 65
+      end: 71
+    - source: f
+      style: secondary
+      start: 5
+      end: 6
+    - source: |-
+        func f() (int, error) {
+        	v, err := g()
+        	if err != nil {
+        		return 0, err
+        	}
+        	return v, nil
+        }
+      style: secondary
+      start: 0
+      end: 91
