@@ -11,13 +11,13 @@
 # the one replacing it, and demo.sh waited on a socket that was gone.
 set -euo pipefail
 
-session="luasnip-demo"
+session="ast-grep-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-sock="${1:-${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-$$.sock}"
+sock="${1:-${XDG_RUNTIME_DIR:-/tmp}/ast-grep-demo-$$.sock}"
 
 # grug-far runs ast-grep from a search buffer. Your config does not carry it,
 # so the demo clones it here, pinned, and every take looks the same.
-plugins="${XDG_DATA_HOME:-${HOME}/.local/share}/luasnip-demo"
+plugins="${XDG_DATA_HOME:-${HOME}/.local/share}/ast-grep-demo"
 fetch_plugin() {
 	local repo="$1" commit="$2" dest="${plugins}/${1#*/}"
 	[[ -d ${dest} ]] && return 0

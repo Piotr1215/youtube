@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Plays one Neovim demo segment in the demo session, one scene per key press.
 #
-#   ./demo.sh tree | search | diagnostics | snippet | triage
+#   ./demo.sh tree | search | diagnostics | triage
 #
 # The slides call this. It rebuilds the demo session (your Neovim with
 # demo-init.lua on top), switches the presenter's client to it, and opens a
@@ -13,13 +13,13 @@
 # PACE scales every pause, so PACE=1.5 slows the typing and the beats down.
 set -euo pipefail
 
-session="luasnip-demo"
+session="ast-grep-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 pace="${PACE:-1}"
-segments="tree|search|diagnostics|snippet|triage"
+segments="tree|search|diagnostics|triage"
 # Each launch gets its own demo nvim socket; the card receives it as --play's
 # third argument. setup-demo.sh says why the path is never reused.
-sock="${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-$$.sock"
+sock="${XDG_RUNTIME_DIR:-/tmp}/ast-grep-demo-$$.sock"
 
 # Sleeps for a number of seconds scaled by PACE.
 pause() {
@@ -93,11 +93,11 @@ wait_findings() {
 }
 
 # Types keys in vim notation into the demo nvim, one key at a time, so viewers
-# can read along. <Esc>, <CR>, <Space> and <M-x> become tmux key names, and
+# can read along. <Esc>, <CR> and <Space> become tmux key names, and
 # <Hold> waits long enough for which-key to show what the prefix offers. The
 # optional second argument sets the pause between plain characters.
 type_keys() {
-	local all="$1" gap="${2:-0.14}" i=0 token char named='^<(Esc|CR|Space|Hold|M-[a-z])>'
+	local all="$1" gap="${2:-0.14}" i=0 token char named='^<(Esc|CR|Space|Hold)>'
 	while ((i < ${#all})); do
 		token=""
 		[[ ${all:i} =~ ${named} ]] && token="${BASH_REMATCH[0]}"
@@ -106,7 +106,6 @@ type_keys() {
 		"<CR>") tmux send-keys -t "${demo_pane}" Enter ;;
 		"<Space>") tmux send-keys -t "${demo_pane}" Space ;;
 		"<Hold>") pause 1.6 ;;
-		"<M-"*) tmux send-keys -t "${demo_pane}" "M-${token:3:1}" ;;
 		*)
 			char="${all:i:1}"
 			# tmux reads a bare ; as its command separator.
@@ -181,10 +180,10 @@ diagnostics() {
 	scene "2/3" "]d" "A %v where the rule wants %w"
 	type_keys "]d"
 	pause 2
-	scene "3/3" "g r  a  Enter" "gr lists the LSP keys; gra offers the rule's fix"
+	scene "3/3" "g r  a  Enter" "gr lists the LSP keys; gra lists each rule's fix"
 	type_keys "gr<Hold>a"
 	pause 1.5
-	beat "Enter ▸ apply the fix"
+	beat "Enter ▸ apply the first, the %w fix"
 	pause 1
 	type_keys "<CR>"
 	pause 1.5
@@ -192,62 +191,47 @@ diagnostics() {
 	pause 2.5
 }
 
-# iferr types the fix the bare-return rule asks for.
-snippet() {
-	scene "1/5" "]d" "A bare return, flagged on line 16"
-	type_keys "]d"
-	pause 2
-	scene "2/5" "3S" "Replace the three lines"
-	type_keys "3S"
-	pause 1
-	scene "3/5" "iferr  M-l" "Expand; the error name is selected"
-	type_keys "iferr"
-	pause 0.6
-	type_keys "<M-l>"
-	pause 1.5
-	scene "4/5" "M-l  M-j  M-j" "Jump to the choice: nil, or nothing"
-	type_keys "<M-l>"
-	pause 1
-	beat "M-j ▸ next choice"
-	type_keys "<M-j>"
-	pause 1.5
-	type_keys "<M-j>"
-	pause 1.5
-	scene "5/5" "M-l  fetch user  M-l  Esc" "Name the context; the warning goes"
-	type_keys "<M-l>"
-	pause 0.8
-	type_keys "fetch user"
-	pause 0.6
-	type_keys "<M-l><Esc>"
-	pause 2.5
-}
-
-# Waits for :Classif to turn its verdicts into diagnostics.
-wait_classified() {
-	local i
+# Types :Classif and waits until the run it starts has turned its verdicts
+# into diagnostics. Demo.classified counts finished runs, so the count read
+# before typing tells this run from the last one.
+classify() {
+	local i before
+	before="$(rpc 'Demo.classified' || true)"
+	type_keys ":Classif<CR>"
+	beat "asking the local model"
 	for ((i = 0; i < 300; i++)); do
-		[[ "$(rpc 'Demo.classified and 1 or 0' || true)" == 1 ]] && return 0
+		(("$(rpc 'Demo.classified' || echo 0)" > before)) && return 0
 		sleep 0.2
 	done
 	fail "classif gave no verdict within a minute"
 }
 
 # ast-grep marks every error message as a hint; classif judges each one and
-# only the messages it confirms become warnings.
+# only the messages it confirms become warnings. gra applies the rule's fix,
+# built from the syntax tree, and a second :Classif judges the fixed text.
 triage() {
-	scene "1/3" "23G" "ast-grep marks each error message; syntax cannot judge it"
+	scene "1/5" "23G" "ast-grep marks each error message; syntax cannot judge it"
 	type_keys "23G"
 	pause 2
-	scene "2/3" ":Classif" "Ask the local model about every marked message"
-	type_keys ":Classif<CR>"
-	beat "asking the local model"
-	wait_classified
+	scene "2/5" ":Classif" "Ask the local model about every marked message"
+	classify
 	beat "line 23 cleared, line 53 confirmed"
 	pause 2.5
-	scene "3/3" "53G  ]d" "The confirmed message is a warning now"
+	scene "3/5" "53G  ]d" "The confirmed message is a warning now"
 	type_keys "53G"
 	pause 1
 	type_keys "]d"
+	pause 3
+	scene "4/5" "g r  a  Enter" "The rule's fix names the function, read from the tree"
+	type_keys "gr<Hold>a"
+	pause 1.5
+	beat "Enter ▸ apply the fix"
+	pause 1
+	type_keys "<CR>"
+	pause 2
+	scene "5/5" ":Classif" "Ask the model about the fixed message"
+	classify
+	beat "line 53 cleared: the fix answered the question"
 	pause 3
 }
 
@@ -264,7 +248,6 @@ play() {
 	tree) tree ;;
 	search) search ;;
 	diagnostics) diagnostics ;;
-	snippet) snippet ;;
 	triage) triage ;;
 	*) fail "unknown segment: ${segment}" ;;
 	esac

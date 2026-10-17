@@ -2,9 +2,13 @@ digraph editor_lsp {
   rankdir=LR;
   node [shape=box];
 
-  rules [label="rules/*.yml\nsgconfig.yml"];
+  rule [label="rule\nmessage:\nfix:"];
   lsp [label="ast-grep lsp"];
-  nvim [label="Neovim\ndiagnostics\ncode actions, gra"];
+  diag [label="diagnostic\nthe message"];
+  action [label="code action\nthe fix"];
+  gra [label="gra\napplies it"];
 
-  rules -> lsp -> nvim;
+  rule -> lsp;
+  lsp -> diag;
+  lsp -> action -> gra;
 }

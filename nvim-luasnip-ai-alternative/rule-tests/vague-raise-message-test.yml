@@ -1,0 +1,7 @@
+id: vague-raise-message
+valid:
+  - 'def f():\n    log("fetch failed")'
+  - 'def f():\n    raise ValueError(msg)'
+  - 'raise ValueError("top level")'
+invalid:
+  - 'def fetch_user():\n    raise RuntimeError("fetch failed")'

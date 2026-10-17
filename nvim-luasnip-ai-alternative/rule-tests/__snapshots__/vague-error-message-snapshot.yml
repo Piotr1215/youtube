@@ -1,14 +1,32 @@
 id: vague-error-message
 snapshots:
-  errors.New("boom"):
-    labels:
-    - source: errors.New("boom")
-      style: primary
-      start: 0
-      end: 18
-  "fmt.Errorf(\"bad status: %d\", code)":
+  "func (c *Client) Get() error { return fmt.Errorf(\"bad status: %d\", code) }":
+    fixed: "func (c *Client) Get() error { return fmt.Errorf(\"Get: bad status: %d\", code) }"
     labels:
     - source: "fmt.Errorf(\"bad status: %d\", code)"
       style: primary
+      start: 38
+      end: 72
+    - source: Get
+      style: secondary
+      start: 17
+      end: 20
+    - source: "func (c *Client) Get() error { return fmt.Errorf(\"bad status: %d\", code) }"
+      style: secondary
       start: 0
-      end: 34
+      end: 74
+  "func fetchUser() error { return fmt.Errorf(\"bad status: %d\", code) }":
+    fixed: "func fetchUser() error { return fmt.Errorf(\"fetchUser: bad status: %d\", code) }"
+    labels:
+    - source: "fmt.Errorf(\"bad status: %d\", code)"
+      style: primary
+      start: 32
+      end: 66
+    - source: fetchUser
+      style: secondary
+      start: 5
+      end: 14
+    - source: "func fetchUser() error { return fmt.Errorf(\"bad status: %d\", code) }"
+      style: secondary
+      start: 0
+      end: 68

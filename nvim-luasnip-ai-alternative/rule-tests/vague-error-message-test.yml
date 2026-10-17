@@ -1,7 +1,8 @@
 id: vague-error-message
 valid:
-  - 'fmt.Sprintf("bad status: %d", code)'
-  - 'errors.Is(err, io.EOF)'
+  - 'func f() string { return fmt.Sprintf("bad status: %d", code) }'
+  - 'func f() error { return fmt.Errorf(msg, code) }'
+  - 'var errBad = fmt.Errorf("bad status: %d", code)'
 invalid:
-  - 'fmt.Errorf("bad status: %d", code)'
-  - 'errors.New("boom")'
+  - 'func fetchUser() error { return fmt.Errorf("bad status: %d", code) }'
+  - 'func (c *Client) Get() error { return fmt.Errorf("bad status: %d", code) }'
