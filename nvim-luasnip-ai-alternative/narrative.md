@@ -27,11 +27,11 @@ The story of the video, written before any slide. Each numbered beat is one mome
 
 ### Text
 
-5. grep finds every log.Printf instantly, but it only compares characters. Ask it for the calls that log err and it misses one split over two lines and matches one inside a comment: to grep there are no calls or arguments.
+5. grep finds every log.Printf instantly, but it only compares characters. Ask it for the calls that log err and it misses one split over two lines and matches one inside a comment. A smarter regex can patch each case, but every new layout needs another patch, and the regex never knows what a call or an argument is.
 
 ### Structure
 
-6. To see code instead of characters, a tool has to read it the way a compiler does, as a syntax tree: a call, the function it calls, its arguments. Spacing, line breaks and comments are gone, and the structure is left.
+6. To see code instead of characters, a tool has to read it the way a compiler does, as a syntax tree: a call, the function it calls, its arguments. Spacing and line breaks are gone, and a comment becomes a comment node, never a call.
 
 7. Your editor already builds this kind of tree, with tree-sitter, to highlight and select code. In Neovim you can open it beside the code and watch each part light up.
 

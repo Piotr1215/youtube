@@ -17,26 +17,23 @@ segments="tree|rules"
 # second argument. setup-demo.sh says why the path is never reused.
 sock="${XDG_RUNTIME_DIR:-/tmp}/ast-grep-demo-$$.sock"
 
-# Prints a segment's steps, one "keys|what it shows" per line. The patterns
-# are typed as written, so their $ metavariables stay in single quotes.
-# shellcheck disable=SC2016
+# Prints a segment's steps, the keys of one per line. The presenter says what
+# each does; the card only shows what to type next.
 steps() {
 	case "$1" in
 	tree)
 		printf '%s\n' \
-			':e logs/main.go|open the login service' \
-			'/got here, then Enter|jump to the leftover debug line' \
-			':InspectTree|its syntax tree, beside the code' \
-			'j j j j|walk the nodes; the code under each lights up' \
-			'q|close the tree' \
-			'v an an an|select a node, then each one around it'
+			'/got here, then Enter' \
+			':InspectTree' \
+			'j j j j' \
+			'q' \
+			'v an an an'
 		;;
 	rules)
 		printf '%s\n' \
-			':e logs/main.go|open the login service' \
-			']d|jump to the first line a rule flags' \
-			'gra|the rule'"'"'s fix, offered as a code action' \
-			'Enter|apply it: the line becomes slog.Error'
+			']d' \
+			'gra' \
+			'Enter'
 		;;
 	esac
 }
@@ -61,13 +58,13 @@ status() {
 card() {
 	segment="$1"
 	sock="$2"
-	local n=0 keys text i
-	printf '\e[?25l\e[2J\n'
-	while IFS='|' read -r keys text; do
+	local n=0 keys i
+	printf '\e[?25l\e[2J'
+	while IFS= read -r keys; do
 		n=$((n + 1))
-		printf '\n \e[33m%d\e[0m  \e[1;33m%s\e[0m\n    \e[37m%s\e[0m\n' "${n}" "${keys}" "${text}"
+		printf '\n \e[33m%d\e[0m  \e[1;33m%s\e[0m' "${n}" "${keys}"
 	done < <(steps "${segment}")
-	printf '\n \e[36m:qa! returns to the slides\e[0m'
+	printf '\n \e[36m:qa! back to the slides\e[0m'
 	status '\e[90mwaiting for ast-grep\e[0m'
 	for ((i = 0; i < 100; i++)); do
 		if [[ "$(rpc 'Demo.findings()' || true)" =~ ^[1-9] ]]; then
@@ -91,14 +88,14 @@ pane_running() {
 # launch replaces the session, so both act only on the session this launch
 # made, by id.
 finish() {
-	if [[ "$(tmux display-message -p -c "${client}" '#{session_id}' 2>/dev/null)" == "${session_id}" ]]; then
+	if tmux list-clients -t "${session_id}" -F '#{client_name}' 2>/dev/null | grep -qxF -- "${client}"; then
 		tmux switch-client -c "${client}" -t "=${home_session}" 2>/dev/null || true
 	fi
 	tmux kill-session -t "${session_id}" 2>/dev/null || true
 }
 
 launch() {
-	local segment="$1" demo_pane width height card_width card_height card_y card_pane keys text
+	local segment="$1" demo_pane card_width card_height card_pane keys
 	if ! [[ ${segment} =~ ^(${segments})$ ]]; then
 		printf 'usage: demo.sh %s\n' "${segments}" >&2
 		exit 2
@@ -122,25 +119,22 @@ launch() {
 	tmux switch-client -c "${client}" -t "${session_id}"
 	sleep 0.5
 
-	# The card fits its longest line: two rows per step, plus the status,
-	# the footer and the blank lines between them.
+	# The card fits its longest line: one row per step, plus the status and
+	# the footer.
 	card_width=30
-	card_height=4
-	while IFS='|' read -r keys text; do
+	card_height=2
+	while IFS= read -r keys; do
 		((${#keys} + 6 > card_width)) && card_width=$((${#keys} + 6))
-		((${#text} + 6 > card_width)) && card_width=$((${#text} + 6))
-		card_height=$((card_height + 3))
+		card_height=$((card_height + 1))
 	done < <(steps "${segment}")
 
-	# The window takes the client's size on switch, so measure it after.
-	# The card sits bottom right, above the statusline: code lives at the top,
-	# and long lines rarely reach that corner.
-	width="$(tmux display-message -p -t "${demo_pane}" '#{window_width}')"
-	height="$(tmux display-message -p -t "${demo_pane}" '#{window_height}')"
-	card_y=$((height - card_height - 4))
+	# The card sits top left, below the tabline: at recording size the code
+	# fills the screen, and the top of the file holds only imports. The
+	# search, the jump to a finding, the fix menu and the syntax tree all land
+	# further down or on the right half.
 	card_pane="$(tmux new-pane -d -P -F '#{pane_id}' -t "${demo_pane}" \
 		-x "${card_width}" -y "${card_height}" \
-		-X "$((width - card_width - 2))" -Y "${card_y}" \
+		-X 1 -Y 2 \
 		"'${dir}/demo.sh' --card '${segment}' '${sock}'")"
 	# new-pane takes no -T since tmux 3.7, so the title is set afterwards.
 	# select-pane also makes the card current, so focus goes back to nvim.
