@@ -3,13 +3,17 @@
 # demo-init.lua on top, listening on a socket so demo.sh can tell when the
 # ast-grep findings are in. Recreated on every run, so each take starts from
 # the file as committed.
+#
+#   ./setup-demo.sh [SOCKET]
+#
+# Each run listens on a socket of its own. An nvim unlinks its socket path as
+# it exits, so with a shared path the nvim being replaced deleted the socket of
+# the one replacing it, and demo.sh waited on a socket that was gone.
 set -euo pipefail
 
 session="luasnip-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-# One demo nvim per tmux server, so two servers never drive each other's.
-server="$(tmux display-message -p '#{pid}')"
-sock="${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-${server}.sock"
+sock="${1:-${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-$$.sock}"
 
 # grug-far runs ast-grep from a search buffer. Your config does not carry it,
 # so the demo clones it here, pinned, and every take looks the same.
@@ -22,8 +26,14 @@ fetch_plugin() {
 }
 fetch_plugin MagicDuck/grug-far.nvim bbde8ef5ae46ceee2c3bd8b21fc048c5f8ffbfc0
 
+# demo-init.lua drops saves from Neovim, but a grug-far replace has ast-grep
+# rewrite the file on disk, and the live scans on later slides read it.
+if ! git -C "${dir}" diff --quiet HEAD -- example_bad.go; then
+	printf 'example_bad.go differs from git; restore it with: git checkout example_bad.go\n' >&2
+	exit 1
+fi
+
 tmux kill-session -t "=${session}" 2>/dev/null || true
-rm -f "${sock}"
 # -i NONE keeps the demo's searches and registers out of your shada. Copilot
 # stays off: the video is about what works without a cloud model.
 tmux new-session -d -s "${session}" -c "${dir}" \
