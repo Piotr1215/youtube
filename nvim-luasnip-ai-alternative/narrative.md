@@ -60,11 +60,11 @@ The video climbs four levels: text search, structural search, rules, and a model
 
 14. Telling what text means is what language models do well, but a chat model answers in free text and rewrites code along the way. classif asks a small model on your own machine one question about each match, and the model may only answer from your list: debug or info, yes or no. Each answer comes with a score.
 
-15. The question lives in the rule, next to the fix each answer points to, so ast-grep asks it of every match and the answer picks which fix to suggest. In Neovim the question and the answer appear above each call, and you take the fix or leave it. Live in Neovim.
+15. The question lives in the rule, next to the fix each answer points to, so ast-grep asks it of every match and the answer picks which fix to suggest. A second question looks at the same lines from another side: does this value hold a secret or personal data? A yes means no fix is suggested at all, and the line waits for a person.
 
-16. A second question looks at the same lines from another side: does this value hold a secret or personal data? A yes means no fix is suggested at all, and the line waits for a person.
+16. In Neovim the questions and the answers appear above each call, and you take a suggested fix or leave it. Live in Neovim.
 
-17. This is an experiment, and its limits are real. The score ranks the answers; it is not the chance of being right. On forty test lines from code the model had never seen, the small model chose right about six times in ten, and some wrong answers came with high scores. A larger model on a laptop was right four times in five, but rarely sure. So the answers are suggestions you read, never edits that land on their own.
+17. This is an experiment, and its limits are real. The score ranks the answers; it is not the chance of being right. The two questions are not alike. Whether a value is an email address is written in the code the model reads. Whether a line is a leftover often lives only in its author's head, and there the small model chose right about six times in ten on forty lines it had never seen, with some wrong answers scored high. Ask the model about what the code shows, not about what its author meant, and read its answers as suggestions, never as edits that land on their own.
 
 18. That still leaves an interesting possibility: a structural match plus one question a local model answers in about a third of a second, without your code leaving the machine. The question is yours to write, and the tree decides what the model reads.
 
@@ -72,13 +72,15 @@ The video climbs four levels: text search, structural search, rules, and a model
 
 19. Rules fit any change you can describe by its shape: a library swap, a review comment you keep writing, a pattern your team has banned. A model's question fits only where a person would decide by reading the code in front of them, and where a wrong answer costs a look, not a broken file.
 
-20. Let the tree find and the rule rewrite; let a model suggest only where meaning decides. Start with a review comment you keep writing, and make it a rule.
+20. Let the tree find and the rule rewrite; let a model suggest only where meaning decides, and ask it about what the code shows. Start with a review comment you keep writing, and make it a rule.
 
 21. To try it you need ast-grep, Neovim with its language server, and for the experiment, Ollama with a local model for classif.
 
 ## Sources for beat 17
 
 Measured on 2026-10-17 with the deck's own question and answers, the function around each line as context, and the 0.85 floor. Twenty pairs of identical lines in different functions, written by an agent that did not see the rules; its intent for each line is the answer key, not a person's label. Small model, winnow 12B: 25 of 40 right, and 6 wrong answers scored above the floor. Larger model, ornith 35B on the Mac: 32 of 40 right, and 6 answers of the 40 scored above the floor, one of them wrong.
+
+The personal data question has no measurement of the same weight yet: 5 of 6 held-out lines right, lines the presenter's assistant wrote. Before the limits slide states the contrast, it needs a run on real log lines a person labelled, such as the 173 Gitea calls that log a value.
 
 ## Slides
 
@@ -122,9 +124,9 @@ Each line: the slide, the question the viewer has when it appears, and its state
 - From Meaning to an Action: how could anything decide? Keep; it ends on the suggested fix.
 - From the Rule to classif: where does the question come from? Keep, merged with The Debug Rule: the rule file, then the call it makes.
 - Same Shape, Different Answers: does it tell them apart? Keep.
-- classif in Neovim: what does that look like while I work? New, live: the question and answer above each call.
 - A Second Question: what about the email line? Keep.
-- Limits: can I trust it? New: the measured numbers.
+- classif in Neovim: what does that look like while I work? New, live: the questions and answers above each call.
+- Two Kinds of Question: can I trust it? New: what the code shows against what its author meant, with the measured numbers.
 
 ### Your own codebase
 
@@ -143,3 +145,4 @@ Sure and Unsure, The Debug Rule (merged), Acting on the Answer, The Whole Servic
 - ast-grep's language server in Neovim, flagging and fixing in the deck's service.
 - An AI drafting a rule that passes its tests from one sentence; if it needs tries, the slide replays a recorded run.
 - The :Classif view, restored from git history (commit d892da5 deleted it).
+- The personal data question on real, person-labelled log lines, before the limits slide contrasts the two questions.
