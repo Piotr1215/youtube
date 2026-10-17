@@ -1,0 +1,62 @@
+[
+ {
+  "line": "log.Printf(\"status: %d\", code)",
+  "debug_func": "clampStatus",
+  "ops_func": "withAccessLog",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"net/http\"\n)\n\ntype recorder struct {\n\thttp.ResponseWriter\n\tcode int\n}\n\nfunc (r *recorder) WriteHeader(code int) {\n\tr.code = code\n\tr.ResponseWriter.WriteHeader(code)\n}\n\nfunc withAccessLog(next http.Handler) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {\n\t\trec := &recorder{ResponseWriter: w, code: http.StatusOK}\n\t\tnext.ServeHTTP(rec, req)\n\t\tcode := rec.code\n\t\tlog.Printf(\"status: %d\", code)\n\t})\n}\n\nfunc clampStatus(code int) int {\n\tif code < 100 {\n\t\tcode = 500\n\t}\n\tlog.Printf(\"status: %d\", code)\n\tif code > 599 {\n\t\tcode = 500\n\t}\n\treturn code\n}\n\nfunc main() {\n\thttp.ListenAndServe(\":8080\", withAccessLog(http.NotFoundHandler()))\n}\n"
+ },
+ {
+  "line": "log.Printf(\"pending: %d\", pending)",
+  "debug_func": "popBatch",
+  "ops_func": "reportDepth",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"time\"\n)\n\nfunc reportDepth(jobs chan string) {\n\tt := time.NewTicker(time.Minute)\n\tdefer t.Stop()\n\tfor range t.C {\n\t\tpending := len(jobs)\n\t\tlog.Printf(\"pending: %d\", pending)\n\t}\n}\n\nfunc popBatch(jobs chan string, limit int) []string {\n\tvar out []string\n\tfor len(out) < limit {\n\t\tselect {\n\t\tcase j := <-jobs:\n\t\t\tout = append(out, j)\n\t\t\tpending := len(out)\n\t\t\tlog.Printf(\"pending: %d\", pending)\n\t\tdefault:\n\t\t\treturn out\n\t\t}\n\t}\n\treturn out\n}\n\nfunc main() {\n\tjobs := make(chan string, 100)\n\tgo reportDepth(jobs)\n\tpopBatch(jobs, 10)\n}\n"
+ },
+ {
+  "line": "log.Printf(\"bytes: %d\", n)",
+  "debug_func": "readFrame",
+  "ops_func": "archiveFile",
+  "source": "package main\n\nimport (\n\t\"io\"\n\t\"log\"\n\t\"os\"\n)\n\nfunc archiveFile(dst, src string) error {\n\tin, err := os.Open(src)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer in.Close()\n\tout, err := os.Create(dst)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer out.Close()\n\tn, err := io.Copy(out, in)\n\tif err != nil {\n\t\treturn err\n\t}\n\tlog.Printf(\"bytes: %d\", n)\n\treturn nil\n}\n\nfunc readFrame(r io.Reader) []byte {\n\tvar buf []byte\n\tone := make([]byte, 1)\n\tfor {\n\t\tn, err := r.Read(one)\n\t\tif n == 0 || err != nil {\n\t\t\tbreak\n\t\t}\n\t\tlog.Printf(\"bytes: %d\", n)\n\t\tif one[0] == '\\n' {\n\t\t\tbreak\n\t\t}\n\t\tbuf = append(buf, one[0])\n\t}\n\treturn buf\n}\n\nfunc main() {\n\tarchiveFile(\"out.bin\", \"in.bin\")\n}\n"
+ },
+ {
+  "line": "log.Printf(\"evicted %d\", evicted)",
+  "debug_func": "Get",
+  "ops_func": "sweepLoop",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"sync\"\n\t\"time\"\n)\n\ntype entry struct {\n\tval     string\n\texpires time.Time\n}\n\ntype Cache struct {\n\tmu    sync.Mutex\n\titems map[string]entry\n}\n\nfunc (c *Cache) sweepLoop() {\n\tfor range time.Tick(30 * time.Second) {\n\t\tc.mu.Lock()\n\t\tevicted := 0\n\t\tfor k, e := range c.items {\n\t\t\tif time.Now().After(e.expires) {\n\t\t\t\tdelete(c.items, k)\n\t\t\t\tevicted++\n\t\t\t}\n\t\t}\n\t\tc.mu.Unlock()\n\t\tlog.Printf(\"evicted %d\", evicted)\n\t}\n}\n\nfunc (c *Cache) Get(key string) (string, bool) {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\te, ok := c.items[key]\n\tif ok && time.Now().After(e.expires) {\n\t\tdelete(c.items, key)\n\t\tevicted := len(c.items)\n\t\tlog.Printf(\"evicted %d\", evicted)\n\t\treturn \"\", false\n\t}\n\treturn e.val, ok\n}\n\nfunc main() {\n\tc := &Cache{items: map[string]entry{}}\n\tgo c.sweepLoop()\n\tc.Get(\"a\")\n}\n"
+ },
+ {
+  "line": "log.Printf(\"next run in %v\", wait)",
+  "debug_func": "nextWeekday",
+  "ops_func": "runAt",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"time\"\n)\n\nfunc runAt(hour int, task func()) {\n\tfor {\n\t\tnow := time.Now()\n\t\tnext := time.Date(now.Year(), now.Month(), now.Day(), hour, 0, 0, 0, now.Location())\n\t\tif !next.After(now) {\n\t\t\tnext = next.Add(24 * time.Hour)\n\t\t}\n\t\twait := time.Until(next)\n\t\tlog.Printf(\"next run in %v\", wait)\n\t\ttime.Sleep(wait)\n\t\ttask()\n\t}\n}\n\nfunc nextWeekday(now time.Time, day time.Weekday) time.Duration {\n\tt := now\n\tfor t.Weekday() != day {\n\t\tt = t.Add(24 * time.Hour)\n\t\twait := t.Sub(now)\n\t\tlog.Printf(\"next run in %v\", wait)\n\t}\n\treturn t.Sub(now)\n}\n\nfunc main() {\n\trunAt(3, func() {})\n}\n"
+ },
+ {
+  "line": "log.Printf(\"config: %+v\", cfg)",
+  "debug_func": "withDefaults",
+  "ops_func": "loadConfig",
+  "source": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"log\"\n\t\"os\"\n)\n\ntype Config struct {\n\tAddr    string\n\tWorkers int\n}\n\nfunc loadConfig(path string) (*Config, error) {\n\tdata, err := os.ReadFile(path)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tcfg := &Config{}\n\tif err := json.Unmarshal(data, cfg); err != nil {\n\t\treturn nil, err\n\t}\n\tlog.Printf(\"config: %+v\", cfg)\n\treturn cfg, nil\n}\n\nfunc withDefaults(cfg *Config) *Config {\n\tif cfg.Workers <= 0 {\n\t\tcfg.Workers = 4\n\t}\n\tlog.Printf(\"config: %+v\", cfg)\n\tif cfg.Addr == \"\" {\n\t\tcfg.Addr = \":8080\"\n\t}\n\treturn cfg\n}\n\nfunc main() {\n\tcfg, _ := loadConfig(\"app.json\")\n\twithDefaults(cfg)\n}\n"
+ },
+ {
+  "line": "log.Printf(\"processed %d files\", count)",
+  "debug_func": "globMatches",
+  "ops_func": "syncDir",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"os\"\n\t\"path\"\n)\n\nfunc copyOne(src, dst string) error {\n\tdata, err := os.ReadFile(src)\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn os.WriteFile(dst, data, 0o644)\n}\n\nfunc syncDir(src, dst string) error {\n\tentries, err := os.ReadDir(src)\n\tif err != nil {\n\t\treturn err\n\t}\n\tcount := 0\n\tfor _, e := range entries {\n\t\tif e.IsDir() {\n\t\t\tcontinue\n\t\t}\n\t\tif err := copyOne(path.Join(src, e.Name()), path.Join(dst, e.Name())); err != nil {\n\t\t\treturn err\n\t\t}\n\t\tcount++\n\t}\n\tlog.Printf(\"processed %d files\", count)\n\treturn nil\n}\n\nfunc globMatches(pattern string, names []string) []string {\n\tvar out []string\n\tfor _, n := range names {\n\t\tif ok, _ := path.Match(pattern, n); ok {\n\t\t\tout = append(out, n)\n\t\t}\n\t\tcount := len(out)\n\t\tlog.Printf(\"processed %d files\", count)\n\t}\n\treturn out\n}\n\nfunc main() {\n\tsyncDir(os.Args[1], os.Args[2])\n}\n"
+ },
+ {
+  "line": "log.Printf(\"rows: %d\", affected)",
+  "debug_func": "collectIDs",
+  "ops_func": "purgeSessions",
+  "source": "package main\n\nimport (\n\t\"database/sql\"\n\t\"log\"\n)\n\nfunc purgeSessions(db *sql.DB) error {\n\tres, err := db.Exec(\"DELETE FROM sessions WHERE expires_at < now()\")\n\tif err != nil {\n\t\treturn err\n\t}\n\taffected, err := res.RowsAffected()\n\tif err != nil {\n\t\treturn err\n\t}\n\tlog.Printf(\"rows: %d\", affected)\n\treturn nil\n}\n\nfunc collectIDs(rows *sql.Rows) []int {\n\tvar ids []int\n\tfor rows.Next() {\n\t\tvar id int\n\t\trows.Scan(&id)\n\t\tids = append(ids, id)\n\t\taffected := len(ids)\n\t\tlog.Printf(\"rows: %d\", affected)\n\t}\n\treturn ids\n}\n\nfunc main() {\n\tdb, _ := sql.Open(\"postgres\", \"dbname=app\")\n\tpurgeSessions(db)\n}\n"
+ },
+ {
+  "line": "log.Printf(\"job took %v\", elapsed)",
+  "debug_func": "backoff",
+  "ops_func": "runJob",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"time\"\n)\n\nfunc runJob(fn func() error) bool {\n\tstart := time.Now()\n\terr := fn()\n\telapsed := time.Since(start)\n\tlog.Printf(\"job took %v\", elapsed)\n\treturn err == nil\n}\n\nfunc backoff(attempt int) time.Duration {\n\telapsed := time.Duration(1<<attempt) * 100 * time.Millisecond\n\tlog.Printf(\"job took %v\", elapsed)\n\tif elapsed > 10*time.Second {\n\t\telapsed = 10 * time.Second\n\t}\n\treturn elapsed\n}\n\nfunc main() {\n\tfor attempt := 0; !runJob(func() error { return nil }); attempt++ {\n\t\ttime.Sleep(backoff(attempt))\n\t}\n}\n"
+ },
+ {
+  "line": "log.Printf(\"clients: %d\", clients)",
+  "debug_func": "broadcast",
+  "ops_func": "heartbeat",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"sync\"\n\t\"time\"\n)\n\ntype Hub struct {\n\tmu    sync.Mutex\n\tconns map[string]chan []byte\n}\n\nfunc (h *Hub) heartbeat() {\n\tfor range time.Tick(time.Minute) {\n\t\th.mu.Lock()\n\t\tclients := len(h.conns)\n\t\th.mu.Unlock()\n\t\tlog.Printf(\"clients: %d\", clients)\n\t}\n}\n\nfunc (h *Hub) broadcast(msg []byte) {\n\th.mu.Lock()\n\tdefer h.mu.Unlock()\n\tfor id, ch := range h.conns {\n\t\tclients := len(ch)\n\t\tlog.Printf(\"clients: %d\", clients)\n\t\tselect {\n\t\tcase ch <- msg:\n\t\tdefault:\n\t\t\tdelete(h.conns, id)\n\t\t}\n\t}\n}\n\nfunc main() {\n\th := &Hub{conns: map[string]chan []byte{}}\n\tgo h.heartbeat()\n\th.broadcast([]byte(\"hi\"))\n}\n"
+ }
+]
