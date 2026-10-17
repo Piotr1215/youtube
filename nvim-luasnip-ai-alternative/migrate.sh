@@ -32,9 +32,11 @@ trap 'rm -rf "${work}"' EXIT
 cp -r -- "${pkg}/." "${work}/"
 PATH="${PATH}:$(go env GOPATH)/bin"
 
-# Prints a step's number and what it does.
+# Prints a step's number and what it does, after a blank line from the step
+# before; the first step starts at the top, so the slide keeps its last row.
 step() {
-	printf '\n\e[1;33m%s  %s\e[0m\n' "$1" "$2"
+	(($1 == 1)) || printf '\n'
+	printf '\e[1;33m%s  %s\e[0m\n' "$1" "$2"
 }
 
 # Runs ast-grep inside the copy, so its rows name files as DIR does, with the

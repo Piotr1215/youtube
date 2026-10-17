@@ -103,7 +103,7 @@ paint
 paint red '  ✗  ' plain 'a call that is commented out: ' red 'matched'
 paint gray '       // log.Printf("failed: %v", err)'
 paint
-paint yellow '  To grep there are no calls or arguments, only characters on a line.'
+paint yellow '  A regex can be patched for each layout, but it never knows what a call is.'
 ```
 
 <!-- end_slide -->
@@ -131,7 +131,7 @@ paint gray '  └─ ' yellow 'arguments   ' cyan 'argument_list'
 paint gray '                 ├─ ' cyan 'interpreted_string_literal   ' plain '"got here %v"'
 paint gray '                 └─ ' cyan 'selector_expression          ' plain 'r.URL'
 paint
-paint yellow '  Spacing, line breaks and comments are gone; the structure is left.'
+paint yellow '  Spacing and line breaks are gone; a comment becomes a comment node, not a call.'
 ```
 
 <!-- end_slide -->
@@ -191,7 +191,7 @@ paint gray '  These lines need no judgment: the code itself says they log an err
 ```
 
 ```bash +exec
-ast-grep scan --filter '^log-error$' logs
+ast-grep scan --filter '^log-error$' -C 1 logs
 ```
 
 <!-- end_slide -->
@@ -382,11 +382,7 @@ paint yellow '  and lines that can leak a secret get no fix at all.'
 
 ## Migration
 
-> Run together, the migration ends with code that still builds.
-
-```bash +exec_replace
-paint gray '  A dry run: every change is shown and checked, and nothing is written.'
-```
+> Run together on a copy, the migration ends with code that still builds.
 
 ```bash +exec_replace
 ./migrate.sh

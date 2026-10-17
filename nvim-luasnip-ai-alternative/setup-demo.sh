@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Opens a fresh tmux session running your Neovim on example_bad.go, with
+# Opens a fresh tmux session running your Neovim on logs/main.go, with
 # demo-init.lua on top, listening on a socket so demo.sh can tell when the
 # ast-grep findings are in. Recreated on every run, so each take starts from
 # the file as committed.
@@ -35,9 +35,10 @@ fi
 
 tmux kill-session -t "=${session}" 2>/dev/null || true
 # -i NONE keeps the demo's searches and registers out of your shada. Copilot
-# stays off: the video is about what works without a cloud model.
+# stays off: the video is about what works without a cloud model. -S takes
+# the full path, since your config moves into logs/, the file's Go module.
 tmux new-session -d -s "${session}" -c "${dir}" \
-	"nvim --cmd 'set noswapfile' --cmd 'let g:copilot_enabled = v:false' -i NONE --listen '${sock}' -S demo-init.lua example_bad.go"
+	"nvim --cmd 'set noswapfile' --cmd 'let g:copilot_enabled = v:false' -i NONE --listen '${sock}' -S '${dir}/demo-init.lua' logs/main.go"
 
 for _ in $(seq 50); do
 	[[ -S ${sock} ]] && break
