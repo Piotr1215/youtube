@@ -4,11 +4,15 @@ severity: hint
 message: Or return its error
 # The same calls as ignored-error, with the other fix. nil is the zero value of
 # a pointer, so the fix is offered only in a function returning (*T, error).
+# triage.sh hands classif the declaration of the function the call names,
+# its doc comment and signature, and lands a fix only on an answer at min_p.
 metadata:
+  context: callee
+  min_p: 0.9
   choose: How should the caller handle the error this call returns?
   option: return=the caller depends on the call succeeding, like saving, writing or committing data, so the failure must reach the caller
 rule:
-  pattern: $CALL
+  pattern: $CALLEE($$$ARGS)
   kind: call_expression
   not:
     has:
@@ -29,4 +33,4 @@ rule:
           - has:
               field: result
               regex: ^\(\*\w+, error\)$
-fix: 'if err := $CALL; err != nil { return nil, fmt.Errorf("$FN: %w", err) }'
+fix: 'if err := $CALLEE($$$ARGS); err != nil { return nil, fmt.Errorf("$FN: %w", err) }'

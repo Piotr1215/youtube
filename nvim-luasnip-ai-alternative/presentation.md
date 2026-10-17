@@ -497,8 +497,8 @@ paint cyan '  above call     ' plain 'the question classif asks, then its answer
 ## Triage Demo Result
 
 ```bash +exec_replace
-paint green '  ✓  ' plain 'the gate fixed lines 27 and 53, left 23, and kept saveUser as a warning'
-paint green '  ✓  ' plain 'pick gave saveUser the return fix and logActivity the ignore fix'
+paint green '  ✓  ' plain 'the gate fixed lines 27 and 53, left 23, and kept record as a warning'
+paint green '  ✓  ' plain 'pick gave record the return fix and notify the ignore fix'
 paint green '  ✓  ' plain 'each call showed the question above it, then the answer'
 paint
 paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'

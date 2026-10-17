@@ -100,7 +100,8 @@ local function mark(bufnr, r)
 		local which = r.pick and ("the " .. r.label .. " fix") or "the rule's fix"
 		hl, says, says_hl = "DiffChange", verdict .. " → " .. which .. " applied", "DiagnosticInfo"
 	elseif r.label and not r.answered then
-		hl, says, says_hl = "DiffDelete", "no answer → a warning, no fix", "DiagnosticWarn"
+		says = r.label == "" and "no answer" or verdict .. " unsure"
+		hl, says, says_hl = "DiffDelete", says .. " → a warning, no fix", "DiagnosticWarn"
 	elseif r.kept then
 		hl, says, says_hl = "DiffDelete", verdict .. " → a warning, no fix", "DiagnosticWarn"
 	elseif r.label then
@@ -112,10 +113,12 @@ local function mark(bufnr, r)
 		end_row = r.end_line,
 		end_col = r.end_col,
 		hl_group = hl,
-		virt_lines = {
+		virt_lines = vim.list_extend({
 			{ { indent .. "classif asks: ", "Comment" }, { r.ask, "Question" } },
+		}, {
+			r.context and { { indent .. "classif reads: ", "Comment" }, { r.context, "Comment" } } or nil,
 			{ { indent .. "classif says: ", "Comment" }, { says, says_hl } },
-		},
+		}),
 		virt_lines_above = true,
 	})
 end
@@ -184,7 +187,6 @@ vim.api.nvim_create_user_command("Classif", function(cmd)
 		{ cwd = dir, text = true }
 	)
 		:wait()
-	vim.fn.delete(copy)
 	-- One row per call and question: triage.sh asks once for the rules that
 	-- match the same call, and a pick offers each of their fixes.
 	local rows, seen = {}, {}
@@ -202,6 +204,7 @@ vim.api.nvim_create_user_command("Classif", function(cmd)
 		end
 	end
 	if #rows == 0 then
+		vim.fn.delete(copy)
 		vim.notify("classif: no rule here asks a question")
 		Demo.classified = Demo.classified + 1
 		return
@@ -210,13 +213,17 @@ vim.api.nvim_create_user_command("Classif", function(cmd)
 	vim.system(
 		{ dir .. "/triage.sh", "--json", pick and "--pick" or nil },
 		{ cwd = dir, text = true, stdin = scan.stdout },
+		-- triage.sh reads the copy too, for the declarations a rule asks it
+		-- to show the model, so the copy goes once the answers are in.
 		vim.schedule_wrap(function(out)
+			vim.fn.delete(copy)
 			local fixes = {}
 			for line in vim.gsplit(out.stdout or "", "\n", { trimempty = true }) do
 				local v = vim.json.decode(line)
 				for _, r in ipairs(rows) do
 					if r.start == v.start and r.ask == v.ask then
 						r.label, r.p, r.kept, r.message, r.answered = v.label, v.p, v.kept, v.message, v.answered
+						r.context = v.context ~= "" and vim.split(v.context, "\n")[1] or nil
 						-- A finding kept for want of an answer is never fixed: a
 						-- model that is down must rewrite nothing.
 						if v.kept and v.answered and v.fix ~= vim.NIL then

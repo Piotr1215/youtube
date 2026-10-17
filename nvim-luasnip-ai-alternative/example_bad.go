@@ -24,8 +24,8 @@ func processUser(id string) (*User, error) {
 	}
 
 	// Pattern 3: Ignored error
-	logActivity(user.ID, "processed")
-	saveUser(user)
+	notify(user)
+	record(user)
 	// Pattern 4: Panic on error
 	file, err := os.Open("config.json")
 	if err != nil {
@@ -87,7 +87,8 @@ type User struct {
 	Email string
 }
 
-func logActivity(userID, action string) error {
+// notify sends the user a push notification; failed deliveries are dropped.
+func notify(user *User) error {
 	// Implementation
 	return nil
 }
@@ -97,7 +98,8 @@ func updateCache(user *User) (bool, error) {
 	return true, nil
 }
 
-func saveUser(user *User) error {
+// record writes the user to the billing ledger that the invoice run reads.
+func record(user *User) error {
 	// Implementation
 	return nil
 }

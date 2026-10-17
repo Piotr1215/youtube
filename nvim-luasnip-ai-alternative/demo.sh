@@ -48,7 +48,7 @@ steps() {
 		printf '%s\n' \
 			':Classif|a yes/no question above each call; the answer gates the fix' \
 			'u, then Ctrl-r|undo shows the call before the fix; redo puts it back' \
-			':Classif pick|classif picks one fix for saveUser among the rules' \
+			':Classif pick|classif picks one fix for record among the rules' \
 			'Enter in the list, then gra|jump onto a call; gra lists every rule'"'"'s fix'
 		;;
 	esac
