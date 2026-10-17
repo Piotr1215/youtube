@@ -21,8 +21,13 @@
 #   --diff    the rows, then a diff of the fixes that land
 #   --apply   the rows, then the same fixes written to the files
 #
-# A call with no answer is never fixed, so a model that is down rewrites
-# nothing.
+# A rule with metadata.context: callee has the model read the declaration of
+# the function the call names, $CALLEE, before the call: the tree finds it and
+# the comment above it, so the answer rests on what the function does, not on
+# its name. A rule with metadata.min_p lands a fix only on an answer that sure.
+#
+# A call with no answer, or one below min_p, is never fixed, so a model that
+# is down or unsure rewrites nothing.
 set -euo pipefail
 
 pick=false
@@ -60,6 +65,25 @@ fix_file() {
 	fi
 }
 
+# Prints what the tree holds about the Go function NAME declared in FILE: the
+# comment lines right above the declaration, then its signature. Prints
+# nothing when FILE declares no such function, such as a method or an import.
+declaration() {
+	local file="$1" name="$2" line
+	[[ ${name} =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || return 0
+	line="$(ast-grep scan --json=stream --inline-rules "id: declaration
+language: go
+rule:
+  kind: function_declaration
+  has:
+    field: name
+    regex: ^${name}\$" "${file}" 2>/dev/null | jq -rs '.[0].range.start.line // empty')"
+	[[ -n ${line} ]] || return 0
+	awk -v n="$((line + 1))" '
+		NR < n { doc = ($0 ~ /^[[:space:]]*\/\//) ? doc $0 "\n" : "" }
+		NR == n { sub(/[[:space:]]*\{.*$/, ""); printf "%s%s\n", doc, $0; exit }' "${file}"
+}
+
 # The question each finding answers to, and the findings grouped by call:
 # rules that match the same code with the same question are asked once.
 if ${pick}; then
@@ -77,18 +101,28 @@ while IFS= read -r group; do
 			args+=(-e "${option}")
 		done < <(jq -r '.[].metadata.option // empty' <<<"${group}")
 	fi
-	# classif prints "label p" and exits non-zero on any label but the first,
-	# which is still an answer here.
-	verdict="$(printf '%s\n' "${text}" | classif "${ask}" "${args[@]}" 2</dev/null)" || true
-	label="${verdict%% *}"
-	p="${verdict##* }"
-	[[ -n ${verdict} ]] || p=""
+	context=""
+	if [[ "$(jq -r '.[0].metadata.context // empty' <<<"${group}")" == callee ]]; then
+		context="$(declaration "$(jq -r '.[0].file' <<<"${group}")" \
+			"$(jq -r '.[0].metaVariables.single.CALLEE.text // empty' <<<"${group}")")"
+	fi
+	[[ -n ${context} ]] && args+=(-c "${context}")
+	min_p="$(jq -r '.[0].metadata.min_p // empty' <<<"${group}")"
+	[[ -n ${min_p} ]] && args+=(-t "${min_p}")
+	# classif prints "label p" and exits 1 on any label but the first, which is
+	# still an answer here. Exit 2 means no score and 3 an answer below -t:
+	# neither may land a fix.
+	status=0
+	verdict="$(printf '%s\n' "${text}" | classif "${ask}" "${args[@]}" 2</dev/null)" || status=$?
+	read -r label p _ <<<"${verdict}"
+	sure=true
+	((status < 2)) || sure=false
 
 	# The call's outcome: whether the model answered, which finding's fix lands
 	# (an index into the group, or null), and whether the finding is cleared.
-	outcome="$(jq -c --arg label "${label}" --argjson pick "${pick}" '
+	outcome="$(jq -c --arg label "${label}" --argjson pick "${pick}" --argjson sure "${sure}" '
 		(if $pick then map(.metadata.option | split("=")[0]) else map(.metadata.fix_on) end) as $on
-		| ($label != "" and (if $pick then ($on + ["none"]) else ["yes", "no"] end | index($label)) != null) as $answered
+		| ($sure and $label != "" and (if $pick then ($on + ["none"]) else ["yes", "no"] end | index($label)) != null) as $answered
 		| {
 			answered: $answered,
 			lands: (if $answered then ([range(length)] | map(select($on[.] == $label)) | first) else null end),
@@ -102,9 +136,9 @@ while IFS= read -r group; do
 	[[ -n ${lands} ]] && fix="$(jq -c '.replacement' <<<"${finding}")"
 
 	if [[ ${mode} == json ]]; then
-		jq -c --arg ask "${ask}" --arg label "${label:-none}" --arg p "${p}" \
+		jq -c --arg ask "${ask}" --arg label "${label}" --arg p "${p}" --arg context "${context}" \
 			--argjson answered "${answered}" --argjson cleared "${cleared}" --argjson fix "${fix}" '{
-			rule: .ruleId, ask: $ask,
+			rule: .ruleId, ask: $ask, context: $context,
 			line: .range.start.line, col: .range.start.column,
 			end_line: .range.end.line, end_col: .range.end.column,
 			start: .range.byteOffset.start, end: .range.byteOffset.end,
@@ -120,7 +154,9 @@ while IFS= read -r group; do
 		printf '  \e[32m✓\e[0m \e[36m%s\e[0m  %s  \e[38;2;128;128;128m%s %s\e[0m\n' "${where}" "${text}" "${label}" "${p}"
 		continue
 	fi
+	${answered} || p="${p} unsure"
 	printf '  \e[31m✗\e[0m \e[36m%s\e[0m  %s  \e[33m%s %s\e[0m\n' "${where}" "${text}" "${label:-none}" "${p}"
+	[[ -z ${context} ]] || printf '    \e[38;2;128;128;128mreads › %s\e[0m\n' "$(head -1 <<<"${context}")"
 	[[ ${fix} == null ]] && continue
 	if [[ ${mode} == rows ]]; then
 		printf '    \e[38;2;128;128;128mfix ›\e[0m \e[32m%s\e[0m\n' "$(jq -r . <<<"${fix}")"
