@@ -18,7 +18,7 @@ func processUser(id string) (*User, error) {
 	}
 
 	// Pattern 2: Basic error with fmt
-	data, err := json.Marshal(user)
+	_, err = json.Marshal(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal user: %v", err)
 	}

@@ -1,0 +1,22 @@
+id: ignored-error
+snapshots:
+  "func f() {\n\tlogActivity(id, \"processed\")\n}\n":
+    labels:
+    - source: logActivity(id, "processed")
+      style: primary
+      start: 12
+      end: 40
+    - source: logActivity(id, "processed")
+      style: secondary
+      start: 12
+      end: 40
+  "func f() {\n\tos.Remove(path)\n}\n":
+    labels:
+    - source: os.Remove(path)
+      style: primary
+      start: 12
+      end: 27
+    - source: os.Remove(path)
+      style: secondary
+      start: 12
+      end: 27

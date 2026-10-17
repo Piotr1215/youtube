@@ -1,0 +1,14 @@
+id: ignored-error
+language: go
+severity: info
+message: Check if function returns an error that should be handled
+# A call standing alone as a statement discards every return value. ast-grep
+# sees syntax, not types, so calls that never return an error are skipped by name.
+rule:
+  kind: call_expression
+  inside:
+    kind: expression_statement
+  not:
+    has:
+      field: function
+      regex: ^(panic|print|println|close|delete|fmt\.Print(f|ln)?|log\.\w+)$

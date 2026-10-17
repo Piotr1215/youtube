@@ -1,0 +1,19 @@
+id: ignored-error
+valid:
+  - |
+    func f() {
+    	user, err := fetchUser(id)
+    	_, err = updateCache(user)
+    	defer file.Close()
+    	fmt.Println("done", err)
+    	panic(err)
+    }
+invalid:
+  - |
+    func f() {
+    	logActivity(id, "processed")
+    }
+  - |
+    func f() {
+    	os.Remove(path)
+    }

@@ -1,0 +1,11 @@
+id: panic-on-error
+snapshots:
+  "func f() {\n\terr := g()\n\tif err != nil {\n\t\tpanic(err)\n\t}\n}\n":
+    labels:
+    - source: |-
+        if err != nil {
+        		panic(err)
+        	}
+      style: primary
+      start: 24
+      end: 55

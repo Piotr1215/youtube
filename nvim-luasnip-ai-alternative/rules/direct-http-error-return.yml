@@ -1,0 +1,11 @@
+id: direct-http-error-return
+language: go
+severity: warning
+message: Wrap HTTP errors with request context
+rule:
+  pattern: |
+    if $ERR != nil {
+      return $$$RETS, $ERR
+    }
+  follows:
+    pattern: $RESP, $ERR := http.$METHOD($$$ARGS)

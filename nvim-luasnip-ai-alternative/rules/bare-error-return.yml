@@ -1,0 +1,13 @@
+id: bare-error-return
+language: go
+severity: warning
+message: Wrap errors with context for better debugging
+rule:
+  pattern: |
+    if $ERR != nil {
+      return $$$ARGS, $ERR
+    }
+  # direct-http-error-return owns the HTTP case, so one line gets one diagnostic
+  not:
+    follows:
+      pattern: $RESP, $ERR := http.$METHOD($$$CALL)

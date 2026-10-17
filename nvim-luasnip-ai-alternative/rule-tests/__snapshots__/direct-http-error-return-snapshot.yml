@@ -1,0 +1,15 @@
+id: direct-http-error-return
+snapshots:
+  "func f() (*http.Response, error) {\n\tresp, err := http.Get(url)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\treturn resp, nil\n}\n":
+    labels:
+    - source: |-
+        if err != nil {
+        		return nil, err
+        	}
+      style: primary
+      start: 64
+      end: 100
+    - source: resp, err := http.Get(url)
+      style: secondary
+      start: 36
+      end: 62

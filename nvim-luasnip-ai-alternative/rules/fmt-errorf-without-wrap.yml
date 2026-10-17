@@ -1,0 +1,24 @@
+id: fmt-errorf-without-wrap
+language: go
+severity: warning
+message: Use %w to wrap errors instead of %v
+rule:
+  pattern: fmt.Errorf($FMT, $$$REST)
+  # only when the last argument looks like an error, the one %w should wrap
+  has:
+    field: arguments
+    has:
+      nthChild:
+        position: 1
+        reverse: true
+      regex: (?i)err
+constraints:
+  FMT:
+    regex: '%v"$'
+transform:
+  WRAPPED:
+    replace:
+      source: $FMT
+      replace: '%v"$'
+      by: '%w"'
+fix: fmt.Errorf($WRAPPED, $$$REST)

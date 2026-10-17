@@ -1,0 +1,8 @@
+id: fmt-errorf-without-wrap
+valid:
+  - 'fmt.Errorf("marshal user: %w", err)'
+  - 'fmt.Errorf("bad id: %v", id)'
+  - 'fmt.Errorf("bad status: %d", code)'
+invalid:
+  - 'fmt.Errorf("marshal user: %v", err)'
+  - 'fmt.Errorf("load %s: %v", name, err)'

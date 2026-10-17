@@ -1,0 +1,11 @@
+id: bare-error-return
+snapshots:
+  "func f() (int, error) {\n\tv, err := g()\n\tif err != nil {\n\t\treturn 0, err\n\t}\n\treturn v, nil\n}\n":
+    labels:
+    - source: |-
+        if err != nil {
+        		return 0, err
+        	}
+      style: primary
+      start: 40
+      end: 74
