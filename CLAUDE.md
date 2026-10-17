@@ -115,11 +115,12 @@ Avoid sandwitching content between two blockquotes. ONly one blockqute per page.
 
 `slides_template.md` holds this structure; `just start <folder>` copies it with `journey.sh`. `tmux-regex-copy/` is the reference deck.
 
+- Write `narrative.md` first and get it approved before any slide: the presenterm-writer skill's Step 0 and quality gate apply to every deck here, and nothing below overrides them. Each beat of the narrative is one slide.
 - Tell a story in chapters, from the viewer's problem to their next action: why it matters, basic concepts, built-in or existing ways, the solution, how it works, getting started. Rename and merge to fit the topic.
 - Open every chapter with a divider slide: a noun phrase `##` heading, one blockquote question the chapter answers, and `./journey.sh N`. The map shows viewers where they are and cues the presenter to introduce the chapter.
 - Edit the `chapters` array in the deck's `journey.sh` to match the divider headings, in order.
 - Put the first divider right after the title slide, so the deck never opens cold on a detail slide.
-- Show the payoff early: a short demo inside chapter one, before any concept.
+- Show the payoff early, once the viewer knows the problem it solves: inside chapter one, before any concept, never before the problem.
 - So what, now what, then what shape the whole deck. Answer them once on a Takeaways slide near the end (✓ ✓ ▶ rows), not on every slide.
 - A chapter holds only its own slides. After inserting or moving a divider, check that the slides following it belong to it.
 - Name chapters neutrally: "Built-in Copying", not "Shortcomings"; "Plugin Internals", not "How the plugin works".
