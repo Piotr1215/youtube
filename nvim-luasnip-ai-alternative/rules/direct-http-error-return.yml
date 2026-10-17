@@ -1,11 +1,32 @@
 id: direct-http-error-return
 language: go
 severity: warning
-message: Add the request to the error
+message: Name the caller; the error names the request
 rule:
-  pattern: |
-    if $ERR != nil {
-      return $$$RETS, $ERR
-    }
-  follows:
-    pattern: $RESP, $ERR := http.$METHOD($$$ARGS)
+  kind: identifier
+  pattern: $ERR
+  nthChild:
+    position: 1
+    reverse: true
+  all:
+    - inside:
+        kind: expression_list
+        inside:
+          kind: return_statement
+          inside:
+            kind: if_statement
+            stopBy: end
+            has:
+              field: condition
+              pattern: $ERR != nil
+            follows:
+              pattern: $RESP, $ERR := http.$METHOD($$$CALL)
+    - inside:
+        any:
+          - kind: function_declaration
+          - kind: method_declaration
+        stopBy: end
+        has:
+          field: name
+          pattern: $FN
+fix: 'fmt.Errorf("$FN: %w", $ERR)'

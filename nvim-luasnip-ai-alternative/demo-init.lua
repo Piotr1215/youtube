@@ -64,12 +64,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- vague-error-message reports every error message as a hint: whether one
 -- names the failed operation is a judgment, not syntax. :Classif scans the
 -- buffer and pipes the matches through triage.sh, which asks classif each
--- rule's question about each call. A message the model keeps becomes a
--- warning, one it clears gets a ✓, and the quickfix list at the bottom shows
--- every finding, ast-grep's and classif's, under the question it asked. The
--- rule's fix stays on gra. :Classif! lets the answer decide instead: the
--- rule's fix lands on every call the model kept and nowhere else. The buffer
--- goes through a temp copy because saves to example_bad.go are dropped.
+-- rule's question about each call, and the answer decides: where it equals
+-- the rule's keep label the rule's fix lands on the call, anywhere else the
+-- call is left as is, and with no answer the call only gets a warning. The
+-- quickfix list at the bottom shows the question, each answer and what it
+-- did, then ast-grep's other findings. u shows the code before the fix. The
+-- buffer goes through a temp copy because saves to example_bad.go are
+-- dropped.
 local classif_ns = vim.api.nvim_create_namespace("classif")
 local verdict_ns = vim.api.nvim_create_namespace("classif-verdict")
 Demo = {}
@@ -110,54 +111,56 @@ local function mark(bufnr, r)
 	})
 end
 
--- Says what happened to a judged call, for its quickfix entry.
+-- Says what an answer did to its call, for the quickfix entry.
 local function outcome(r)
 	if r.fixed then
-		return "fixed: " .. r.fix
+		return "fixed by the rule: " .. r.fix
 	elseif not r.answered then
-		return "no verdict, left as is"
+		return "no answer, so a warning and no fix"
 	elseif r.kept then
-		return "kept as a warning; gra or :Classif! applies the fix"
+		return "kept as a warning; the rule has no fix"
 	end
-	return "cleared, left as is"
+	return "left as is"
 end
 
--- Fills the quickfix list with every finding in the buffer: ast-grep's own,
--- hints aside, and classif's verdict on each call it judged, under the
--- question it asked. The list opens at the bottom; the cursor stays in the
--- code.
+-- Fills the quickfix list: each question classif asked, the answer for every
+-- call under it and what the answer did, then ast-grep's other findings,
+-- hints aside. The list opens at the bottom; the cursor stays in the code,
+-- and Enter on an entry jumps onto its call, where gra finds the fixes.
 local function show_list(bufnr, rows)
-	local diags = vim.tbl_filter(function(d)
-		return d.namespace ~= classif_ns
-	end, vim.diagnostic.get(bufnr, { severity = { min = vim.diagnostic.severity.INFO } }))
-	local items = vim.diagnostic.toqflist(diags)
-	for _, r in ipairs(rows) do
-		table.insert(items, {
-			bufnr = bufnr,
-			lnum = r.line + 1,
-			col = r.col + 1,
-			type = (r.kept and not r.fixed) and "W" or "I",
-			text = string.format("%s: classif %s %s, %s", r.rule, r.label, r.p, outcome(r)),
-		})
-	end
-	table.sort(items, function(a, b)
-		return a.lnum < b.lnum
-	end)
-	local asks = {}
+	local items, asks = {}, {}
 	for _, r in ipairs(rows) do
 		if not vim.tbl_contains(asks, r.ask) then
 			table.insert(asks, r.ask)
 		end
 	end
-	for i = #asks, 1, -1 do
-		table.insert(items, 1, { text = "classif asks: " .. asks[i] })
+	for _, ask in ipairs(asks) do
+		table.insert(items, { text = "classif asks: " .. ask })
+		for _, r in ipairs(rows) do
+			if r.ask == ask then
+				table.insert(items, {
+					bufnr = bufnr,
+					lnum = r.line + 1,
+					col = r.col + 1,
+					type = r.answered and "I" or "W",
+					text = string.format("%s %s, %s", r.label, r.p, outcome(r)),
+				})
+			end
+		end
+	end
+	local others = vim.diagnostic.toqflist(vim.tbl_filter(function(d)
+		return d.namespace ~= classif_ns
+	end, vim.diagnostic.get(bufnr, { severity = { min = vim.diagnostic.severity.INFO } })))
+	if #others > 0 then
+		table.insert(items, { text = "ast-grep, other findings:" })
+		vim.list_extend(items, others)
 	end
 	vim.fn.setqflist({}, " ", { title = "ast-grep + classif", items = items })
 	vim.cmd("botright copen " .. math.min(#items, 10))
 	vim.cmd("wincmd p")
 end
 
-vim.api.nvim_create_user_command("Classif", function(opts)
+vim.api.nvim_create_user_command("Classif", function()
 	local bufnr = vim.api.nvim_get_current_buf()
 	vim.diagnostic.reset(classif_ns, bufnr)
 	vim.api.nvim_buf_clear_namespace(bufnr, verdict_ns, 0, -1)
@@ -196,7 +199,7 @@ vim.api.nvim_create_user_command("Classif", function(opts)
 						r.label, r.p, r.kept, r.message, r.answered = v.label, v.p, v.kept, v.message, v.answered
 						-- A finding kept for want of an answer is never fixed: a
 						-- model that is down must rewrite nothing.
-						if opts.bang and v.kept and v.answered and v.fix ~= vim.NIL then
+						if v.kept and v.answered and v.fix ~= vim.NIL then
 							r.fix, r.fix_start, r.fix_end = v.fix, v.fix_start, v.fix_end
 							table.insert(fixes, r)
 						end
@@ -244,7 +247,7 @@ vim.api.nvim_create_user_command("Classif", function(opts)
 			Demo.classified = Demo.classified + 1
 		end)
 	)
-end, { bang = true, desc = "Ask classif about ast-grep findings whose rule carries a question; ! applies the fix where it keeps one" })
+end, { desc = "Ask classif each rule's question and apply the rule's fix where the answer keeps the finding" })
 
 -- Number of ast-grep findings in the current buffer, so demo.sh can wait for
 -- the language server before the first scene.

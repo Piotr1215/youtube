@@ -4,7 +4,7 @@ valid:
     func f() (*http.Response, error) {
     	resp, err := http.Get(url)
     	if err != nil {
-    		return nil, fmt.Errorf("GET %s: %w", url, err)
+    		return nil, fmt.Errorf("f: %w", err)
     	}
     	return resp, nil
     }

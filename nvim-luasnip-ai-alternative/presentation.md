@@ -296,15 +296,15 @@ paint yellow '  scan -U writes the new text over the matched call; the editor of
 
 <!-- end_slide -->
 
-## Fix in the Editor
+## Fix in Editor and Shell
 
-> The rule's message becomes a diagnostic; its fix becomes a code action.
+> The fix lives in the rule file; the editor and the shell both run it.
 
 ```bash +exec_replace
 just digraph editor-lsp | awk '
 {
   gsub(/message:|fix:/, "\033[36m&\033[0m")
-  gsub(/ast-grep lsp/, "\033[1;33m&\033[0m")
+  gsub(/ast-grep lsp|ast-grep scan -U/, "\033[1;33m&\033[0m")
   gsub(/diagnostic|code action/, "\033[1;36m&\033[0m")
   gsub(/gra/, "\033[1;35m&\033[0m")
   print "  " $0
@@ -467,7 +467,7 @@ paint yellow '  classif writes no code: its answer decides where the rule'"'"'s 
 > The model's answer decides where the rule's fix lands.
 
 ```bash +exec_replace
-paint gray '  --apply writes the same fixes; a finding with no answer is never fixed.'
+paint gray '  --apply writes these fixes, :Classif applies them in Neovim; no answer, no fix.'
 ```
 
 ```bash +exec
@@ -479,12 +479,12 @@ ast-grep scan --json=stream --include-metadata --filter '^vague-' \
 
 ## Triage in Neovim
 
-> Watch a hint become a verdict, then a fix on gra, then a verdict again.
+> Watch the model's answer decide which call the rule rewrites.
 
 ```bash +exec_replace
-paint cyan '  :Classif    ' plain 'asks the rule'"'"'s question; the quickfix list shows each verdict'
-paint cyan '  :Classif!   ' plain 'the same, and the rule'"'"'s fix lands on every call the model kept'
-paint cyan '  quickfix    ' plain 'every finding, ast-grep'"'"'s and classif'"'"'s, one Enter from its line'
+paint cyan '  :Classif    ' plain 'asks each call the rule'"'"'s question; a no applies the rule'"'"'s fix'
+paint cyan '  quickfix    ' plain 'the question, each answer, and what it did to the call'
+paint cyan '  u           ' plain 'shows the code before the fix'
 ```
 
 ```bash +exec
@@ -496,10 +496,10 @@ paint cyan '  quickfix    ' plain 'every finding, ast-grep'"'"'s and classif'"'"
 ## Triage Demo Result
 
 ```bash +exec_replace
-paint green '  ✓  ' plain 'the quickfix list showed the question and every finding with its verdict'
-paint green '  ✓  ' plain 'classif cleared line 23 and kept line 53 as a warning'
-paint green '  ✓  ' plain ':Classif! fixed line 53 and left line 23 alone'
-paint green '  ✓  ' plain 'asking again cleared the fixed message'
+paint green '  ✓  ' plain 'classif answered no for line 53 and yes for line 23'
+paint green '  ✓  ' plain 'only line 53 got the rule'"'"'s fix; line 23 was left as is'
+paint green '  ✓  ' plain 'the quickfix list showed the question, each answer, and what it did'
+paint green '  ✓  ' plain 'asking again left the fixed call as is'
 paint
 paint yellow '  The model adds meaning between two deterministic steps and replaces neither.'
 ```
