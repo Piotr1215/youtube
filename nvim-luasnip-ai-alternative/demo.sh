@@ -17,9 +17,9 @@ session="luasnip-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 pace="${PACE:-1}"
 segments="tree|search|diagnostics|snippet|classif"
-# One demo nvim per tmux server, so two servers never drive each other's.
-server="$(tmux display-message -p '#{pid}' 2>/dev/null || true)"
-sock="${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-${server}.sock"
+# Each launch gets its own demo nvim socket; the card receives it as --play's
+# third argument. setup-demo.sh says why the path is never reused.
+sock="${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-$$.sock"
 
 # Sleeps for a number of seconds scaled by PACE.
 pause() {
@@ -243,6 +243,7 @@ classif() {
 play() {
 	segment="$1"
 	demo_pane="$2"
+	sock="$3"
 	step="" keys="" text=""
 	trap 'printf "\e[?25h"' EXIT
 	card "${segment}" "waiting for ast-grep" "" ""
@@ -261,13 +262,15 @@ play() {
 
 # ---- launcher (runs from the slides) -----------------------------------------
 
-# Hands the client back to the slides, even when the demo fails.
+# Hands the client back to the slides, even when the demo fails, and closes
+# the demo session so no nvim outlives its segment.
 finish() {
 	tmux switch-client -c "${client}" -t "=${home_session}" 2>/dev/null || true
+	tmux kill-session -t "=${session}" 2>/dev/null || true
 }
 
 launch() {
-	local segment="$1" demo_pane width card_width card_pane
+	local segment="$1" demo_pane width height card_width card_height=7 card_pane
 	if ! [[ ${segment} =~ ^(${segments})$ ]]; then
 		printf 'usage: demo.sh %s\n' "${segments}" >&2
 		exit 2
@@ -284,20 +287,23 @@ launch() {
 		exit 1
 	fi
 
-	"${dir}/setup-demo.sh" >/dev/null
+	"${dir}/setup-demo.sh" "${sock}" >/dev/null
 	demo_pane="$(tmux display-message -p -t "=${session}:" '#{pane_id}')"
 	trap finish EXIT
 	tmux switch-client -c "${client}" -t "=${session}"
 	pause 0.5
 
 	# The window takes the client's size on switch, so measure it after.
-	# The card sits top right, over the import block.
+	# The card sits bottom right, above the statusline: code and the grug-far
+	# inputs live at the top, and long lines rarely reach that corner.
 	width="$(tmux display-message -p -t "${demo_pane}" '#{window_width}')"
-	card_width=$((width * 40 / 100))
+	height="$(tmux display-message -p -t "${demo_pane}" '#{window_height}')"
+	card_width=$((width * 35 / 100))
 	((card_width < 48)) && card_width=48
 	card_pane="$(tmux new-pane -P -F '#{pane_id}' -t "${demo_pane}" \
-		-x "${card_width}" -y 7 -X "$((width - card_width - 2))" -Y 1 \
-		"PACE='${pace}' '${dir}/demo.sh' --play '${segment}' '${demo_pane}'")"
+		-x "${card_width}" -y "${card_height}" \
+		-X "$((width - card_width - 2))" -Y "$((height - card_height - 4))" \
+		"PACE='${pace}' '${dir}/demo.sh' --play '${segment}' '${demo_pane}' '${sock}'")"
 	# new-pane takes no -T since tmux 3.7, so the title is set afterwards.
 	tmux select-pane -t "${card_pane}" -T ' demo '
 	tmux set-option -p -t "${card_pane}" remain-on-exit off
@@ -309,7 +315,7 @@ launch() {
 }
 
 if [[ ${1:-} == --play ]]; then
-	play "$2" "$3"
+	play "$2" "$3" "$4"
 else
 	launch "${1:?usage: demo.sh ${segments}}"
 fi
