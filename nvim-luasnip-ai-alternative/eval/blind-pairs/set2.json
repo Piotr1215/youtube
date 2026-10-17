@@ -1,0 +1,62 @@
+[
+ {
+  "line": "log.Printf(\"subtotal: %d\", subtotal)",
+  "debug_func": "total",
+  "ops_func": "settle",
+  "source": "package main\n\nimport \"log\"\n\ntype Item struct {\n\tPrice int\n\tQty   int\n}\n\nfunc total(items []Item) int {\n\tsubtotal := 0\n\tfor _, it := range items {\n\t\tsubtotal += it.Price * it.Qty\n\t}\n\tlog.Printf(\"subtotal: %d\", subtotal)\n\tif subtotal > 10000 {\n\t\tsubtotal -= subtotal / 10\n\t}\n\treturn subtotal\n}\n\nfunc settle(ledger map[string]int, id string, subtotal int) {\n\tledger[id] += subtotal\n\tlog.Printf(\"subtotal: %d\", subtotal)\n}\n\nfunc main() {\n\tledger := map[string]int{}\n\tsettle(ledger, \"a1\", total([]Item{{5, 2}, {7, 1}}))\n}\n"
+ },
+ {
+  "line": "log.Printf(\"served %d\", served)",
+  "debug_func": "cost",
+  "ops_func": "Close",
+  "source": "package main\n\nimport \"log\"\n\ntype Resolver struct {\n\tcache  map[string]string\n\tserved int\n}\n\nfunc cost(names []string) int {\n\tserved := 0\n\tfor _, n := range names {\n\t\tserved += len(n)\n\t}\n\tlog.Printf(\"served %d\", served)\n\treturn served * 3\n}\n\nfunc (r *Resolver) Lookup(name string) string {\n\tr.served++\n\treturn r.cache[name]\n}\n\nfunc (r *Resolver) Close() {\n\tserved := r.served\n\tr.cache = nil\n\tlog.Printf(\"served %d\", served)\n}\n\nfunc main() {\n\tr := &Resolver{cache: map[string]string{\"a\": \"1.1.1.1\"}}\n\tr.Lookup(\"a\")\n\t_ = cost([]string{\"a\", \"bb\"})\n\tr.Close()\n}\n"
+ },
+ {
+  "line": "log.Printf(\"moved to %+v\", pos)",
+  "debug_func": "simulate",
+  "ops_func": "apply",
+  "source": "package main\n\nimport \"log\"\n\ntype Vec struct {\n\tX, Y int\n}\n\ntype Move struct {\n\tPlayer string\n\tTo     Vec\n}\n\nfunc simulate(start Vec, steps int) Vec {\n\tpos := start\n\tfor i := 0; i < steps; i++ {\n\t\tpos.X += i\n\t\tpos.Y -= 1\n\t\tlog.Printf(\"moved to %+v\", pos)\n\t}\n\treturn pos\n}\n\nfunc apply(world map[string]Vec, m Move) {\n\tpos := m.To\n\tworld[m.Player] = pos\n\tlog.Printf(\"moved to %+v\", pos)\n}\n\nfunc main() {\n\tworld := map[string]Vec{}\n\tapply(world, Move{\"ann\", simulate(Vec{}, 3)})\n}\n"
+ },
+ {
+  "line": "log.Printf(\"count: %d\", count)",
+  "debug_func": "words",
+  "ops_func": "migrate",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"strings\"\n)\n\nfunc words(line string) []string {\n\tparts := strings.Fields(line)\n\tif len(parts) > 3 {\n\t\tcount := len(parts)\n\t\tlog.Printf(\"count: %d\", count)\n\t\tparts = parts[:3]\n\t}\n\treturn parts\n}\n\nfunc migrate(rows []string, store map[int]string) {\n\tfor i, r := range rows {\n\t\tstore[i] = strings.TrimSpace(r)\n\t}\n\tcount := len(store)\n\tlog.Printf(\"count: %d\", count)\n}\n\nfunc main() {\n\tstore := map[int]string{}\n\tmigrate(words(\"a b c d e\"), store)\n}\n"
+ },
+ {
+  "line": "log.Printf(\"level %d\", level)",
+  "debug_func": "scale",
+  "ops_func": "sample",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"time\"\n)\n\nfunc scale(raw int) int {\n\tlevel := raw * 255 / 1023\n\tif level > 255 {\n\t\tlevel = 255\n\t}\n\tlog.Printf(\"level %d\", level)\n\treturn level\n}\n\nfunc sample(tick <-chan time.Time, read func() int) {\n\tfor range tick {\n\t\tlevel := read()\n\t\tlog.Printf(\"level %d\", level)\n\t}\n}\n\nfunc main() {\n\tt := time.NewTicker(time.Second)\n\tdefer t.Stop()\n\tgo sample(t.C, func() int { return scale(512) })\n\ttime.Sleep(2 * time.Second)\n}\n"
+ },
+ {
+  "line": "log.Printf(\"recipient %s\", rcpt)",
+  "debug_func": "clean",
+  "ops_func": "deliver",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"strings\"\n)\n\ntype Mailer struct {\n\tsent map[string][]string\n}\n\nfunc clean(rcpt string) string {\n\tif strings.HasPrefix(rcpt, \"<\") {\n\t\trcpt = strings.Trim(rcpt, \"<>\")\n\t\tlog.Printf(\"recipient %s\", rcpt)\n\t}\n\treturn strings.ToLower(rcpt)\n}\n\nfunc (m *Mailer) deliver(rcpt, body string) {\n\tm.sent[rcpt] = append(m.sent[rcpt], body)\n\tlog.Printf(\"recipient %s\", rcpt)\n}\n\nfunc main() {\n\tm := &Mailer{sent: map[string][]string{}}\n\tm.deliver(clean(\"<Bob@example.com>\"), \"hi\")\n}\n"
+ },
+ {
+  "line": "log.Printf(\"peer %s\", peer)",
+  "debug_func": "shard",
+  "ops_func": "serve",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"net\"\n\t\"strings\"\n)\n\nfunc shard(addr string, n int) int {\n\tpeer := strings.Split(addr, \":\")[0]\n\tsum := 0\n\tfor _, c := range peer {\n\t\tsum += int(c)\n\t}\n\tlog.Printf(\"peer %s\", peer)\n\treturn sum % n\n}\n\nfunc serve(ln net.Listener) {\n\tfor {\n\t\tc, err := ln.Accept()\n\t\tif err != nil {\n\t\t\treturn\n\t\t}\n\t\tpeer := c.RemoteAddr().String()\n\t\tlog.Printf(\"peer %s\", peer)\n\t\tc.Close()\n\t}\n}\n\nfunc main() {\n\tprintln(shard(\"10.0.0.1:80\", 4))\n}\n"
+ },
+ {
+  "line": "log.Printf(\"stock %d\", stock)",
+  "debug_func": "parseQty",
+  "ops_func": "restock",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"strconv\"\n)\n\nfunc parseQty(s string) int {\n\tstock, _ := strconv.Atoi(s)\n\tlog.Printf(\"stock %d\", stock)\n\treturn stock\n}\n\nfunc restock(shelf, lot map[string]int) {\n\tfor k, v := range lot {\n\t\tshelf[k] += v\n\t}\n\tstock := 0\n\tfor _, v := range shelf {\n\t\tstock += v\n\t}\n\tlog.Printf(\"stock %d\", stock)\n}\n\nfunc main() {\n\tshelf := map[string]int{\"bolt\": 4}\n\trestock(shelf, map[string]int{\"bolt\": parseQty(\"12\")})\n}\n"
+ },
+ {
+  "line": "log.Printf(\"listening on %s\", addr)",
+  "debug_func": "join",
+  "ops_func": "start",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"net\"\n\t\"strconv\"\n)\n\nfunc join(host string, port int) string {\n\taddr := host + \":\" + strconv.Itoa(port)\n\tlog.Printf(\"listening on %s\", addr)\n\treturn addr\n}\n\nfunc start(addr string) error {\n\tln, err := net.Listen(\"tcp\", addr)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer ln.Close()\n\tlog.Printf(\"listening on %s\", addr)\n\tfor {\n\t\tc, err := ln.Accept()\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tc.Close()\n\t}\n}\n\nfunc main() {\n\tlog.Fatal(start(join(\"127.0.0.1\", 8080)))\n}\n"
+ },
+ {
+  "line": "log.Printf(\"moves: %d\", moves)",
+  "debug_func": "play",
+  "ops_func": "Close",
+  "source": "package main\n\nimport (\n\t\"log\"\n\t\"net\"\n)\n\ntype Session struct {\n\tconn  net.Conn\n\tmoves int\n}\n\nfunc play(board []int) int {\n\tmoves := 0\n\tfor _, sq := range board {\n\t\tif sq == 0 {\n\t\t\tmoves++\n\t\t\tlog.Printf(\"moves: %d\", moves)\n\t\t}\n\t}\n\treturn moves\n}\n\nfunc (s *Session) Close() {\n\tmoves := s.moves\n\ts.conn.Close()\n\tlog.Printf(\"moves: %d\", moves)\n}\n\nfunc main() {\n\ta, b := net.Pipe()\n\ts := &Session{conn: a, moves: play([]int{0, 1, 0})}\n\ts.Close()\n\tb.Close()\n}\n"
+ }
+]
