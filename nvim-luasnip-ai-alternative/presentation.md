@@ -247,8 +247,13 @@ path: rules/panic-on-error.yml
 language: yaml
 ```
 
-```bash +exec +expect:failure
-ast-grep scan -r rules/panic-on-error.yml --report-style short example_bad.go
+```bash +exec_replace
+paint green '  ✓  ' plain 'if err != nil { panic(err) }'
+paint green '  ✓  ' plain 'if e != nil { panic(e) }' gray '              any name, any layout'
+paint green '  ✓  ' plain 'if load() != nil { panic(load()) }' gray '    any expression'
+paint red '  ✗  ' plain 'if err != nil { panic(other) }' gray '        $ERR differs'
+paint red '  ✗  ' plain '// if err != nil { panic(err) }' gray '       a comment'
+paint red '  ✗  ' plain 'if err != nil { log.Print(err); panic(err) }' gray '  two statements'
 ```
 
 <!-- end_slide -->
