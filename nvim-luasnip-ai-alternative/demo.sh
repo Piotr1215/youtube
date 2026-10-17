@@ -46,7 +46,7 @@ steps() {
 		;;
 	triage)
 		printf '%s\n' \
-			':Classif|ask about each call; a no applies the rule'"'"'s fix' \
+			':Classif|the question and its answer appear above each call' \
 			'u, then Ctrl-r|undo shows the call before the fix; redo puts it back' \
 			':Classif|ask again: the fixed call is left as is' \
 			'Enter in the list, then gra|jump onto a call; gra lists its fixes'
