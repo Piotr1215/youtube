@@ -468,6 +468,7 @@ paint yellow '  classif writes no code: its answer decides where the rule'"'"'s 
 
 ```bash +exec_replace
 paint gray '  --apply writes these fixes, :Classif applies them in Neovim; no answer, no fix.'
+paint gray '  gra and scan -U never ask the model: they apply every fix.'
 ```
 
 ```bash +exec
