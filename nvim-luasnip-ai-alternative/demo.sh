@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Plays one Neovim demo segment in the demo session, one scene per key press.
 #
-#   ./demo.sh tree | search | diagnostics | snippet | classif
+#   ./demo.sh tree | search | diagnostics | snippet | triage
 #
 # The slides call this. It rebuilds the demo session (your Neovim with
 # demo-init.lua on top), switches the presenter's client to it, and opens a
@@ -16,7 +16,7 @@ set -euo pipefail
 session="luasnip-demo"
 dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 pace="${PACE:-1}"
-segments="tree|search|diagnostics|snippet|classif"
+segments="tree|search|diagnostics|snippet|triage"
 # Each launch gets its own demo nvim socket; the card receives it as --play's
 # third argument. setup-demo.sh says why the path is never reused.
 sock="${XDG_RUNTIME_DIR:-/tmp}/luasnip-demo-$$.sock"
@@ -127,19 +127,31 @@ type_keys() {
 # ---- segments ----------------------------------------------------------------
 
 # :InspectTree shows the tree Neovim parsed, and walking it lights up the code.
+# v an then climbs the same tree from the cursor, one parent node per an.
 tree() {
-	scene "1/3" "]d" "The bare return from the last slides"
+	scene "1/4" "]d" "The bare return from the last slides"
 	type_keys "]d"
 	pause 1.5
-	scene "2/3" ":InspectTree" "The syntax tree of this buffer"
+	scene "2/4" ":InspectTree" "The syntax tree of this buffer"
 	type_keys ":InspectTree<CR>"
 	pause 2
-	scene "3/3" "j  j  j  j" "Walk the nodes; each one lights up its code"
+	scene "3/4" "j  j  j  j" "Walk the nodes; each one lights up its code"
 	for _ in 1 2 3 4; do
 		type_keys "j"
 		pause 1.2
 	done
 	pause 1.5
+	scene "4/4" "q  v  an  an  an  an" "Each an selects the parent: if, body, function"
+	type_keys "q"
+	pause 0.8
+	type_keys "v"
+	pause 0.6
+	for _ in 1 2 3 4; do
+		type_keys "an"
+		pause 1.4
+	done
+	type_keys "<Esc>"
+	pause 1
 }
 
 # grug-far runs ast-grep as you type, in a buffer you can edit. The patterns
@@ -210,32 +222,32 @@ snippet() {
 	pause 2.5
 }
 
-# ast-grep flags a call it cannot judge; a local model answers the question.
-classif() {
-	local question="does this Go function declare error as a return type?" verdict
-	scene "1/4" "27G" "ast-grep asks: does this call return an error?"
-	type_keys "27G"
+# Waits for :Classif to turn its verdicts into diagnostics.
+wait_classified() {
+	local i
+	for ((i = 0; i < 300; i++)); do
+		[[ "$(rpc 'Demo.classified and 1 or 0' || true)" == 1 ]] && return 0
+		sleep 0.2
+	done
+	fail "classif gave no verdict within a minute"
+}
+
+# ast-grep marks every error message as a hint; classif judges each one and
+# only the messages it confirms become warnings.
+triage() {
+	scene "1/3" "23G" "ast-grep marks each error message; syntax cannot judge it"
+	type_keys "23G"
 	pause 2
-	scene "2/4" "*" "Jump to the function it calls"
-	type_keys "*"
-	pause 1.5
-	scene "3/4" "v  an  an" "Climb the syntax tree: name, then function"
-	type_keys "van"
-	pause 1.2
-	type_keys "an"
-	pause 1.5
-	scene "4/4" ':w !classif "…"' "Pipe the selection to a local model"
-	type_keys ":w !classif \"${question}\"" 0.06
-	pause 1
-	type_keys "<CR>"
+	scene "2/3" ":Classif" "Ask the local model about every marked message"
+	type_keys ":Classif<CR>"
 	beat "asking the local model"
-	pause 0.5
-	verdict="$(rpc 'vim.v.shell_error' || true)"
-	case "${verdict}" in
-	0) beat "yes: line 27 drops a returned error" ;;
-	1) beat "no: line 27 drops nothing" ;;
-	*) beat "classif did not answer" ;;
-	esac
+	wait_classified
+	beat "line 23 cleared, line 53 confirmed"
+	pause 2.5
+	scene "3/3" "53G  ]d" "The confirmed message is a warning now"
+	type_keys "53G"
+	pause 1
+	type_keys "]d"
 	pause 3
 }
 
@@ -253,7 +265,7 @@ play() {
 	search) search ;;
 	diagnostics) diagnostics ;;
 	snippet) snippet ;;
-	classif) classif ;;
+	triage) triage ;;
 	*) fail "unknown segment: ${segment}" ;;
 	esac
 	card "done" "Back to the slides" "" "any key ▸ close"

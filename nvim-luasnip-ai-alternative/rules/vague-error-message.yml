@@ -1,0 +1,14 @@
+id: vague-error-message
+language: go
+severity: hint
+message: Say which operation failed
+# Syntax finds every error message, but whether one names the failed operation
+# is a judgment. triage.sh asks classif the question below about each match and
+# keeps the finding only when the answer is the keep label.
+metadata:
+  ask: Does this error message tell a reader which operation failed?
+  keep: "no"
+rule:
+  any:
+    - pattern: fmt.Errorf($MSG, $$$ARGS)
+    - pattern: errors.New($MSG)

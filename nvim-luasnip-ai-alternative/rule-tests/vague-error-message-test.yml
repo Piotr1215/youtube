@@ -1,0 +1,7 @@
+id: vague-error-message
+valid:
+  - 'fmt.Sprintf("bad status: %d", code)'
+  - 'errors.Is(err, io.EOF)'
+invalid:
+  - 'fmt.Errorf("bad status: %d", code)'
+  - 'errors.New("boom")'

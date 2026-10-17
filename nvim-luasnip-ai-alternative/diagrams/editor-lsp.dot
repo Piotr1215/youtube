@@ -1,0 +1,10 @@
+digraph editor_lsp {
+  rankdir=LR;
+  node [shape=box];
+
+  rules [label="rules/*.yml\nsgconfig.yml"];
+  lsp [label="ast-grep lsp"];
+  nvim [label="Neovim\ndiagnostics\ncode actions, gra"];
+
+  rules -> lsp -> nvim;
+}

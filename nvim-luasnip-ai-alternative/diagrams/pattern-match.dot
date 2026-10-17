@@ -1,0 +1,11 @@
+digraph pattern_match {
+  rankdir=TB;
+  node [shape=box];
+
+  pattern [label="fmt.Errorf($MSG, $$$ARGS)"];
+  ptree [label="call_expression\nfmt.Errorf, two holes"];
+  hit [label="line 53\n$MSG     \"bad status: %d\"\n$$$ARGS  resp.StatusCode"];
+
+  pattern -> ptree [label="parse"];
+  ptree -> hit [label="compare with every node"];
+}

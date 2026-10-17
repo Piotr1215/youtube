@@ -67,21 +67,68 @@ end, { desc = "Search with ast-grep (grug-far)" })
 
 -- Your ]d and [d open the message with float = true, which Neovim 0.13
 -- deprecates and warns about on screen at the first jump. Same jump, same
--- float, through on_jump; this autocmd runs after yours, so it wins.
+-- float, through on_jump; this autocmd runs after yours, so it wins. Both skip
+-- hints: a hint is a candidate waiting for :Classif, not a finding.
+local findings = { min = vim.diagnostic.severity.INFO }
 local function open_float(_, bufnr)
-	vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
+	vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false, severity = findings })
 end
 vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(args)
 		for lhs, count in pairs({ ["]d"] = 1, ["[d"] = -1 }) do
 			vim.keymap.set("n", lhs, function()
-				vim.diagnostic.jump({ count = count * vim.v.count1, on_jump = open_float })
+				vim.diagnostic.jump({ count = count * vim.v.count1, severity = findings, on_jump = open_float })
 			end, { buffer = args.buf, desc = "Go to next diagnostic message" })
 		end
 	end,
 })
 
+-- vague-error-message reports every error message as a hint: whether one
+-- names the failed operation is a judgment, not syntax. :Classif runs
+-- triage.sh over the file on disk, which asks classif about each match; a
+-- message the model confirms becomes a warning, one it clears gets a ✓.
+local classif_ns = vim.api.nvim_create_namespace("classif")
+local cleared_ns = vim.api.nvim_create_namespace("classif-cleared")
 Demo = {}
+Demo.classified = false
+vim.api.nvim_create_user_command("Classif", function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	Demo.classified = false
+	vim.diagnostic.reset(classif_ns, bufnr)
+	vim.api.nvim_buf_clear_namespace(bufnr, cleared_ns, 0, -1)
+	vim.notify("classif: asking the local model")
+	local scan = "ast-grep scan --json=stream --include-metadata "
+		.. vim.fn.shellescape(vim.api.nvim_buf_get_name(bufnr))
+		.. " | ./triage.sh --json"
+	vim.system(
+		{ "sh", "-c", scan },
+		{ cwd = dir, text = true },
+		vim.schedule_wrap(function(out)
+			local diags = {}
+			for line in vim.gsplit(out.stdout or "", "\n", { trimempty = true }) do
+				local v = vim.json.decode(line)
+				local verdict = string.format("classif: %s %s", v.label, v.p)
+				if v.kept then
+					table.insert(diags, {
+						lnum = v.line,
+						col = v.col,
+						end_lnum = v.end_line,
+						end_col = v.end_col,
+						severity = vim.diagnostic.severity.WARN,
+						source = "classif",
+						message = string.format("%s (%s)", v.message, verdict),
+					})
+				else
+					vim.api.nvim_buf_set_extmark(bufnr, cleared_ns, v.line, 0, {
+						virt_text = { { "✓ " .. verdict, "DiagnosticOk" } },
+					})
+				end
+			end
+			vim.diagnostic.set(classif_ns, bufnr, diags)
+			Demo.classified = true
+		end)
+	)
+end, { desc = "Ask classif about ast-grep findings whose rule carries a question" })
 
 -- Number of ast-grep findings in the current buffer, so demo.sh can wait for
 -- the language server before the first scene.
@@ -101,4 +148,5 @@ Demo.rules = {
 	"fmt-errorf-without-wrap",
 	"ignored-error",
 	"panic-on-error",
+	"vague-error-message",
 }

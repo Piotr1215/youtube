@@ -2,10 +2,12 @@ digraph snippet_expansion {
   rankdir=LR;
   node [shape=box];
 
-  trigger [label="iferr\ntrigger"];
-  expand [label="M-l\nexpand"];
+  trigger [label="iferr\nbefore cursor"];
+  lookup [label="go snippets\ntop priority"];
   fields [label="fields\nM-l next\nM-j choice"];
-  done [label="M-l\nlast field"];
+  done [label="done\nlast M-l"];
 
-  trigger -> expand -> fields -> done;
+  trigger -> lookup [label="M-l"];
+  lookup -> fields;
+  fields -> done;
 }
