@@ -47,9 +47,15 @@ case "${target}" in
 vm)
 	ip="$(sudo virsh domifaddr cloud-node | awk '/ipv4/ {print $4}' | cut -d/ -f1)"
 	# reset.sh rebuilds this VM, so its host key changes every run.
-	exec ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "root@${ip}"
+	shell=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "root@${ip}")
 	;;
 gpu)
-	exec gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t sudo -i
+	shell=(gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t sudo -i)
 	;;
 esac
+
+# The shell's exit code is its last command's, and presenterm calls any non-zero
+# code an error, so a typo before exit is not a failure. 255 is ssh's own failure.
+code=0
+"${shell[@]}" || code=$?
+[[ "${code}" -ne 255 ]]
