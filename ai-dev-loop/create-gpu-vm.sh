@@ -15,10 +15,7 @@ source "$SCRIPT_DIR/common.sh"
 
 gc() { gcloud compute "$@" --project="$PROJECT" --zone="$ZONE"; }
 
-if gc instances describe "$VM" >/dev/null 2>&1; then
-	created="built before the talk"
-else
-	created="created now"
+if ! gc instances describe "$VM" >/dev/null 2>&1; then
 	gc instances create "$VM" \
 		--machine-type=n1-standard-4 \
 		--image-family=common-cu129-ubuntu-2404-nvidia-580 \
@@ -34,7 +31,7 @@ fi
 
 # shellcheck disable=SC2016 # $3 and $4 belong to the remote awk
 info="$(gc ssh "$VM" --command='nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; ollama list | awk "/^winnow/ {print \$3, \$4}"; systemctl is-active kubelet || true' 2>/dev/null)"
-ok "$GPU_NODE" "a GCE VM in $ZONE, $created"
+ok "$GPU_NODE" "a GCE VM in $ZONE"
 ok "GPU" "$(sed -n 1p <<<"$info")"
 ok "model" "Winnow 12B, $(sed -n 2p <<<"$info"), served by Ollama"
 if [[ "$(sed -n 3p <<<"$info")" == active ]]; then
