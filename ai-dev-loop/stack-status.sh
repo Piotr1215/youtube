@@ -14,11 +14,21 @@ mgmt="$(mktemp)"
 trap 'rm -f "${mgmt}"' EXIT
 vcluster platform connect management --print >"${mgmt}" 2>/dev/null
 
-# Print "stack PHASE", then "TASK PHASE" for each task of the Stack.
+# Print "stack PHASE", then "TASK PHASE" for each task of the Stack. A task keeps Failed
+# from an earlier attempt until a later one succeeds, and the first attempt always comes
+# before the cluster answers, so a task whose app instance is deploying again counts as
+# Progressing.
 phases() {
+	local apps
+	apps="$(kubectl --kubeconfig "${mgmt}" get appinstances.management.loft.sh -A -o json | jq -c '[.items[] | select(.status.phase == "Pending") | .metadata.name]')"
 	kubectl --kubeconfig "${mgmt}" get stackinstance -A \
 		-l "platform.vcluster.com/stack-config-name=${STACK}" -o json |
-		jq -r '.items[0] // empty | "stack \(.status.phase // "Pending")", (.status.tasks[]? | "\(.name) \(.phase)")'
+		jq -r --argjson apps "${apps}" '
+			def retrying: . as $task | .phase == "Failed" and any($apps[]; contains("-\($task.name)-"));
+			.items[0] // empty | .status as $s |
+			($s.tasks // [] | map(if retrying then .phase = "Progressing" else . end)) as $tasks |
+			"stack \(if $s.phase == "Degraded" and ($tasks | any(.phase == "Failed") | not) then "Progressing" else ($s.phase // "Pending") end)",
+			($tasks[] | "\(.name) \(.phase)")'
 }
 
 # Print what a task is doing, in plain words.
