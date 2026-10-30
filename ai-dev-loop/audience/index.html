@@ -41,14 +41,35 @@
     border: 1px solid var(--line); display: none;
   }
   .result.show { display: block; }
-  .label { font-size: 40px; font-weight: 700; letter-spacing: .02em; }
+  .label { font-size: 40px; font-weight: 700; letter-spacing: .02em; min-height: 60px; }
   .label.yes { color: var(--yes); } .label.no { color: var(--no); } .label.unknown { color: var(--unknown); }
-  .meta { color: var(--muted); margin-top: 2px; }
-  .path {
-    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+  .meta { color: var(--muted); margin-top: 2px; min-height: 24px; }
+  .hops {
+    position: relative; margin-top: 14px; padding: 12px 0 0 24px; border-top: 1px solid var(--line);
     font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted);
   }
-  .path b { color: var(--text); font-weight: 500; }
+  .hop { position: relative; display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+  .hop b { color: var(--text); font-weight: 500; }
+  .hop .ms { color: var(--accent); white-space: nowrap; }
+  .hop.lit { color: var(--text); }
+  .hop:not(:last-of-type)::before {
+    content: ""; position: absolute; left: -19px; top: 50%; width: 2px; height: 100%; background: var(--line);
+  }
+  .hop::after {
+    content: ""; position: absolute; left: -24px; top: 50%; width: 8px; height: 8px; margin-top: -6px;
+    border: 2px solid var(--line); border-radius: 50%; background: var(--card);
+  }
+  .hop.via::after { transform: scale(.6); }
+  .hop.lit::before { background: var(--accent); }
+  .hop.lit::after { border-color: var(--accent); background: var(--accent); }
+  .pulse {
+    position: absolute; z-index: 1; left: 0; top: 0; width: 12px; height: 12px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 10px 3px var(--accent); opacity: 0;
+    transition: transform .12s linear, opacity .15s;
+  }
+  .pulse.on { opacity: 1; animation: glow .6s ease-in-out infinite alternate; }
+  @keyframes glow { to { box-shadow: 0 0 18px 7px var(--accent); } }
+  .legend { margin: 6px 0 0; font-size: 12px; }
   .msg { color: var(--unknown); }
   footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
 </style>
@@ -71,9 +92,15 @@
   <section class="result" id="result" aria-live="polite">
     <div class="label" id="label"></div>
     <div class="meta" id="meta"></div>
-    <div class="path">
-      <b>your phone</b> › Cloudflare › <b>speaker's laptop</b><br>
-      › WireGuard tunnel › <b>NVIDIA T4</b> › Winnow 12B
+    <div class="hops" id="hops">
+      <div class="hop"><b>your phone</b><span class="ms"></span></div>
+      <div class="hop via"><span>Cloudflare <span id="edge"></span></span><span class="ms"></span></div>
+      <div class="hop"><b>speaker's laptop</b><span class="ms"></span></div>
+      <div class="hop via"><span>WireGuard tunnel</span><span class="ms"></span></div>
+      <div class="hop"><span><b>NVIDIA T4</b> us-central1</span><span class="ms"></span></div>
+      <div class="hop via"><span>Winnow 12B</span><span class="ms"></span></div>
+      <span class="pulse" id="pulse"></span>
+      <p class="legend">Times measured on this request.</p>
     </div>
   </section>
 
@@ -86,6 +113,9 @@
   const label = document.getElementById("label");
   const meta = document.getElementById("meta");
   const count = document.getElementById("count");
+  const hops = [...document.querySelectorAll(".hop")];
+  const pulse = document.getElementById("pulse");
+  const edge = document.getElementById("edge");
   const errors = {
     429: "Lots of questions right now. Try again in a minute.",
     503: "The GPU is busy or out of reach. Try again in a few seconds.",
@@ -109,26 +139,65 @@
     result.classList.add("show");
   }
 
+  function reset() {
+    hops.forEach(hop => {
+      hop.classList.remove("lit");
+      hop.querySelector(".ms").textContent = "";
+    });
+    edge.textContent = "";
+    label.textContent = "";
+    meta.textContent = "";
+  }
+
+  // The dot's pace is a fixed animation. Only the times it stamps are measured.
+  async function walk(from, to, pace, step) {
+    for (let i = from; ; i += Math.sign(to - from)) {
+      pulse.style.transform = `translateY(${hops[i].offsetTop + hops[i].offsetHeight / 2 - 6}px)`;
+      step(i);
+      if (i === to) return;
+      await new Promise(done => setTimeout(done, pace));
+    }
+  }
+
   async function send() {
     const value = text.value.trim();
     if (!value) { text.focus(); return; }
+    if (ask.disabled) return;
     ask.disabled = true;
     ask.textContent = "Asking the GPU…";
+    reset();
+    result.classList.add("show");
+    text.blur();
+    result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    pulse.classList.add("on");
+    const started = performance.now();
+    const out = walk(0, hops.length - 1, 130, i => hops[i].classList.add("lit"));
     try {
       const r = await fetch("/api/classify", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: value }),
       });
       const data = await r.json().catch(() => ({}));
+      const total = performance.now() - started;
+      await out;
       if (r.ok && data.label) {
+        const legs = { 1: total - data.trace.served_ms, 3: data.trace.tunnel_ms, 5: data.trace.model_ms };
+        edge.textContent = (r.headers.get("cf-ray") || "").split("-")[1] || "";
+        await walk(hops.length - 1, 0, 70, i => {
+          if (legs[i] != null) hops[i].querySelector(".ms").textContent = Math.round(legs[i]) + " ms";
+        });
         show(data.label, data.label.toUpperCase(),
-          Math.round(data.p * 100) + "% sure · answered in " + data.seconds + " s");
+          Math.round(data.p * 100) + "% sure · answered in " + (total / 1000).toFixed(1) + " s");
       } else {
+        reset();
         show("", "", errors[r.status] || errors[503]);
       }
     } catch (e) {
+      await out;
+      reset();
       show("", "", "No connection. Check your network and try again.");
     } finally {
+      pulse.classList.remove("on");
       ask.disabled = false;
       ask.textContent = "Ask the GPU";
     }

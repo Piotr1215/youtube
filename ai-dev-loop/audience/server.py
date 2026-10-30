@@ -5,7 +5,7 @@ On the laptop it serves index.html and POST /api/classify on 127.0.0.1 only, the
 Cloudflare tunnel being the sole way in, and asks through ../ask. In a cluster
 (classifier/) CLASSIF_HOSTS names the model Service, it runs classif directly and
 binds AUDIENCE_BIND. Either way it uses an argv list, never a shell, and returns
-only the label, its probability and the time. The text goes in on stdin, never in
+only the label, its probability and the timings. The text goes in on stdin, never in
 argv: classif would read text such as "-i/etc/passwd" as an option. Input is capped,
 requests are rate limited per client and bounded overall. Nothing logs the text:
 classif's question form does not write its log, and CLASSIF_LOG points at a
@@ -14,12 +14,14 @@ private directory that audience.sh deletes in case a later classif does.
     CLASSIF_LOG=/private/dir/log.jsonl python3 -I server.py [PORT]
 """
 import collections
+import http.client
 import json
 import os
 import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -40,6 +42,9 @@ QUEUE_WAIT = 15  # seconds a request waits for a slot before the page says busy
 hits = collections.defaultdict(collections.deque)
 hits_lock = threading.Lock()
 answers = collections.Counter()
+# classif reports the model's address; the check request in audience.sh sets it.
+model_host = None
+probes = ThreadPoolExecutor(3)
 
 
 def allowed(client):
@@ -57,9 +62,27 @@ def allowed(client):
         return True
 
 
+def tunnel_ms(host):
+    """Time Ollama's cheapest route: the round trip without the model."""
+    if not host:
+        return None
+    started = time.monotonic()
+    try:
+        conn = http.client.HTTPConnection(host, timeout=2)
+        conn.request("GET", "/api/version")
+        conn.getresponse().read()
+        conn.close()
+    except (OSError, http.client.HTTPException):
+        return None
+    return round((time.monotonic() - started) * 1000)
+
+
 def classify(text):
     """Ask the T4 and keep only the public fields of classif's JSON."""
+    global model_host
     started = time.monotonic()
+    # Beside the model call, so tracing adds no wait to the answer.
+    probe = probes.submit(tunnel_ms, model_host)
     try:
         out = subprocess.run([ASK, "-j", "-d", "20", QUESTION], input=text, capture_output=True,
                              text=True, timeout=30, cwd=HERE).stdout
@@ -70,8 +93,12 @@ def classify(text):
     if label not in ("yes", "no", "unknown"):
         return None
     answers[label] += 1
-    return {"label": label, "p": round(result["p"][label], 2),
-            "seconds": round(time.monotonic() - started, 1)}
+    model_host = result.get("host")
+    served = time.monotonic() - started
+    tunnel = probe.result()
+    return {"label": label, "p": round(result["p"][label], 2), "seconds": round(served, 1),
+            "trace": {"served_ms": round(served * 1000), "tunnel_ms": tunnel,
+                      "model_ms": max(result["ms"] - (tunnel or 0), 0)}}
 
 
 class Handler(BaseHTTPRequestHandler):
