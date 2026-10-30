@@ -51,11 +51,24 @@ done
 
 # A Stack still deploying holds its cluster in Terminating: the deploy keeps the app
 # instance busy until its 25m timeout, so the delete waits behind it. This happens when
-# a run stops before the GPU join. The cluster is gone, so nothing is left to uninstall.
+# a run stops before the GPU join. The cluster is gone, so nothing is left to uninstall:
+# release the app instance. The next create reuses its name and would queue behind the
+# same deploy, so restart the Platform to end that deploy too.
 mgmt="$(mktemp)"
 if vcluster platform connect management --print >"${mgmt}" 2>/dev/null; then
-  kubectl --kubeconfig "${mgmt}" get appinstances.management.loft.sh -n p-default -o name 2>/dev/null |
-    xargs -r -I{} kubectl --kubeconfig "${mgmt}" patch {} -n p-default --type=merge -p '{"metadata":{"finalizers":null}}' >/dev/null 2>&1
+  apps() { kubectl --kubeconfig "${mgmt}" get appinstances.management.loft.sh -n p-default -o name 2>/dev/null; }
+  for _ in 1 2 3 4 5; do
+    [[ -z "$(apps)" ]] && break
+    sleep 1
+  done
+  if [[ -n "$(apps)" ]]; then
+    apps | xargs -r -I{} kubectl --kubeconfig "${mgmt}" patch {} -n p-default --type=merge -p '{"metadata":{"finalizers":null}}' >/dev/null 2>&1
+    docker restart vcluster-platform >/dev/null
+    for _ in $(seq 1 60); do
+      vcluster platform get current-user >/dev/null 2>&1 && break
+      sleep 2
+    done
+  fi
 fi
 rm -f "${mgmt}"
 
