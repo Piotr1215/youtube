@@ -18,6 +18,34 @@ done < vcluster-logo-ascii.txt
 
 <!-- end_slide -->
 
+## Demo Reset
+
+> Presenter only: back to a clean start, T4 VM kept. Skip on stage.
+
+```bash +exec_replace
+paint red '  ✗  ' cyan 'audience page    ' plain 'server stopped, its state deleted'
+paint red '  ✗  ' cyan 'T4 join          ' plain 'undone, vcluster-vpn stopped, its config deleted'
+paint red '  ✗  ' cyan 'all vclusters    ' plain 'ai-dev and anything else in vcluster list'
+paint red '  ✗  ' cyan 'Docker           ' plain 'vcluster.* containers and networks'
+paint red '  ✗  ' cyan 'kubeconfig       ' plain '~/.kube/vind-demo.config'
+paint red '  ✗  ' cyan 'cloud-node       ' plain 'KVM VM and disk, rebuilt fresh from the Ubuntu image'
+paint
+paint green '  ✓  ' cyan 'Platform         ' plain 'stays up; a new one needs activation in the UI'
+paint green '  ✓  ' cyan 'T4 VM            ' plain 'keeps running and billing, with driver and model'
+paint
+paint yellow '  ▶  ' cyan 'also             ' plain 'loads br_netfilter, sets the docker driver'
+paint yellow '  ▶  ' cyan '--clean-platform ' plain 'destroys the Platform too'
+paint yellow '  ▶  ' cyan '--clean-gcp      ' plain 'deletes the T4 VM; recreating it re-downloads the model'
+paint
+paint yellow '  Next: Platform Setup, then Step 1.'
+```
+
+```bash +acquire_terminal
+./reset.sh
+```
+
+<!-- end_slide -->
+
 <!-- include: ../_partials/about-me.md -->
 
 <!-- end_slide -->
