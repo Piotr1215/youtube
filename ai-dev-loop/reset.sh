@@ -49,6 +49,16 @@ for vc in $(vcluster list --output name 2>/dev/null); do
   vcluster delete "$vc" 2>/dev/null || true
 done
 
+# A Stack still deploying holds its cluster in Terminating: the deploy keeps the app
+# instance busy until its 25m timeout, so the delete waits behind it. This happens when
+# a run stops before the GPU join. The cluster is gone, so nothing is left to uninstall.
+mgmt="$(mktemp)"
+if vcluster platform connect management --print >"${mgmt}" 2>/dev/null; then
+  kubectl --kubeconfig "${mgmt}" get appinstances.management.loft.sh -n p-default -o name 2>/dev/null |
+    xargs -r -I{} kubectl --kubeconfig "${mgmt}" patch {} -n p-default --type=merge -p '{"metadata":{"finalizers":null}}' >/dev/null 2>&1
+fi
+rm -f "${mgmt}"
+
 if [[ " $* " == *" --clean-platform "* ]]; then
   echo "=== Stopping platform ==="
   echo "delete" | vcluster platform destroy 2>/dev/null || true
