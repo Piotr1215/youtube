@@ -104,11 +104,11 @@ paint yellow '  A fast, production-shaped API before scarce GPU capacity enters 
 just boxart vpn-architecture | sed 's/^/              /'
 paint
 paint cyan '              host    ' plain 'KVM VM, cloud VM, or bare metal'
-paint cyan '              join    ' plain 'one curl installs kubelet and connects the tunnel'
-paint cyan '              scope   ' plain 'one cluster and one kube context'
+paint cyan '              join    ' plain 'a curl command installs kubelet and connects the tunnel'
+paint cyan '              scope   ' plain 'the node joins this cluster, under the same kube context'
 paint cyan '              VPN     ' plain 'Tailscale library + WireGuard; no Tailscale account'
 paint
-paint yellow '          Remote hardware becomes a worker, not a second cluster.'
+paint yellow '          Remote hardware joins as a worker in the same cluster.'
 ```
 
 <!-- end_slide -->
@@ -124,7 +124,7 @@ paint cyan '  network        ' plain 'WireGuard coordination between node and co
 paint cyan '  services       ' plain 'Stacks track dependent applications and their health'
 paint cyan '  operations     ' plain 'cluster, node, and Stack state in the UI'
 paint
-paint yellow '  One repeatable join path replaces per-VM network plumbing.'
+paint yellow '  Every node joins the same way, with no network setup per VM.'
 ```
 
 <!-- end_slide -->
@@ -180,11 +180,11 @@ end_line: 37
 
 ## Step 1: A Cluster on the Laptop
 
-> Give a developer a repeatable Kubernetes environment from one file.
+> Give a developer a repeatable Kubernetes environment from vcluster.yaml.
 
 ```bash +exec_replace
 paint cyan '  Doing   ' plain 'create the dev cluster from vcluster.yaml'
-paint cyan '  Why     ' plain 'one file declares the workers, VPN, and model dependency'
+paint cyan '  Why     ' plain 'vcluster.yaml declares the workers, VPN, and model dependency'
 ```
 
 ```bash
@@ -225,17 +225,17 @@ paint cyan '  Why     ' plain 'developers use real manifests without waiting for
 
 ## A Local VM Node
 
-> One join contract works for hosts outside Docker.
+> Hosts outside Docker join the same way.
 
 ```bash +exec_replace
-paint plain '  ai-dev, one kube context'
+paint plain '  ai-dev'
 paint gray '  │'
 paint gray '  ├── ' 'bold cyan' 'control plane     ' plain 'the same API server, in Docker'
 paint gray '  ├── ' 'bold cyan' 'worker-1          ' plain 'a Docker container on the laptop'
 paint gray '  └── ' 'bold green' 'cloud-node        ' plain 'a KVM VM: its own kernel and systemd'
 paint gray '                        ' plain 'joined over a WireGuard tunnel'
 paint
-paint yellow '  The platform adds capacity; the developer keeps one API and context.'
+paint yellow '  The platform adds capacity; the developer keeps the same API and context.'
 ```
 
 <!-- end_slide -->
@@ -270,7 +270,7 @@ paint cyan '  Why     ' plain 'the onboarding contract is independent of the hos
 > A remote T4 joins the same cluster and becomes a placement target.
 
 ```bash +exec_replace
-paint plain '  ai-dev, one kube context'
+paint plain '  ai-dev'
 paint gray '  │'
 paint gray '  ├── ' 'bold cyan' 'control plane     ' plain 'the same API server and scheduler'
 paint gray '  ├── ' 'bold cyan' 'worker-1          ' plain 'a Docker container on the laptop'
@@ -301,7 +301,7 @@ paint cyan '  Why     ' plain 'the platform must plan for a 7.4 GB model pull an
 
 ## Step 5: Curl In the GPU
 
-> The VM already has a GPU and model; one curl joins it to ai-dev.
+> The VM already has a GPU and model; a curl command joins it to ai-dev.
 
 ```bash +exec_replace
 paint cyan '  Doing   ' plain 'generate a one-hour join URL; paste its curl as root on the T4'
@@ -323,13 +323,13 @@ paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'con
 
 <!-- end_slide -->
 
-## Step 6: One Kube Context
+## Step 6: Same Kube Context
 
 > Developer access stays simple while the platform spans three locations.
 
 ```bash +exec_replace
 paint cyan '  Doing   ' plain 'list the nodes and where each one runs'
-paint cyan '  Why     ' plain 'the platform owns placement and network; the user keeps one context'
+paint cyan '  Why     ' plain 'the platform owns placement and network; the user keeps the same context'
 ```
 
 ```bash +exec
@@ -397,7 +397,7 @@ just digraph architecture | awk '
   print
 }'
 paint
-paint yellow '  One kube context spans Docker, KVM, and the T4.'
+paint yellow '  The same kube context reaches Docker, KVM, and the T4.'
 ```
 
 <!-- end_slide -->
@@ -530,7 +530,7 @@ paint yellow '  Git carries the service contract; each cluster supplies its own 
 > The demo proves the path. A platform offering needs an operating contract.
 
 ```bash +exec_replace
-paint green '  ✓  ' cyan 'proven       ' plain 'one context, remote T4, Stack health, packaged API'
+paint green '  ✓  ' cyan 'proven       ' plain 'same context, remote T4, Stack health, packaged API'
 paint
 paint cyan '  access       ' plain 'authenticate callers; enforce tenant boundaries separately'
 paint cyan '  capacity     ' plain 'quota and placement policy; this demo pins one proxy pod'

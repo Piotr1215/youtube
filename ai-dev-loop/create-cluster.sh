@@ -41,4 +41,4 @@ for node in $(docker ps --format '{{.Names}}' | sed -n "s/^vcluster\.node\.${CLU
 	ok "${node}" "a worker node, also a Docker container"
 done
 ok "Platform UI" "https://${platform}"
-note "One file declared all of it, and the kube context now points at ${CLUSTER}."
+note "vcluster.yaml defines this cluster; the kube context now points at ${CLUSTER}."
