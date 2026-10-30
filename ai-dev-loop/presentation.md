@@ -257,7 +257,7 @@ curl -fsSLk '<join-url>' | sh -s -- --node-name remote-node --force-join
 
 ```bash +exec_replace
 paint gray '  <join-url> contains the token from vcluster token create --expires=1h'
-paint gray '  clipboard failed? ./join.sh gpu --print shows the whole command'
+paint gray '  paste failed? in the T4 shell: sh /root/join-cmd'
 paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'connect VPN' gray ' ──▶ ' plain 'register node'
 ```
 

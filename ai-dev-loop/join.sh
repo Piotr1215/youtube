@@ -44,11 +44,15 @@ if [[ "${2:-}" == --print ]]; then
 	printf '%s\n' "${join}"
 	exit 0
 fi
-printf "%s" "${join}" | xclip -selection clipboard >/dev/null 2>&1
-ok "join command" "copied to the clipboard, valid for one hour"
+if printf "%s" "${join}" | xclip -selection clipboard >/dev/null 2>&1; then
+	ok "join command" "copied to the clipboard, valid for one hour"
+else
+	fail "clipboard failed" "  the join command is still on the VM"
+fi
 paint gray "    ${shown}"
 paint
 paint yellow "  Paste it in the root shell that opens next, then exit when it says joined."
+[[ "${target}" == gpu ]] && paint gray "  If the paste fails, run this there: sh /root/join-cmd"
 paint
 
 case "${target}" in
@@ -58,7 +62,8 @@ vm)
 	shell=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR "root@${ip}")
 	;;
 gpu)
-	shell=(gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t sudo -i)
+	# A paste can fail on stage, so the command also waits on the VM as a file.
+	shell=(gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t "printf '%s\n' '${join}' | sudo tee /root/join-cmd >/dev/null; sudo -i")
 	;;
 esac
 
