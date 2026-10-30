@@ -200,7 +200,7 @@ kubectl wait --for=condition=Ready node --all
 
 ```bash +exec_replace
 paint cyan '  Doing   ' plain 'build, run and test, then edit the page and do it again'
-paint cyan '  Why     ' plain 'a code change reaches the cluster without a registry push'
+paint cyan '  Why     ' plain 'no kind load step: vind pulls the new image from the laptop'"'"'s Docker'
 ```
 
 ```bash +exec
