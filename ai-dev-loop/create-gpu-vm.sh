@@ -41,5 +41,5 @@ if [[ "$(sed -n 3p <<<"$info")" == active ]]; then
 		fail "kubelet already runs" "  a join from an earlier run: ./reset.sh undoes it"
 	fi
 else
-	ok "kubelet" "none yet: the join adds it"
+	paint yellow '  ▶  ' cyan "$(printf '%-14s' kubelet)" plain "none yet: the join adds it"
 fi
