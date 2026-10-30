@@ -73,8 +73,9 @@ deploy:
                             api="http://$HOST_IP:11434/api"
                             until curl -sf "$api/version" >/dev/null; do echo "waiting for ollama on $HOST_IP"; sleep 5; done
                             curl -sf "$api/tags" | grep -q "\"$MODEL\"" || { echo "$MODEL is missing on the GPU host"; exit 1; }
-                            curl -sf "$api/pull" -d '{"model":"embeddinggemma","stream":false}'
-                            curl -sf "$api/generate" -d "{\"model\":\"$MODEL\",\"keep_alive\":\"1h\"}" >/dev/null
+                            curl -sf "$api/tags" | grep -q '"embeddinggemma:latest"' || curl -sf "$api/pull" -d '{"model":"embeddinggemma","stream":false}'
+                            # classif asks with this context; any other one reloads the model for 8s.
+                            curl -sf "$api/generate" -d "{\"model\":\"$MODEL\",\"keep_alive\":-1,\"options\":{\"num_ctx\":32768} }" >/dev/null
                             echo "$MODEL loaded on $HOST_IP"
                         # Ollama runs on the GPU host; this forwards the cluster to it.
                         containers:
@@ -144,9 +145,21 @@ deploy:
                     template:
                       spec:
                         restartPolicy: Never
+                        # Runs on the warm GPU node from its local classif: no venue network.
+                        nodeSelector:
+                          kubernetes.io/hostname: {{ .Values.gpuNode }}
+                        volumes:
+                        - name: classif
+                          hostPath:
+                            path: /opt/classif
+                            type: Directory
                         containers:
                         - name: classif
                           image: python:3.12-alpine
+                          volumeMounts:
+                          - name: classif
+                            mountPath: /opt/classif
+                            readOnly: true
                           env:
                           - name: CLASSIF_HOSTS
                             value: "{{ .Outputs.model.clusterip }}:11434={{ .Values.model }}"
@@ -154,9 +167,8 @@ deploy:
                           args:
                           - |
                             set -eu
-                            wget -qO- https://github.com/Piotr1215/classif/archive/refs/heads/main.tar.gz | tar xz
                             rc=0
-                            classif-main/classif "Is this about Kubernetes?" "The pod keeps crashlooping." || rc=$?
+                            /opt/classif/classif "Is this about Kubernetes?" "The pod keeps crashlooping." || rc=$?
                             [ "$rc" -le 1 ]
       publishedOutputs:
       - name: endpoint

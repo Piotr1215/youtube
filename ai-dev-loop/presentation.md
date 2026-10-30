@@ -384,8 +384,6 @@ paint
 paint yellow '  ▶  ' cyan 'pause and resume    ' plain 'stop a cluster, free its resources, start it again'
 paint yellow '  ▶  ' cyan 'snapshot, restore   ' plain 'save a cluster to a file, restore it under a new name'
 paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Action creates clusters in workflows'
-paint
-paint gray '  ✓ used in this talk   ▶ in the docs'
 ```
 
 <!-- end_slide -->
@@ -429,7 +427,6 @@ paint cyan '  node provider   ' plain 'where machines come from, set up once in 
 paint cyan '  node pools      ' plain 'which machine types a cluster may get, in vcluster.yaml'
 paint
 paint yellow '  Node pools are a path to self-service GPU capacity.'
-paint gray '  Today we join by hand; this provider and pool are not configured here.'
 ```
 
 <!-- end_slide -->

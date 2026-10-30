@@ -44,6 +44,12 @@ else
   echo "no join to undo"
 fi
 
+echo "=== Warming the GPU VM ==="
+# The VM stays ready between runs: a join leaves its images and classif in place, and
+# this keeps Winnow on the GPU. num_ctx matches classif, or its first question reloads
+# the model.
+gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="curl -sf localhost:11434/api/generate -d '{\"model\":\"winnow:12b-q4_K_M\",\"keep_alive\":-1,\"options\":{\"num_ctx\":32768}}' >/dev/null && echo 'Winnow on the GPU'" 2>/dev/null || echo "could not warm ${GPU_VM}"
+
 echo "=== Deleting all vclusters ==="
 for vc in $(vcluster list --output name 2>/dev/null); do
   vcluster delete "$vc" 2>/dev/null || true

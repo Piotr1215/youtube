@@ -28,4 +28,7 @@ MODEL
 export HOME=/root
 ollama list | grep -q '^winnow:12b-q4_K_M' || ollama create winnow:12b-q4_K_M -f /tmp/Modelfile
 ollama pull embeddinggemma
+# The Stack's check runs this copy, so it needs no network from the venue.
+mkdir -p /opt/classif
+[ -x /opt/classif/classif ] || curl -fsSL https://github.com/Piotr1215/classif/archive/refs/heads/main.tar.gz | tar xz --strip-components=1 -C /opt/classif
 touch /var/lib/models-ready
