@@ -34,7 +34,7 @@ start() {
 		fail "the page did not start" "$(tail -3 "${STATE}/server.log")"
 		exit 1
 	fi
-	ok "page" "http://127.0.0.1:${PORT}, bound to this laptop only"
+	ok "page" "127.0.0.1:${PORT}, this laptop only"
 
 	public="${URL}"
 	host="${URL#https://}"
@@ -49,7 +49,7 @@ start() {
 		# The hostname's route lives on the named tunnel, which may already run for
 		# another demo; only a connector started here is stopped by stop.
 		if pgrep -x cloudflared >/dev/null; then
-			ok "tunnel" "a cloudflared connector already runs, reused"
+			ok "tunnel" "cloudflared already runs, reused"
 		elif [[ -s "${TOKEN_FILE}" ]]; then
 			TUNNEL_TOKEN_FILE="${TOKEN_FILE}" setsid cloudflared tunnel run >"${STATE}/tunnel.log" 2>&1 </dev/null &
 			echo $! >"${STATE}/tunnel.pid"
@@ -81,7 +81,7 @@ start() {
 	done
 	ready=1
 	if [[ "${code}" == 200 ]]; then
-		ok "public" "${public} reaches the page"
+		ok "public" "${public#https://} answers"
 	else
 		fail "${public:-the tunnel} answers ${code:-nothing}" "  see ${STATE}/tunnel.log"
 		ready=0
@@ -91,7 +91,7 @@ start() {
 		-d "{\"text\": \"${SAMPLE}\"}" "http://127.0.0.1:${PORT}/api/classify" |
 		jq -r 'if .label then "\(.label) \(.p) in \(.seconds) s" else empty end' 2>/dev/null || true)"
 	if [[ -n "${answer}" ]]; then
-		ok "T4" "answers through the page: ${answer}"
+		ok "T4" "page answered: ${answer}"
 	else
 		fail "the T4 does not answer yet" "  is the classif Stack Healthy?"
 		ready=0
