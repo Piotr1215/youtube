@@ -1,7 +1,13 @@
 experimental:
   docker:
+    # The node image masks udevd but runs systemd-udev-trigger. In a privileged container
+    # that replays device events on the host, and Xorg drops every mouse and keyboard.
+    volumes:
+    - /dev/null:/etc/systemd/system/systemd-udev-trigger.service
     nodes:
     - name: "worker-1"
+      volumes:
+      - /dev/null:/etc/systemd/system/systemd-udev-trigger.service
 
 privateNodes:
   enabled: true
