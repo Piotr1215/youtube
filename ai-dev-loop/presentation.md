@@ -199,8 +199,8 @@ kubectl wait --for=condition=Ready node --all
 > Keep the inner loop fast before the workload needs scarce hardware.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'build an image, run it in the cluster, test it from the laptop'
-paint cyan '  Why     ' plain 'developers use real manifests without waiting for a registry push'
+paint cyan '  Doing   ' plain 'build, run and test, then edit the page and do it again'
+paint cyan '  Why     ' plain 'a code change reaches the cluster without a registry push'
 ```
 
 ```bash +exec

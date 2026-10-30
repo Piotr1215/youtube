@@ -17,5 +17,7 @@ spec:
       containers:
       - name: web
         image: web:dev
+        # web:dev changes with every local build, so a restart has to pull it.
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
