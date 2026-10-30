@@ -17,7 +17,7 @@ kubectl get nodes -o json |
 		case "${name}" in
 		"${CLUSTER}") where="the control plane, a Docker container on this laptop" ;;
 		cloud-node) where="a KVM VM on this laptop, joined over the VPN" ;;
-		"${GPU_VM}") where="a GCE VM with an NVIDIA T4, joined over the VPN" ;;
+		"${GPU_NODE}") where="a GCE VM with an NVIDIA T4, joined over the VPN" ;;
 		*) where="a Docker container on this laptop" ;;
 		esac
 		if [[ "${ready}" == True ]]; then
@@ -30,5 +30,5 @@ kubectl get nodes -o json |
 names="$(kubectl get nodes -o name)"
 places="laptop"
 grep -qx node/cloud-node <<<"${names}" && places+=" + local VM"
-grep -qx "node/${GPU_VM}" <<<"${names}" && places+=" + cloud GPU"
+grep -qx "node/${GPU_NODE}" <<<"${names}" && places+=" + cloud GPU"
 note "Nodes in this kube context: ${places}."

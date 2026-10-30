@@ -34,11 +34,11 @@ fi
 
 # shellcheck disable=SC2016 # $3 and $4 belong to the remote awk
 info="$(gc ssh "$VM" --command='nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; ollama list | awk "/^winnow/ {print \$3, \$4}"; systemctl is-active kubelet || true' 2>/dev/null)"
-ok "$VM" "a GCE VM in $ZONE, $created"
+ok "$GPU_NODE" "a GCE VM in $ZONE, $created"
 ok "GPU" "$(sed -n 1p <<<"$info")"
 ok "model" "Winnow 12B, $(sed -n 2p <<<"$info"), served by Ollama"
 if [[ "$(sed -n 3p <<<"$info")" == active ]]; then
-	if kubectl get node "$VM" >/dev/null 2>&1; then
+	if kubectl get node "$GPU_NODE" >/dev/null 2>&1; then
 		ok "kubelet" "running: already joined to ${CLUSTER}"
 	else
 		fail "kubelet already runs" "  a join from an earlier run: ./reset.sh undoes it"

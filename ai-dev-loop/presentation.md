@@ -228,7 +228,7 @@ paint plain '  ai-dev'
 paint gray '  │'
 paint gray '  ├── ' 'bold cyan' 'control plane     ' plain 'the same API server and scheduler'
 paint gray '  ├── ' 'bold cyan' 'worker-1          ' plain 'a Docker container on the laptop'
-paint gray '  └── ' 'bold green' 'vind-node         ' plain 'a GCE VM with an NVIDIA T4'
+paint gray '  └── ' 'bold green' 'remote-node       ' plain 'a GCE VM with an NVIDIA T4'
 paint gray '        ├── ' cyan 'at first boot   ' plain 'driver, Ollama, and the model download'
 paint gray '        └── ' cyan 'at join         ' plain 'kubelet and the tunnel to the laptop'
 paint
@@ -252,7 +252,7 @@ paint cyan '  Why     ' plain 'remote capacity appears behind the same Kubernete
 ```
 
 ```bash
-curl -fsSLk '<join-url>' | sh -s -- --node-name vind-node
+curl -fsSLk '<join-url>' | sh -s -- --node-name remote-node
 ```
 
 ```bash +exec_replace
@@ -298,7 +298,7 @@ paint cyan '  Why     ' plain 'the platform owns placement and network; the user
 ```bash +exec_replace
 paint plain '  vcluster.yaml'
 paint gray '  └── ' 'bold cyan' 'Stack classif     ' plain 'created with the cluster in step 1'
-paint gray '      ├── ' 'bold cyan' 'model         ' plain 'a pod pinned to vind-node, Pending until it joins'
+paint gray '      ├── ' 'bold cyan' 'model         ' plain 'a pod pinned to remote-node, Pending until it joins'
 paint gray '      │                 ' plain 'then exposes Ollama behind a LoadBalancer'
 paint gray '      │                 ' plain 'and loads Winnow into GPU memory'
 paint gray '      └── ' 'bold cyan' 'check         ' plain 'once model is healthy: one test question'
@@ -335,7 +335,7 @@ just digraph architecture | awk '
 {
   gsub(/vCluster Platform|join tokens [+] VPN|Stack health/, "\033[1;35m&\033[0m")
   gsub(/LAPTOP \/ ai-dev|API [+] worker-1/, "\033[1;36m&\033[0m")
-  gsub(/GCE \/ vind-node|proxy -> Ollama|Winnow on T4/, "\033[1;32m&\033[0m")
+  gsub(/GCE \/ remote-node|proxy -> Ollama|Winnow on T4/, "\033[1;32m&\033[0m")
   gsub(/Audience phone|via Cloudflare|HTTPS|page [+] classif|model Service|Tailscale\/WireGuard/, "\033[1;33m&\033[0m")
   print
 }'
@@ -345,59 +345,46 @@ paint yellow '  The same kube context reaches Docker and the T4.'
 
 <!-- end_slide -->
 
-## Step 7: Score, Edit, Retry
-
-> Iterate locally against a platform-supplied model endpoint.
-
-```bash +exec_replace
-paint cyan '  Doing   ' plain 'score six labeled examples, edit the question, score again'
-paint cyan '  Why     ' plain 'the developer changes code; the platform keeps the GPU available'
-```
-
-```bash +exec
-./eval.sh "Is this an infrastructure problem?" "Is this a Kubernetes problem?"
-```
-
-<!-- end_slide -->
-
-## Step 8: Try It From Your Phone
+## Step 7: Share the Loop
 
 > Expose the same model call to the room through a small page.
 
-<!-- column_layout: [3, 2] -->
-
-<!-- column: 0 -->
-
 ```bash +exec_replace
-paint cyan '  Doing  ' plain 'start the page, check a real answer'
-paint cyan '  Why    ' plain 'a request crosses ingress, laptop, and T4'
+paint cyan '  Doing   ' plain 'start the page; check the public URL and a real model answer'
+paint cyan '  Why     ' plain 'a public request now crosses ingress, the laptop, and the T4'
 ```
 
 ```bash +exec
 ./audience.sh start
 ```
 
-<!-- column: 1 -->
+<!-- end_slide -->
+
+## Try It From Your Phone
+
+> Ask Winnow on the T4 any yes or no question.
 
 ```bash +exec
 ./audience.sh qr
 ```
 
-<!-- reset_layout -->
-
 <!-- end_slide -->
 
-## Step 9: Pause and Resume
+## vind Capabilities
 
-> A developer environment needs a predictable stop and start.
+> Docker is the only requirement; the Platform adds external nodes.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'pause the cluster like a closed laptop, then resume it'
-paint cyan '  Why     ' plain 'the platform restores the route without rebuilding the model VM'
-```
-
-```bash +exec
-./sleep-wake.sh
+paint green '  ✓  ' cyan 'pull through cache  ' plain 'images come from the laptop'"'"'s Docker, no kind load'
+paint green '  ✓  ' cyan 'LoadBalancers       ' plain 'work out of the box, reachable locally'
+paint green '  ✓  ' cyan 'multiple nodes      ' plain 'each worker declared in vcluster.yaml'
+paint green '  ✓  ' cyan 'external nodes      ' plain 'remote hosts join over vCluster VPN'
+paint
+paint yellow '  ▶  ' cyan 'pause and resume    ' plain 'stop a cluster, free its resources, start it again'
+paint yellow '  ▶  ' cyan 'snapshot, restore   ' plain 'save a cluster to a file, restore it under a new name'
+paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Action creates clusters in workflows'
+paint
+paint gray '  ✓ used in this talk   ▶ in the docs'
 ```
 
 <!-- end_slide -->
@@ -417,23 +404,31 @@ paint cyan '  Why     ' plain 'the platform restores the route without rebuildin
 > Review the service definition; supply GPU capacity in each target cluster.
 
 ```bash +exec_replace
-paint 'bold cyan' '  LAPTOP CLUSTER: VERIFIED'
-paint gray '  │  ' plain 'classifier/' gray ' ──▶ ' plain 'worker-1' gray ' ──▶ ' plain 'model on the T4'
-paint gray '  │  ' plain 'a Deployment and a LoadBalancer: kubectl apply -k classifier/'
-paint gray '  │'
-paint gray '  ▼  ' cyan 'pull request'
-paint 'bold yellow' '  NEXT: GIT + CI'
-paint gray '  │  ' plain 'classifier/ + argocd/classifier.yaml'
-paint gray '  │  ' plain 'CI publishes classifier:<sha> and updates its tag'
-paint gray '  │'
-paint gray '  ▼  ' cyan 'Argo CD sync'
-paint 'bold green' '  SHARED CLUSTER'
-paint gray '     ' plain 'same classifier API + its own model Service'
+paint plain '  app/' gray ' ──▶ ' plain 'pull request' gray ' ──▶ ' plain 'CI builds the image' gray ' ──▶ ' plain 'Argo CD' gray ' ──▶ ' plain 'shared cluster'
 paint
-paint cyan '  stays local   ' plain 'Docker workers, this T4 and its node pin'
-paint cyan '  still to do   ' plain 'publish an image and replace the Argo CD placeholder'
+paint cyan '  moves to Git   ' plain 'app/, the manifests from step 2'
+paint cyan '  changes        ' plain 'web:dev becomes an immutable tag from CI'
+paint cyan '  stays local    ' plain 'Docker workers, this T4 and its node pin'
+paint cyan '  each cluster   ' plain 'supplies its own GPU and model Service'
 paint
 paint yellow '  Git carries the service contract; each cluster supplies its own capacity.'
+```
+
+<!-- end_slide -->
+
+## Auto Nodes
+
+> From a manual join to capacity requested by the workload.
+
+```bash +exec_replace
+paint plain '  pod has nowhere to run' gray ' ──▶ ' plain 'Platform creates a machine' gray ' ──▶ ' plain 'it joins'
+paint plain '  node sits empty       ' gray ' ──▶ ' plain 'Platform removes the machine'
+paint
+paint cyan '  node provider   ' plain 'where machines come from, set up once in the Platform'
+paint cyan '  node pools      ' plain 'which machine types a cluster may get, in vcluster.yaml'
+paint
+paint yellow '  Node pools are a path to self-service GPU capacity.'
+paint gray '  Today we join by hand; this provider and pool are not configured here.'
 ```
 
 <!-- end_slide -->
@@ -443,7 +438,7 @@ paint yellow '  Git carries the service contract; each cluster supplies its own 
 > The demo proves the path. A platform offering needs an operating contract.
 
 ```bash +exec_replace
-paint green '  ✓  ' cyan 'proven           ' plain 'same context, remote T4, Stack health, packaged API'
+paint green '  ✓  ' cyan 'proven           ' plain 'same context, remote T4, Stack health, public page'
 paint
 paint red '  ✗  ' cyan 'laptop sleeps    ' plain 'pause first; on resume the tunnel returns'
 paint red '  ✗  ' cyan 'model downloads  ' plain 'gigabytes per new VM: pull at boot, never on stage'

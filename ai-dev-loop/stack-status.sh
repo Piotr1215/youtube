@@ -32,10 +32,10 @@ meaning() {
 		;;
 	model:Failed | model:Degraded) echo "deploy failed; the Stack retries it" ;;
 	model:*)
-		if kubectl get node "${GPU_VM}" >/dev/null 2>&1; then
+		if kubectl get node "${GPU_NODE}" >/dev/null 2>&1; then
 			echo "loading Winnow into the T4's memory"
 		else
-			echo "waiting for ${GPU_VM}, the GPU node, to join"
+			echo "waiting for ${GPU_NODE}, the GPU node, to join"
 		fi
 		;;
 	check:Healthy) echo "a test question got an answer from the model" ;;

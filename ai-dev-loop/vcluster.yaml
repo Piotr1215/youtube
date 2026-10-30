@@ -17,7 +17,7 @@ deploy:
   - name: classif
     displayName: classif on the GPU node
     parameters:
-      gpuNode: vind-node
+      gpuNode: remote-node
       model: winnow:12b-q4_K_M
     template:
       tasks:

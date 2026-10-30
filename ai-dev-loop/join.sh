@@ -12,7 +12,7 @@ source ./common.sh
 target="${1:?usage: ./join.sh vm|gpu}"
 case "${target}" in
 vm) node=cloud-node ;;
-gpu) node="${GPU_VM}" ;;
+gpu) node="${GPU_NODE}" ;;
 *)
 	fail "unknown target ${target}" "use vm or gpu"
 	exit 1
@@ -31,10 +31,10 @@ join="$(vcluster token create --expires=1h 2>/dev/null)" || {
 	exit 1
 }
 shown='curl -fsSLk "https://<platform>/…/join?token=…" | sh -'
-# GCE hostnames are FQDNs; the Stack pins its model pod to the node named vind-node.
+# GCE hostnames are FQDNs; the Stack pins its model pod to the gpuNode in vcluster.yaml.
 if [[ "${target}" == gpu ]]; then
-	join+="s -- --node-name ${GPU_VM}"
-	shown+="s -- --node-name ${GPU_VM}"
+	join+="s -- --node-name ${GPU_NODE}"
+	shown+="s -- --node-name ${GPU_NODE}"
 fi
 printf "%s" "${join}" | xclip -selection clipboard >/dev/null 2>&1
 ok "join command" "copied to the clipboard, valid for one hour"

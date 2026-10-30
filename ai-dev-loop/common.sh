@@ -6,6 +6,8 @@
 export KUBECONFIG="${VIND_KUBECONFIG:-${HOME}/.kube/vind-demo.config}"
 CLUSTER="${CLUSTER:-ai-dev}"
 GPU_VM="${GPU_VM:-vind-node}"
+# The GCE VM's name in the cluster; gpuNode in vcluster.yaml must match it.
+GPU_NODE="${GPU_NODE:-remote-node}"
 # shellcheck disable=SC2034 # used by join.sh
 GCE=(--project="${PROJECT:-eng-sandbox-02}" --zone="${ZONE:-us-central1-a}")
 

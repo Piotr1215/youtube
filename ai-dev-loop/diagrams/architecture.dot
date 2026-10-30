@@ -5,7 +5,7 @@ digraph architecture {
   platform [label="vCluster Platform\njoin tokens + VPN\nStack health"];
   audience [label="Audience phone\nvia Cloudflare"];
   laptop [label="LAPTOP / ai-dev\nAPI + worker-1\npage + classif"];
-  gpu [label="GCE / vind-node\nproxy -> Ollama\nWinnow on T4"];
+  gpu [label="GCE / remote-node\nproxy -> Ollama\nWinnow on T4"];
 
   platform -> laptop [label="coordinate", style=dashed];
   audience -> laptop [label="HTTPS"];
