@@ -3,7 +3,10 @@
 # machine that joins, where the presenter pastes it. vm is the KVM VM on this
 # laptop; gpu is the GCE T4 VM.
 #
-#   ./join.sh vm|gpu
+#   ./join.sh vm|gpu [--print]
+#
+# --print is the fallback when the clipboard fails: it prints the whole join command
+# to paste by hand, and stops.
 set -eo pipefail
 
 cd "$(dirname "$0")"
@@ -32,9 +35,14 @@ join="$(vcluster token create --expires=1h 2>/dev/null)" || {
 }
 shown='curl -fsSLk "https://<platform>/…/join?token=…" | sh -'
 # GCE hostnames are FQDNs; the Stack pins its model pod to the gpuNode in vcluster.yaml.
+# --force-join clears any earlier join, so a leftover config cannot stop this step.
 if [[ "${target}" == gpu ]]; then
-	join+="s -- --node-name ${GPU_NODE}"
-	shown+="s -- --node-name ${GPU_NODE}"
+	join+="s -- --node-name ${GPU_NODE} --force-join"
+	shown+="s -- --node-name ${GPU_NODE} --force-join"
+fi
+if [[ "${2:-}" == --print ]]; then
+	printf '%s\n' "${join}"
+	exit 0
 fi
 printf "%s" "${join}" | xclip -selection clipboard >/dev/null 2>&1
 ok "join command" "copied to the clipboard, valid for one hour"

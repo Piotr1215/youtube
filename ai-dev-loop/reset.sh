@@ -29,13 +29,17 @@ echo "=== Undoing the GPU VM's join ==="
 # before the cluster is deleted. It leaves vcluster-vpn running with the deleted
 # cluster's key in memory, and a later join rewrites its config without restarting
 # it, so stop it too.
+#
+# kubelet.conf is what the join refuses on, and it outlives a stopped kubelet, so that
+# file decides whether the VM counts as joined.
+joined='test -e /etc/kubernetes/kubelet.conf'
 join="$(vcluster token create --expires=10m 2>/dev/null)"
-if [[ -n "${join}" ]] && gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command='systemctl is-active -q kubelet' 2>/dev/null; then
+if [[ -n "${join}" ]] && gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="${joined}" 2>/dev/null; then
   gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="sudo sh -c '${join}s -- --reset-only' && sudo systemctl disable --now vcluster-vpn && sudo rm -f /etc/vcluster-vpn/config.json" 2>&1 | tail -3
-elif gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command='systemctl is-active -q kubelet' 2>/dev/null; then
-  # The cluster is gone, so no token for --reset-only: stop what makes the next
-  # join refuse or hang; that join resets the rest before it installs.
-  gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="sudo systemctl disable --now kubelet vcluster-vpn && sudo rm -f /etc/vcluster-vpn/config.json" 2>&1 | tail -3
+elif gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="${joined}" 2>/dev/null; then
+  # The cluster is gone or stopped, so no token for --reset-only: remove what makes the
+  # next join refuse or hang. That join passes --force-join and resets the rest.
+  gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="sudo systemctl disable --now kubelet vcluster-vpn; sudo rm -f /etc/vcluster-vpn/config.json /etc/kubernetes/kubelet.conf" 2>&1 | tail -3
 else
   echo "no join to undo"
 fi

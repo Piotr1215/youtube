@@ -252,11 +252,12 @@ paint cyan '  Why     ' plain 'remote capacity appears behind the same Kubernete
 ```
 
 ```bash
-curl -fsSLk '<join-url>' | sh -s -- --node-name remote-node
+curl -fsSLk '<join-url>' | sh -s -- --node-name remote-node --force-join
 ```
 
 ```bash +exec_replace
 paint gray '  <join-url> contains the token from vcluster token create --expires=1h'
+paint gray '  clipboard failed? ./join.sh gpu --print shows the whole command'
 paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'connect VPN' gray ' ──▶ ' plain 'register node'
 ```
 
