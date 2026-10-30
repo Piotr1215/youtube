@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The audience page for Step 8: one fixed question, answered by Winnow on the T4.
+"""The audience page for Step 8: any yes or no question, answered by Winnow on the T4.
 
 On the laptop it serves index.html and POST /api/classify on 127.0.0.1 only, the
 Cloudflare tunnel being the sole way in, and asks through ../ask. In a cluster
@@ -29,7 +29,8 @@ HERE = Path(__file__).resolve().parent
 # In a cluster the model is a Service name; on the laptop ../ask looks up its IP.
 ASK = "classif" if os.environ.get("CLASSIF_HOSTS") else str(HERE.parent / "ask")
 PAGE = (HERE / "index.html").read_bytes()
-QUESTION = "Is this a Kubernetes problem?"
+# Fixed, so what attendees type stays the text on stdin and never reaches argv.
+QUESTION = "Is the answer to this question yes?"
 MAX_TEXT = 500
 MAX_BODY = 4096
 # Requests per minute. Conference WiFi puts a room behind one address, so the

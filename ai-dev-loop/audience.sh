@@ -15,7 +15,7 @@ PORT="${AUDIENCE_PORT:-8089}"
 URL="${AUDIENCE_URL:-https://gpu.cloudrumble.net}"
 TOKEN_FILE="${CF_TOKEN_FILE:-${HOME}/.config/haiku-tunnel/token}"
 STATE="${XDG_RUNTIME_DIR:-/tmp}/vind-audience"
-SAMPLE="The deployment is stuck at 0 of 3 replicas."
+SAMPLE="Is this a Kubernetes problem? The deployment is stuck at 0 of 3 replicas."
 
 alive() { [[ -s "${STATE}/$1.pid" ]] && kill -0 "$(<"${STATE}/$1.pid")" 2>/dev/null; }
 

@@ -27,10 +27,11 @@
   .count { text-align: right; color: var(--muted); font-size: 13px; margin-top: 4px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
   .chip {
-    background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px;
+    background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 14px;
     padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; text-align: left;
   }
   .chip:hover { color: var(--text); border-color: var(--muted); }
+  .chip span { color: var(--accent); }
   button.ask {
     width: 100%; padding: 14px; border: 0; border-radius: 10px; cursor: pointer;
     background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 17px;
@@ -77,15 +78,15 @@
 <body>
 <main>
   <div class="brand">vCluster · Curl a GPU Into Your Cluster</div>
-  <h1>Is this a Kubernetes problem?</h1>
-  <p class="sub">Describe any problem in a sentence. A 12B model on a cloud GPU, joined to the speaker's laptop cluster, answers yes, no or unknown.</p>
+  <h1>Ask the GPU</h1>
+  <p class="sub">Type any yes or no question. A 12B model on a cloud GPU, joined to the speaker's laptop cluster, answers yes, no or unknown.</p>
 
-  <textarea id="text" maxlength="500" placeholder="The deployment is stuck at 0 of 3 replicas."></textarea>
+  <textarea id="text" maxlength="500" placeholder="Are apples good for health?"></textarea>
   <div class="count"><span id="count">0</span>/500</div>
   <div class="chips">
-    <button class="chip" type="button">My PVC stays Pending after the apply.</button>
-    <button class="chip" type="button">Pods cannot pull images from the private registry.</button>
-    <button class="chip" type="button">The coffee machine on floor two is broken.</button>
+    <button class="chip" type="button"><span>Is this a Kubernetes problem?</span> My PVC stays Pending after the apply.</button>
+    <button class="chip" type="button"><span>Is this a Kubernetes problem?</span> Pods cannot pull images from the private registry.</button>
+    <button class="chip" type="button"><span>Is this a Kubernetes problem?</span> The coffee machine on floor two is broken.</button>
   </div>
   <button class="ask" id="ask" type="button">Ask the GPU</button>
 
