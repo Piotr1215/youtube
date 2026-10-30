@@ -156,6 +156,28 @@ paint gray '  Today we join by hand; this provider and pool are not configured h
 
 <!-- end_slide -->
 
+## Platform Setup
+
+> Clusters get their license and join tokens here, so the CLI logs in first.
+
+```bash +exec_replace
+paint cyan '  Doing   ' plain 'start the Platform, print its login, log the CLI in'
+paint cyan '  Why     ' plain 'vcluster create needs this login to get a license'
+```
+
+```file
+path: platform.sh
+language: bash
+start_line: 33
+end_line: 37
+```
+
+```bash +exec
+./platform.sh
+```
+
+<!-- end_slide -->
+
 ## Step 1: A Cluster on the Laptop
 
 > Give a developer a repeatable Kubernetes environment from one file.
@@ -163,6 +185,11 @@ paint gray '  Today we join by hand; this provider and pool are not configured h
 ```bash +exec_replace
 paint cyan '  Doing   ' plain 'create the dev cluster from vcluster.yaml'
 paint cyan '  Why     ' plain 'one file declares the workers, VPN, and model dependency'
+```
+
+```bash
+vcluster create ai-dev --values vcluster.yaml
+kubectl wait --for=condition=Ready node --all
 ```
 
 ```bash +exec

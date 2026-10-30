@@ -24,3 +24,9 @@ fail() { paint red '  ✗  ' plain "$1"; [[ -n "$2" ]] && paint gray "$2"; }
 # Print a closing line under the rows.
 # $1: text
 note() { paint; paint yellow "$1"; }
+
+# Print a command's output as it arrives, without blank lines, warnings or banners.
+brief() {
+	sed -u -E -e 's/\x1b\[[0-9;]*m//g' -e '/^[[:space:]]*$/d' -e '/ warn /d' -e '/^#+/d' \
+		-e '/^Thanks for/d' -e '/successfully installed/d' -e 's/^/  /'
+}
