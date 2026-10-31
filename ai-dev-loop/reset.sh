@@ -14,12 +14,19 @@ set +e
 cd "$(dirname "$0")" || exit 1
 source ./common.sh
 
+# The Demo Reset slide reads this marker: it says all set when the file exists. It goes
+# now, so a run that stops halfway reads as reset needed, and returns at the end only if
+# the run held up. create-cluster.sh removes it too.
+rm -f .reset-done
+ready=1
+
 # The T4 half of the demo runs through gcloud, and the steps below hide its errors, so a
 # lapsed login reads as "no join to undo". gcloud auth list still shows a lapsed account,
 # so ask for a token. This runs again at the end, where the warning stays on screen.
 check_google() {
-  gcloud auth print-access-token >/dev/null 2>&1 ||
-    fail "not logged in to Google: the T4 part of the demo will fail" "  Run: gcloud auth login"
+  gcloud auth print-access-token >/dev/null 2>&1 && return
+  fail "not logged in to Google: the T4 part of the demo will fail" "  Run: gcloud auth login"
+  return 1
 }
 check_google
 
@@ -58,7 +65,7 @@ echo "=== Warming the GPU VM ==="
 # The VM stays ready between runs: a join leaves its images and classif in place, and
 # this keeps Winnow on the GPU. num_ctx matches classif, or its first question reloads
 # the model.
-gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="curl -sf localhost:11434/api/generate -d '{\"model\":\"winnow:12b-q4_K_M\",\"keep_alive\":-1,\"options\":{\"num_ctx\":32768}}' >/dev/null && echo 'Winnow on the GPU'" 2>/dev/null || echo "could not warm ${GPU_VM}"
+gcloud compute ssh "${GPU_VM}" "${GCE[@]}" --command="curl -sf localhost:11434/api/generate -d '{\"model\":\"winnow:12b-q4_K_M\",\"keep_alive\":-1,\"options\":{\"num_ctx\":32768}}' >/dev/null && echo 'Winnow on the GPU'" 2>/dev/null || { echo "could not warm ${GPU_VM}"; ready=0; }
 
 echo "=== Deleting all vclusters ==="
 for vc in $(vcluster list --output name 2>/dev/null); do
@@ -161,10 +168,13 @@ for image in "${images[@]}"; do
   # A pull skips a tag it already has, whatever is missing. This fetches only the gap,
   # and with no network it leaves the image as it was.
   cached "${image}" || sudo ctr -n moby content fetch --platform linux/amd64 "${image}" >/dev/null 2>&1
-  cached "${image}" || { echo "not cached: ${image}"; gaps=1; }
+  cached "${image}" || { echo "not cached: ${image}"; gaps=1; ready=0; }
 done
 ((gaps)) || echo "all images cached"
 
 echo "=== Done ==="
 docker ps --format "table {{.Names}}\t{{.Status}}"
-check_google
+check_google || ready=0
+((ready)) && touch .reset-done
+# presenterm reloads the deck when this file changes, which refreshes the slide's marker.
+touch presentation.md

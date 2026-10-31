@@ -18,11 +18,21 @@ done < vcluster-logo-ascii.txt
 
 <!-- end_slide -->
 
+<!-- include: ../_partials/about-me.md -->
+
+<!-- end_slide -->
+
 ## Demo Reset
 
 > Back to a clean start, with the T4 VM kept warm.
 
 ```bash +exec_replace
+if [[ -e .reset-done ]]; then
+  paint 'bold green' '  ✓  all set for the demo'
+else
+  paint 'bold red' '  ✗  reset needed before the demo'
+fi
+paint
 paint red '  ✗  ' cyan 'demo page        ' plain 'server stopped, its state deleted'
 paint red '  ✗  ' cyan 'T4 join          ' plain 'undone, vcluster-vpn stopped, its config deleted'
 paint red '  ✗  ' cyan 'all vclusters    ' plain 'ai-dev and anything else in vcluster list'
@@ -59,10 +69,6 @@ end_line: 37
 ```bash +exec
 ./platform.sh
 ```
-
-<!-- end_slide -->
-
-<!-- include: ../_partials/about-me.md -->
 
 <!-- end_slide -->
 

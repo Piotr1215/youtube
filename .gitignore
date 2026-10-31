@@ -12,3 +12,6 @@ __pycache__/
 
 # Build outputs
 **/_build/
+
+# Written by reset.sh, read by the Demo Reset slide
+ai-dev-loop/.reset-done

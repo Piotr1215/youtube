@@ -16,6 +16,9 @@ if ! vcluster platform get current-user >/dev/null 2>&1; then
 fi
 platform="$(jq -r '.platform.host // empty' ~/.vcluster/config.json | sed -E 's#^https?://##')"
 
+# A cluster ends the clean start: the Demo Reset slide reads this marker.
+rm -f .reset-done
+
 cmd "vcluster create ${CLUSTER} --values vcluster.yaml"
 start="$(date +%s)"
 if docker ps --format '{{.Names}}' | grep -qx "vcluster.cp.${CLUSTER}"; then
