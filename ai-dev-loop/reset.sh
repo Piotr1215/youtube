@@ -14,6 +14,15 @@ set +e
 cd "$(dirname "$0")" || exit 1
 source ./common.sh
 
+# The T4 half of the demo runs through gcloud, and the steps below hide its errors, so a
+# lapsed login reads as "no join to undo". gcloud auth list still shows a lapsed account,
+# so ask for a token. This runs again at the end, where the warning stays on screen.
+check_google() {
+  gcloud auth print-access-token >/dev/null 2>&1 ||
+    fail "not logged in to Google: the T4 part of the demo will fail" "  Run: gcloud auth login"
+}
+check_google
+
 echo "=== Ensuring bridge kernel module ==="
 sudo modprobe br_netfilter
 sudo sysctl -q -w net.bridge.bridge-nf-call-iptables=1
@@ -158,3 +167,4 @@ done
 
 echo "=== Done ==="
 docker ps --format "table {{.Names}}\t{{.Status}}"
+check_google
