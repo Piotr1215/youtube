@@ -2,12 +2,13 @@ digraph architecture {
   rankdir=TB;
   node [shape=box];
 
-  platform [label="vCluster Platform\njoin tokens + VPN\nStack health"];
-  audience [label="Audience phone\nvia Cloudflare"];
-  laptop [label="LAPTOP / ai-dev\nAPI + worker-1\npage + classif"];
-  gpu [label="GCE / remote-node\nproxy -> Ollama\nWinnow on T4"];
+  platform [label="vCluster Platform\njoin tokens + VPN\nhealth checks"];
+  users [label="Developers and users\nkubectl, apps, tests"];
+  cluster [label="Dev cluster\nAPI server + workers\nyour app"];
+  gpu [label="GPU node\nkubelet\nmodel server"];
 
-  platform -> laptop [label="coordinate", style=dashed];
-  audience -> laptop [label="HTTPS"];
-  laptop -> gpu [label="model Service\nTailscale/WireGuard"];
+  platform -> cluster [label="coordinate", style=dashed];
+  platform -> gpu [label="join", style=dashed];
+  users -> cluster [label="kube context"];
+  cluster -> gpu [label="model endpoint\nover the VPN"];
 }

@@ -82,7 +82,7 @@ end_line: 37
 
 ## The AI Dev Loop
 
-> The usual inner and outer loops gain one step: a remote GPU.
+> The usual inner and outer loops gain a remote GPU step.
 
 ```bash +exec_replace
 paint 'bold cyan' '             edit                              pull request'
@@ -242,7 +242,7 @@ paint yellow '          Every node joins the same way, with no network setup per
 
 ## The VPN in vcluster.yaml
 
-> One block in the cluster config gives every joined node the VPN.
+> The cluster config gives every joined node the VPN.
 
 ```file
 path: vcluster.yaml
@@ -358,21 +358,21 @@ paint cyan '  Why     ' plain 'a healthy Stack should mean the model really is o
 
 <!-- end_slide -->
 
-## The Whole Path
+## Platform Architecture
 
 > The platform connects the nodes; applications use the model endpoint.
 
 ```bash +exec_replace
 just digraph architecture | awk '
 {
-  gsub(/vCluster Platform|join tokens [+] VPN|Stack health/, "\033[1;35m&\033[0m")
-  gsub(/LAPTOP \/ ai-dev|API [+] worker-1/, "\033[1;36m&\033[0m")
-  gsub(/GCE \/ remote-node|proxy -> Ollama|Winnow on T4/, "\033[1;32m&\033[0m")
-  gsub(/Audience phone|via Cloudflare|HTTPS|page [+] classif|model Service|Tailscale\/WireGuard/, "\033[1;33m&\033[0m")
+  gsub(/vCluster Platform|join tokens [+] VPN|health checks/, "\033[1;35m&\033[0m")
+  gsub(/Dev cluster|API server [+] workers|your app/, "\033[1;36m&\033[0m")
+  gsub(/GPU node|kubelet|model server/, "\033[1;32m&\033[0m")
+  gsub(/Developers and users|kubectl, apps, tests|kube context|model endpoint|over the VPN/, "\033[1;33m&\033[0m")
   print
 }'
 paint
-paint yellow '  The same kube context reaches Docker and the T4.'
+paint yellow '  The same kube context reaches local workers and remote GPU nodes.'
 ```
 
 <!-- end_slide -->
