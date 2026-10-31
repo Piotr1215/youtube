@@ -32,6 +32,7 @@ paint red '  ✗  ' cyan 'cloud-node       ' plain 'KVM VM and disk, rebuilt fre
 paint
 paint green '  ✓  ' cyan 'Platform         ' plain 'stays up; a new one needs activation in the UI'
 paint green '  ✓  ' cyan 'T4 VM            ' plain 'keeps running and billing, with driver and model'
+paint green '  ✓  ' cyan 'images           ' plain 'complete in Docker, so a new cluster pulls nothing'
 paint
 paint yellow '  ▶  ' cyan 'also             ' plain 'loads br_netfilter, sets the docker driver'
 paint yellow '  ▶  ' cyan '--clean-platform ' plain 'destroys the Platform too'

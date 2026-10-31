@@ -2,7 +2,8 @@
 # Return the demo to a clean start: no vclusters, a fresh KVM node, and a GPU VM
 # with its join undone but its driver and model kept. The Platform stays up,
 # because a new one starts unactivated and blocks every vcluster create until
-# someone activates it in the UI.
+# someone activates it in the UI. Every image a run needs ends up complete in this
+# laptop's Docker, so run this on good wifi before the talk.
 # --clean-platform also destroys the Platform.
 # --clean-gcp also deletes the GCE T4 VM, which stops its billing; recreating it
 # with create-gpu-vm.sh re-downloads the 7.4 GB model.
@@ -126,6 +127,34 @@ if [[ " $* " == *" --clean-gcp "* ]]; then
     echo "No vind-node VM found"
   fi
 fi
+
+echo "=== Caching images ==="
+# A new cluster takes its node images from this Docker and a build takes its base image,
+# so a run needs no registry while these are complete. docker image inspect passes an
+# image with a layer missing, and a node then fetches that layer from the registry on
+# every create, so ask containerd. A complete image pulls nothing, which makes this step
+# free on venue wifi. Bump this list with the vcluster CLI: its release sets the versions.
+cached() { sudo ctr -n moby images check "name==$1" 2>/dev/null | grep -q ' complete '; }
+images=(
+  docker.io/library/nginx:1.29-alpine # web/Dockerfile
+  docker.io/library/haproxy:3.3-alpine
+  docker.io/coredns/coredns:1.14.2
+  docker.io/rancher/local-path-provisioner:v0.0.31
+  ghcr.io/flannel-io/flannel:v0.26.7
+  ghcr.io/flannel-io/flannel-cni-plugin:v1.6.2-flannel1
+  ghcr.io/loft-sh/vm-container:latest
+  registry.k8s.io/kube-proxy:v1.36.0
+)
+gaps=0
+for image in "${images[@]}"; do
+  cached "${image}" && continue
+  docker pull -q "${image}" >/dev/null 2>&1
+  # A pull skips a tag it already has, whatever is missing. This fetches only the gap,
+  # and with no network it leaves the image as it was.
+  cached "${image}" || sudo ctr -n moby content fetch --platform linux/amd64 "${image}" >/dev/null 2>&1
+  cached "${image}" || { echo "not cached: ${image}"; gaps=1; }
+done
+((gaps)) || echo "all images cached"
 
 echo "=== Done ==="
 docker ps --format "table {{.Names}}\t{{.Status}}"
