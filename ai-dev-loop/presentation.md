@@ -5,7 +5,7 @@
 <!-- new_lines: 3 -->
 
 ```bash +exec_replace
-echo "Curl a GPU" | figlet -f small -w 90
+echo "AI Dev Loop" | figlet -f small -w 90
 ```
 
 <!-- jump_to_middle -->
@@ -20,7 +20,7 @@ done < vcluster-logo-ascii.txt
 
 ## Demo Reset
 
-> Presenter only: back to a clean start, T4 VM kept. Skip on stage.
+> Back to a clean start, with the T4 VM kept warm.
 
 ```bash +exec_replace
 paint red '  ✗  ' cyan 'audience page    ' plain 'server stopped, its state deleted'
@@ -36,8 +36,6 @@ paint
 paint yellow '  ▶  ' cyan 'also             ' plain 'loads br_netfilter, sets the docker driver'
 paint yellow '  ▶  ' cyan '--clean-platform ' plain 'destroys the Platform too'
 paint yellow '  ▶  ' cyan '--clean-gcp      ' plain 'deletes the T4 VM; recreating it re-downloads the model'
-paint
-paint yellow '  Next: Platform Setup, then the laptop cluster.'
 ```
 
 ```bash +acquire_terminal
@@ -48,7 +46,7 @@ paint yellow '  Next: Platform Setup, then the laptop cluster.'
 
 ## Platform Setup
 
-> Presenter only, before the talk: the CLI logs in so clusters get a license.
+> The CLI logs in to the Platform so new clusters get a license.
 
 ```bash +exec_replace
 paint cyan '  Doing   ' plain 'start the Platform, print its login, log the CLI in'
@@ -161,6 +159,21 @@ kubectl wait --for=condition=Ready node --all
 
 <!-- end_slide -->
 
+## The Cluster as Containers
+
+> The cluster we just created is a few Docker containers on the laptop.
+
+```bash +exec_replace
+paint cyan '  Doing   ' plain 'list the Docker containers behind ai-dev'
+paint cyan '  Why     ' plain 'no VM to manage: control plane and workers are plain containers'
+```
+
+```bash +exec
+docker ps --filter name=ai-dev --format "table {{.Names}}\t{{.Status}}"
+```
+
+<!-- end_slide -->
+
 ## Build, Run, Test
 
 > Keep the inner loop fast before the workload needs scarce hardware.
@@ -242,7 +255,6 @@ curl -fsSLk '<join-url>' | sh -s -- --node-name remote-node --force-join
 
 ```bash +exec_replace
 paint gray '  <join-url> contains the token from vcluster token create --expires=1h'
-paint gray '  paste failed? in the T4 shell: sh /root/join-cmd'
 paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'connect VPN' gray ' ──▶ ' plain 'register node'
 ```
 
@@ -308,6 +320,21 @@ paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model hea
 
 ```bash +exec
 ./stack-status.sh --watch
+```
+
+<!-- end_slide -->
+
+## The Model in GPU Memory
+
+> Winnow sits in the T4's memory, ready to answer.
+
+```bash +exec_replace
+paint cyan '  Doing   ' plain 'ask the T4 what its GPU holds'
+paint cyan '  Why     ' plain 'a healthy Stack should mean the model really is on the GPU'
+```
+
+```bash +exec
+./gpu.sh
 ```
 
 <!-- end_slide -->
@@ -424,7 +451,7 @@ paint yellow '  Node pools are a path to self-service GPU capacity.'
 paint green '  ✓  ' cyan 'proven           ' plain 'same context, remote T4, Stack health, public page'
 paint
 paint red '  ✗  ' cyan 'laptop sleeps    ' plain 'pause first; on resume the tunnel returns'
-paint red '  ✗  ' cyan 'model downloads  ' plain 'gigabytes per new VM: pull at boot, never on stage'
+paint red '  ✗  ' cyan 'model downloads  ' plain 'gigabytes per new VM: pull them at first boot'
 paint red '  ✗  ' cyan 'GPU host event   ' plain 'GCE stops GPU VMs for maintenance, no live migration'
 paint
 paint cyan '     access           ' plain 'authenticate callers; enforce tenant boundaries'
