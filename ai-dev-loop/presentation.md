@@ -102,9 +102,9 @@ paint yellow '         inference' gray '  •  ' yellow 'evals' gray '  •  ' y
 
 <!-- end_slide -->
 
-## Basic Concepts
+## Simple and Local
 
-> What gives a developer a real cluster on a laptop?
+> Which parts of the dev loop should stay fast and local?
 
 ```bash +exec_replace
 ./journey.sh 2
@@ -125,16 +125,6 @@ paint gray '  ├── ' 'bold cyan' 'LoadBalancers     ' plain 'IPs on the Doc
 paint gray '  └── ' 'bold cyan' 'images            ' plain 'pulled through the laptop'"'"'s Docker, no push'
 paint
 paint yellow '  A fast, production-shaped API before scarce GPU capacity enters the loop.'
-```
-
-<!-- end_slide -->
-
-## Simple and Local
-
-> Which parts of the dev loop should stay fast and local?
-
-```bash +exec_replace
-./journey.sh 3
 ```
 
 <!-- end_slide -->
@@ -194,7 +184,7 @@ paint cyan '  Why     ' plain 'no kind load step: vind pulls the new image from 
 > How do we supply GPU capacity outside the laptop?
 
 ```bash +exec_replace
-./journey.sh 4
+./journey.sh 3
 ```
 
 <!-- end_slide -->
@@ -303,7 +293,7 @@ paint cyan '  Why     ' plain 'the platform owns placement and network; the user
 > How does a GPU become a dependable model service?
 
 ```bash +exec_replace
-./journey.sh 5
+./journey.sh 4
 ```
 
 <!-- end_slide -->
@@ -424,7 +414,7 @@ paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Acti
 > How does this move from the laptop to a shared cluster?
 
 ```bash +exec_replace
-./journey.sh 6
+./journey.sh 5
 ```
 
 <!-- end_slide -->
