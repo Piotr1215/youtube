@@ -23,7 +23,7 @@ done < vcluster-logo-ascii.txt
 > Back to a clean start, with the T4 VM kept warm.
 
 ```bash +exec_replace
-paint red '  ✗  ' cyan 'audience page    ' plain 'server stopped, its state deleted'
+paint red '  ✗  ' cyan 'demo page        ' plain 'server stopped, its state deleted'
 paint red '  ✗  ' cyan 'T4 join          ' plain 'undone, vcluster-vpn stopped, its config deleted'
 paint red '  ✗  ' cyan 'all vclusters    ' plain 'ai-dev and anything else in vcluster list'
 paint red '  ✗  ' cyan 'Docker           ' plain 'vcluster.* containers and networks'
@@ -377,7 +377,7 @@ paint cyan '  Why     ' plain 'a public request now crosses ingress, the laptop,
 ```
 
 ```bash +exec
-./audience.sh start
+./demo.sh start
 ```
 
 <!-- end_slide -->
@@ -387,7 +387,7 @@ paint cyan '  Why     ' plain 'a public request now crosses ingress, the laptop,
 > Scan the code, ask a yes or no question, and the cloud GPU answers on your phone.
 
 ```bash +exec
-./audience.sh qr
+./demo.sh qr
 ```
 
 <!-- end_slide -->

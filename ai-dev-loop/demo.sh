@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# run the audience page for the QR slide: audience/server.py on 127.0.0.1, made
+# run the demo page for the QR slide: audience/server.py on 127.0.0.1, made
 # public through the named tunnel's gpu.cloudrumble.net once that hostname has a
 # route, or through a temporary trycloudflare.com quick tunnel until then. url
 # prints the public address once it answers. stop ends only the processes start
 # launched and deletes the page's private state directory.
 #
-#   ./audience.sh start|stop|status|url|qr
+#   ./demo.sh start|stop|status|url|qr
 set -eo pipefail
 
 cd "$(dirname "$0")"
@@ -106,7 +106,7 @@ stop() {
 		alive "${name}" && kill "$(<"${STATE}/${name}.pid")"
 	done
 	rm -rf "${STATE}"
-	ok "audience page" "stopped, its state deleted"
+	ok "demo page" "stopped, its state deleted"
 }
 
 # The public address, once start has seen it and the T4 answer and both the page
@@ -122,7 +122,7 @@ url() {
 qr() {
 	local address
 	if ! address="$(url)"; then
-		fail "the page is not public yet" "  run ./audience.sh start first"
+		fail "the page is not public yet" "  run ./demo.sh start first"
 		return 1
 	fi
 	qrencode -t UTF8 -s 1 -m 2 "${address}"
@@ -134,14 +134,14 @@ status() {
 		curl -sf "http://127.0.0.1:${PORT}/healthz" |
 			jq -r '"  \(.answers) answers: \(.yes // 0) yes, \(.no // 0) no, \(.unknown // 0) unknown"'
 	else
-		paint gray "  the audience page is not running"
+		paint gray "  the demo page is not running"
 	fi
 }
 
 case "${1:-}" in
 start | stop | status | url | qr) "$1" ;;
 *)
-	echo "usage: ./audience.sh start|stop|status|url|qr" >&2
+	echo "usage: ./demo.sh start|stop|status|url|qr" >&2
 	exit 1
 	;;
 esac

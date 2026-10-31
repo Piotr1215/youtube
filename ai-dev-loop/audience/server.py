@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The audience page: any yes or no question, answered by Winnow on the T4.
+"""The demo page: any yes or no question, answered by Winnow on the T4.
 
 On the laptop it serves index.html and POST /api/classify on 127.0.0.1 only, the
 Cloudflare tunnel being the sole way in, and asks through ../ask. In a cluster
@@ -9,7 +9,7 @@ only the label, its probability and the timings. The text goes in on stdin, neve
 argv: classif would read text such as "-i/etc/passwd" as an option. Input is capped,
 requests are rate limited per client and bounded overall. Nothing logs the text:
 classif's question form does not write its log, and CLASSIF_LOG points at a
-private directory that audience.sh deletes in case a later classif does.
+private directory that demo.sh deletes in case a later classif does.
 
     CLASSIF_LOG=/private/dir/log.jsonl python3 -I server.py [PORT]
 """
@@ -43,7 +43,7 @@ QUEUE_WAIT = 15  # seconds a request waits for a slot before the page says busy
 hits = collections.defaultdict(collections.deque)
 hits_lock = threading.Lock()
 answers = collections.Counter()
-# classif reports the model's address; the check request in audience.sh sets it.
+# classif reports the model's address; the check request in demo.sh sets it.
 model_host = None
 probes = ThreadPoolExecutor(3)
 
@@ -158,7 +158,7 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     if not os.environ.get("CLASSIF_LOG"):
-        sys.exit("set CLASSIF_LOG to a private path; audience.sh does this")
+        sys.exit("set CLASSIF_LOG to a private path; demo.sh does this")
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8089
     bind = os.environ.get("AUDIENCE_BIND", "127.0.0.1")
     ThreadingHTTPServer((bind, port), Handler).serve_forever()

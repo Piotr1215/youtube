@@ -20,8 +20,8 @@ sudo sysctl -q -w net.bridge.bridge-nf-call-iptables=1
 echo "=== Setting docker driver ==="
 vcluster use driver docker
 
-echo "=== Stopping the audience page ==="
-"$(dirname "$0")/audience.sh" stop
+echo "=== Stopping the demo page ==="
+"$(dirname "$0")/demo.sh" stop
 
 echo "=== Undoing the GPU VM's join ==="
 # A second join refuses while the first kubelet runs. The join script's own
