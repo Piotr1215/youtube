@@ -49,7 +49,7 @@ paint yellow '  ▶  ' cyan '--clean-gcp      ' plain 'deletes the T4 VM; recrea
 > The CLI logs in to the Platform so new clusters get a license.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'start the Platform, print its login, log the CLI in'
+paint cyan '  Shows   ' plain 'the Platform starting and the CLI logging in'
 paint cyan '  Why     ' plain 'vcluster create needs this login to get a license'
 ```
 
@@ -141,10 +141,10 @@ paint yellow '  A fast, production-shaped API before scarce GPU capacity enters 
 
 ## A Cluster on the Laptop
 
-> Give a developer a repeatable Kubernetes environment from vcluster.yaml.
+> vcluster.yaml gives every developer the same Kubernetes environment.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'create the dev cluster from vcluster.yaml'
+paint cyan '  Shows   ' plain 'the dev cluster created from vcluster.yaml'
 paint cyan '  Why     ' plain 'vcluster.yaml declares the workers, VPN, and model dependency'
 ```
 
@@ -164,7 +164,7 @@ kubectl wait --for=condition=Ready node --all
 > The cluster we just created is a few Docker containers on the laptop.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'list the Docker containers behind ai-dev'
+paint cyan '  Shows   ' plain 'the Docker containers behind ai-dev'
 paint cyan '  Why     ' plain 'no VM to manage: control plane and workers are plain containers'
 ```
 
@@ -176,10 +176,10 @@ docker ps --filter name=ai-dev --format "table {{.Names}}\t{{.Status}}"
 
 ## Build, Run, Test
 
-> Keep the inner loop fast before the workload needs scarce hardware.
+> The inner loop stays fast until the workload needs scarce hardware.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'build, run and test, then edit the page and do it again'
+paint cyan '  Shows   ' plain 'build, run and test, then the same loop after an edit'
 paint cyan '  Why     ' plain 'no kind load step: vind pulls the new image from the laptop'"'"'s Docker'
 ```
 
@@ -212,7 +212,7 @@ paint gray '  └── ' 'bold green' 'remote-node       ' plain 'a GCE VM with
 paint gray '        ├── ' cyan 'at first boot   ' plain 'driver, Ollama, and the model download'
 paint gray '        └── ' cyan 'at join         ' plain 'kubelet and the tunnel to the laptop'
 paint
-paint cyan '  Doing   ' plain 'check the GPU VM: driver, Ollama, and the model are ready'
+paint cyan '  Shows   ' plain 'the GPU VM with its driver, Ollama, and the model ready'
 paint cyan '  Why     ' plain 'the platform must plan for a 7.4 GB model pull and cache'
 ```
 
@@ -264,7 +264,7 @@ paint cyan '  nodeToNode    ' plain 'joined nodes also reach each other'
 > The VM already has a GPU and model; a curl command joins it to ai-dev.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'generate a one-hour join URL; paste its curl as root on the T4'
+paint cyan '  Shows   ' plain 'a one-hour join URL, then its curl running as root on the T4'
 paint cyan '  Why     ' plain 'remote capacity appears behind the same Kubernetes API'
 ```
 
@@ -288,7 +288,7 @@ paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'con
 > Developer access stays simple while the platform spans laptop and cloud.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'list the nodes and where each one runs'
+paint cyan '  Shows   ' plain 'the nodes and where each one runs'
 paint cyan '  Why     ' plain 'the platform owns placement and network; the user keeps the same context'
 ```
 
@@ -310,7 +310,7 @@ paint cyan '  Why     ' plain 'the platform owns placement and network; the user
 
 ## A Model Service on the GPU
 
-> Turn a GPU node into a model endpoint with a health gate.
+> A GPU node becomes a model endpoint with a health gate.
 
 ```bash +exec_replace
 paint plain '  vcluster.yaml'
@@ -333,7 +333,7 @@ paint yellow '  The service definition waits for the hardware it needs.'
 > The Stack reports when the model service is ready on the T4.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'watch the Stack created with the cluster'
+paint cyan '  Shows   ' plain 'the Stack created with the cluster, finishing live'
 paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model health'
 ```
 
@@ -348,7 +348,7 @@ paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model hea
 > Winnow sits in the T4's memory, ready to answer.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'ask the T4 what its GPU holds'
+paint cyan '  Shows   ' plain 'what the T4 holds in GPU memory'
 paint cyan '  Why     ' plain 'a healthy Stack should mean the model really is on the GPU'
 ```
 
@@ -379,10 +379,10 @@ paint yellow '  The same kube context reaches local workers and remote GPU nodes
 
 ## Share the Loop
 
-> Expose the same model call to the room through a small page.
+> A small public page makes the same model call from any phone.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'start the page; check the public URL and a real model answer'
+paint cyan '  Shows   ' plain 'the page starting, its public URL, and a real model answer'
 paint cyan '  Why     ' plain 'a public request now crosses ingress, the laptop, and the T4'
 ```
 
@@ -431,7 +431,7 @@ paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Acti
 
 ## From Laptop to Git
 
-> Review the service definition; supply GPU capacity in each target cluster.
+> The service definition moves to Git and goes through review.
 
 ```bash +exec_replace
 paint plain '  app/' gray ' ──▶ ' plain 'pull request' gray ' ──▶ ' plain 'CI builds the image' gray ' ──▶ ' plain 'Argo CD' gray ' ──▶ ' plain 'shared cluster'
@@ -479,7 +479,7 @@ paint cyan '     operations       ' plain 'measure tunnel health, inference late
 paint cyan '     cost             ' plain 'budget idle time and model pulls; replace failed GPU VMs'
 paint cyan '     promotion        ' plain 'publish the image, then sync the Argo CD Application'
 paint
-paint yellow '  Make these defaults before treating a new model as self-service.'
+paint yellow '  Self-service needs these as defaults.'
 ```
 
 <!-- end_slide -->
