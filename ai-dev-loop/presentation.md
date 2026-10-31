@@ -159,6 +159,23 @@ docker ps --filter name=ai-dev --format "table {{.Names}}\t{{.Status}}"
 
 <!-- end_slide -->
 
+## vind Capabilities
+
+> Docker is the only requirement; the Platform adds external nodes.
+
+```bash +exec_replace
+paint green '  ✓  ' cyan 'pull through cache  ' plain 'images come from the laptop'"'"'s Docker, no kind load'
+paint green '  ✓  ' cyan 'LoadBalancers       ' plain 'work out of the box, reachable locally'
+paint green '  ✓  ' cyan 'multiple nodes      ' plain 'each worker declared in vcluster.yaml'
+paint
+paint yellow '  ▶  ' cyan 'external nodes      ' plain 'remote hosts join over vCluster VPN'
+paint yellow '  ▶  ' cyan 'pause and resume    ' plain 'stop a cluster, free its resources, start it again'
+paint yellow '  ▶  ' cyan 'snapshot, restore   ' plain 'save a cluster to a file, restore it under a new name'
+paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Action creates clusters in workflows'
+```
+
+<!-- end_slide -->
+
 ## Complex and Remote
 
 > How do we supply GPU capacity outside the laptop?
@@ -338,23 +355,6 @@ paint yellow '  The same kube context reaches local workers and remote GPU nodes
 
 ```bash +exec
 ./demo.sh qr
-```
-
-<!-- end_slide -->
-
-## vind Capabilities
-
-> Docker is the only requirement; the Platform adds external nodes.
-
-```bash +exec_replace
-paint green '  ✓  ' cyan 'pull through cache  ' plain 'images come from the laptop'"'"'s Docker, no kind load'
-paint green '  ✓  ' cyan 'LoadBalancers       ' plain 'work out of the box, reachable locally'
-paint green '  ✓  ' cyan 'multiple nodes      ' plain 'each worker declared in vcluster.yaml'
-paint green '  ✓  ' cyan 'external nodes      ' plain 'remote hosts join over vCluster VPN'
-paint
-paint yellow '  ▶  ' cyan 'pause and resume    ' plain 'stop a cluster, free its resources, start it again'
-paint yellow '  ▶  ' cyan 'snapshot, restore   ' plain 'save a cluster to a file, restore it under a new name'
-paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Action creates clusters in workflows'
 ```
 
 <!-- end_slide -->
