@@ -240,6 +240,25 @@ paint yellow '          Every node joins the same way, with no network setup per
 
 <!-- end_slide -->
 
+## The VPN in vcluster.yaml
+
+> One block in the cluster config gives every joined node the VPN.
+
+```file
+path: vcluster.yaml
+language: yaml
+start_line: 12
+end_line: 17
+```
+
+```bash +exec_replace
+paint cyan '  privateNodes  ' plain 'real hosts join this cluster'
+paint cyan '  vpn           ' plain 'the tunnel each joined node uses to reach the cluster'
+paint cyan '  nodeToNode    ' plain 'joined nodes also reach each other'
+```
+
+<!-- end_slide -->
+
 ## Curl In the GPU
 
 > The VM already has a GPU and model; a curl command joins it to ai-dev.
