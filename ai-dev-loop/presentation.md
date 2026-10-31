@@ -48,11 +48,6 @@ paint yellow '  ▶  ' cyan '--clean-gcp      ' plain 'deletes the T4 VM; recrea
 
 > The CLI logs in to the Platform so new clusters get a license.
 
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'the Platform starting and the CLI logging in'
-paint cyan '  Why     ' plain 'vcluster create needs this login to get a license'
-```
-
 ```file
 path: platform.sh
 language: bash
@@ -133,11 +128,6 @@ paint yellow '  A fast, production-shaped API before scarce GPU capacity enters 
 
 > vcluster.yaml gives every developer the same Kubernetes environment.
 
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'the dev cluster created from vcluster.yaml'
-paint cyan '  Why     ' plain 'vcluster.yaml declares the workers, VPN, and model dependency'
-```
-
 ```bash
 vcluster create ai-dev --values vcluster.yaml
 kubectl wait --for=condition=Ready node --all
@@ -151,12 +141,7 @@ kubectl wait --for=condition=Ready node --all
 
 ## The Cluster as Containers
 
-> The cluster we just created is a few Docker containers on the laptop.
-
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'the Docker containers behind ai-dev'
-paint cyan '  Why     ' plain 'no VM to manage: control plane and workers are plain containers'
-```
+> The cluster is a few Docker containers on the laptop.
 
 ```bash +exec
 docker ps --filter name=ai-dev --format "table {{.Names}}\t{{.Status}}"
@@ -167,11 +152,6 @@ docker ps --filter name=ai-dev --format "table {{.Names}}\t{{.Status}}"
 ## Build, Run, Test
 
 > The inner loop stays fast until the workload needs scarce hardware.
-
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'build, run and test, then the same loop after an edit'
-paint cyan '  Why     ' plain 'no kind load step: vind pulls the new image from the laptop'"'"'s Docker'
-```
 
 ```bash +exec
 ./local-loop.sh
@@ -201,9 +181,6 @@ paint gray '  ├── ' 'bold cyan' 'worker-1          ' plain 'a Docker conta
 paint gray '  └── ' 'bold green' 'remote-node       ' plain 'a GCE VM with an NVIDIA T4'
 paint gray '        ├── ' cyan 'at first boot   ' plain 'driver, Ollama, and the model download'
 paint gray '        └── ' cyan 'at join         ' plain 'kubelet and the tunnel to the laptop'
-paint
-paint cyan '  Shows   ' plain 'the GPU VM with its driver, Ollama, and the model ready'
-paint cyan '  Why     ' plain 'the platform must plan for a 7.4 GB model pull and cache'
 ```
 
 ```bash +exec
@@ -253,11 +230,6 @@ paint cyan '  nodeToNode    ' plain 'joined nodes also reach each other'
 
 > The VM already has a GPU and model; a curl command joins it to ai-dev.
 
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'a one-hour join URL, then its curl running as root on the T4'
-paint cyan '  Why     ' plain 'remote capacity appears behind the same Kubernetes API'
-```
-
 ```bash
 curl -fsSLk '<join-url>' | sh -s -- --node-name remote-node --force-join
 ```
@@ -276,11 +248,6 @@ paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'con
 ## Laptop and Cloud Nodes
 
 > Developer access stays simple while the platform spans laptop and cloud.
-
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'the nodes and where each one runs'
-paint cyan '  Why     ' plain 'the platform owns placement and network; the user keeps the same context'
-```
 
 ```bash +exec
 ./nodes.sh
@@ -322,11 +289,6 @@ paint yellow '  The model service waits for the GPU it needs.'
 
 > The Stack reports when the model service is ready on the T4.
 
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'the Stack created with the cluster, finishing live'
-paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model health'
-```
-
 ```bash +exec
 ./stack-status.sh --watch
 ```
@@ -336,11 +298,6 @@ paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model hea
 ## The Model in GPU Memory
 
 > Winnow sits in the T4's memory, ready to answer.
-
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'what the T4 holds in GPU memory'
-paint cyan '  Why     ' plain 'a healthy Stack should mean the model really is on the GPU'
-```
 
 ```bash +exec
 ./gpu.sh
@@ -371,20 +328,13 @@ paint yellow '  The same kube context reaches local workers and remote GPU nodes
 
 > A small public page makes the same model call from any phone.
 
-```bash +exec_replace
-paint cyan '  Shows   ' plain 'the page starting, its public URL, and a real model answer'
-paint cyan '  Why     ' plain 'a public request now crosses ingress, the laptop, and the T4'
-```
-
 ```bash +exec
 ./demo.sh start
 ```
 
 <!-- end_slide -->
 
-## Try It From Your Phone
-
-> Scan the code, ask a yes or no question, and the cloud GPU answers on your phone.
+## Phone to GPU
 
 ```bash +exec
 ./demo.sh qr
