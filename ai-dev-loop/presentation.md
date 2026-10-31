@@ -37,7 +37,7 @@ paint yellow '  ▶  ' cyan 'also             ' plain 'loads br_netfilter, sets 
 paint yellow '  ▶  ' cyan '--clean-platform ' plain 'destroys the Platform too'
 paint yellow '  ▶  ' cyan '--clean-gcp      ' plain 'deletes the T4 VM; recreating it re-downloads the model'
 paint
-paint yellow '  Next: Platform Setup, then Step 1.'
+paint yellow '  Next: Platform Setup, then the laptop cluster.'
 ```
 
 ```bash +acquire_terminal
@@ -84,44 +84,29 @@ end_line: 37
 
 ## The AI Dev Loop
 
-> Build, test, and repeat still apply; the loop now needs model access.
+> The usual inner and outer loops gain one step: a remote GPU.
 
 ```bash +exec_replace
-paint 'bold cyan' '  edit prompt or code' gray ' ──▶ ' 'bold yellow' 'call the model' gray ' ──▶ ' 'bold cyan' 'score the answers'
-paint gray '      ▲                                             │'
-paint gray '      └──────────◀ swap the model, retry ───────────┘'
+paint 'bold cyan' '             edit                              pull request'
+paint gray '          ╭────────╮                            ╭────────╮'
+paint gray '        ╭─╯        ╰─╮                        ╭─╯        ╰─╮'
+paint gray '        │            │  ' 'bold cyan' 'build' gray '                 │            │  ' 'bold cyan' 'CI'
+paint 'bold cyan' '  test  ' gray '▲            ▼' 'bold cyan' '               monitor  ' gray '▲            ▼'
+paint gray '        │            │  ' 'bold cyan' 'run' gray '                   │            │  ' 'bold cyan' 'deploy'
+paint gray '        ╰─╮        ╭─╯                        ╰─╮        ╭─╯'
+paint gray '          ╰────────╯                            ╰────────╯'
+paint 'bold yellow' '          remote GPU                            remote GPU'
 paint
-paint cyan '  your code    ' plain 'calls a model: an MCP server, an agent, an app feature'
-paint cyan '  your tests   ' plain 'score a prompt or a model over many examples'
-paint cyan '  your tools   ' plain 'an assistant or agent inside the dev environment'
+paint 'bold white' '          Inner Loop                            Outer Loop'
 paint
-paint yellow '  A GPU-backed model is now a dependency of the development loop.'
-```
-
-<!-- end_slide -->
-
-## From Request to Platform Service
-
-> A developer needs an endpoint. The platform team must make it dependable.
-
-```bash +exec_replace
-paint 'bold cyan' '  developer request' gray ' ──▶ ' plain 'a model endpoint in the dev loop'
-paint gray '          │'
-paint gray '          ▼'
-paint 'bold yellow' '  platform service'
-paint cyan '    capacity      ' plain 'find suitable GPU compute'
-paint cyan '    reachability  ' plain 'connect code and model across networks'
-paint cyan '    lifecycle     ' plain 'join, wait, pause, resume, recover'
-paint cyan '    repeatability ' plain 'declare the cluster and its dependencies'
-paint
-paint yellow '  How do we deliver that without a new infrastructure ticket each time?'
+paint yellow '         inference' gray '  •  ' yellow 'evals' gray '  •  ' yellow 'fine-tuning' gray '  •  ' yellow 'embeddings'
 ```
 
 <!-- end_slide -->
 
 ## Basic Concepts
 
-> Which components turn remote hardware into a reusable capability?
+> What gives a developer a real cluster on a laptop?
 
 ```bash +exec_replace
 ./journey.sh 2
@@ -146,24 +131,6 @@ paint yellow '  A fast, production-shaped API before scarce GPU capacity enters 
 
 <!-- end_slide -->
 
-## Private Nodes
-
-> A Linux host joins the laptop cluster over WireGuard.
-
-```bash +exec_replace
-just boxart vpn-architecture | sed 's/^/              /'
-paint
-paint cyan '              host      ' plain 'KVM VM, cloud VM, or bare metal'
-paint cyan '              join      ' plain 'a curl command installs kubelet and connects the tunnel'
-paint cyan '              token     ' plain 'an expiring join token for this cluster'
-paint cyan '              Platform  ' plain 'a public URL the node dials; it coordinates WireGuard'
-paint cyan '              VPN       ' plain 'Tailscale library + WireGuard; no Tailscale account'
-paint
-paint yellow '          Every node joins the same way, with no network setup per VM.'
-```
-
-<!-- end_slide -->
-
 ## Simple and Local
 
 > Which parts of the service should stay fast and local?
@@ -174,7 +141,7 @@ paint yellow '          Every node joins the same way, with no network setup per
 
 <!-- end_slide -->
 
-## Step 1: A Cluster on the Laptop
+## A Cluster on the Laptop
 
 > Give a developer a repeatable Kubernetes environment from vcluster.yaml.
 
@@ -194,7 +161,7 @@ kubectl wait --for=condition=Ready node --all
 
 <!-- end_slide -->
 
-## Step 2: Build, Run, Test
+## Build, Run, Test
 
 > Keep the inner loop fast before the workload needs scarce hardware.
 
@@ -219,7 +186,7 @@ paint cyan '  Why     ' plain 'no kind load step: vind pulls the new image from 
 
 <!-- end_slide -->
 
-## Step 3: A Cloud GPU Node
+## A Cloud GPU Node
 
 > A remote T4 joins the same cluster and becomes a placement target.
 
@@ -242,7 +209,25 @@ paint cyan '  Why     ' plain 'the platform must plan for a 7.4 GB model pull an
 
 <!-- end_slide -->
 
-## Step 4: Curl In the GPU
+## Private Nodes
+
+> A Linux host joins the laptop cluster over WireGuard.
+
+```bash +exec_replace
+just boxart vpn-architecture | sed 's/^/              /'
+paint
+paint cyan '              host      ' plain 'KVM VM, cloud VM, or bare metal'
+paint cyan '              join      ' plain 'a curl command installs kubelet and connects the tunnel'
+paint cyan '              token     ' plain 'an expiring join token for this cluster'
+paint cyan '              Platform  ' plain 'a public URL the node dials; it coordinates WireGuard'
+paint cyan '              VPN       ' plain 'Tailscale library + WireGuard; no Tailscale account'
+paint
+paint yellow '          Every node joins the same way, with no network setup per VM.'
+```
+
+<!-- end_slide -->
+
+## Curl In the GPU
 
 > The VM already has a GPU and model; a curl command joins it to ai-dev.
 
@@ -267,7 +252,7 @@ paint cyan '  on the T4: ' plain 'install kubelet' gray ' ──▶ ' plain 'con
 
 <!-- end_slide -->
 
-## Step 5: Same Kube Context
+## Laptop and Cloud Nodes
 
 > Developer access stays simple while the platform spans laptop and cloud.
 
@@ -292,13 +277,13 @@ paint cyan '  Why     ' plain 'the platform owns placement and network; the user
 
 <!-- end_slide -->
 
-## Stacks
+## A Model Service on the GPU
 
 > Turn a GPU node into a model endpoint with a health gate.
 
 ```bash +exec_replace
 paint plain '  vcluster.yaml'
-paint gray '  └── ' 'bold cyan' 'Stack classif     ' plain 'created with the cluster in step 1'
+paint gray '  └── ' 'bold cyan' 'Stack classif     ' plain 'created with the cluster'
 paint gray '      ├── ' 'bold cyan' 'model         ' plain 'a pod pinned to remote-node, Pending until it joins'
 paint gray '      │                 ' plain 'then exposes Ollama behind a LoadBalancer'
 paint gray '      │                 ' plain 'and loads Winnow into GPU memory'
@@ -312,12 +297,12 @@ paint yellow '  The service definition waits for the hardware it needs.'
 
 <!-- end_slide -->
 
-## Step 6: The Stack Finishes
+## Model Service Startup
 
 > The Stack reports when the model service is ready on the T4.
 
 ```bash +exec_replace
-paint cyan '  Doing   ' plain 'watch the Stack the cluster created in step 1'
+paint cyan '  Doing   ' plain 'watch the Stack created with the cluster'
 paint cyan '  Why     ' plain 'the Stack retries its tasks and reports model health'
 ```
 
@@ -346,7 +331,7 @@ paint yellow '  The same kube context reaches Docker and the T4.'
 
 <!-- end_slide -->
 
-## Step 7: Share the Loop
+## Share the Loop
 
 > Expose the same model call to the room through a small page.
 
@@ -405,7 +390,7 @@ paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Acti
 ```bash +exec_replace
 paint plain '  app/' gray ' ──▶ ' plain 'pull request' gray ' ──▶ ' plain 'CI builds the image' gray ' ──▶ ' plain 'Argo CD' gray ' ──▶ ' plain 'shared cluster'
 paint
-paint cyan '  moves to Git   ' plain 'app/, the manifests from step 2'
+paint cyan '  moves to Git   ' plain 'app/, the manifests from the laptop'
 paint cyan '  changes        ' plain 'web:dev becomes an immutable tag from CI'
 paint cyan '  stays local    ' plain 'Docker workers, this T4 and its node pin'
 paint cyan '  each cluster   ' plain 'supplies its own GPU and model Service'

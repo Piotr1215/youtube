@@ -1,4 +1,4 @@
-# The same app package the laptop applies in step 2, reconciled by Argo CD in a shared
+# The same app package the laptop applies in its local loop, reconciled by Argo CD in a shared
 # cluster. CI builds web/ and pushes an immutable tag; the images override points the
 # package at it, since web:dev exists only in the laptop's Docker.
 apiVersion: argoproj.io/v1alpha1

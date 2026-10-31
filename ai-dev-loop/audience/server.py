@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The audience page for Step 8: any yes or no question, answered by Winnow on the T4.
+"""The audience page: any yes or no question, answered by Winnow on the T4.
 
 On the laptop it serves index.html and POST /api/classify on 127.0.0.1 only, the
 Cloudflare tunnel being the sole way in, and asks through ../ask. In a cluster
