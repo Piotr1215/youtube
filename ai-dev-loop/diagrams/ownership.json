@@ -1,0 +1,29 @@
+{
+  "boxes": [
+    {
+      "title": "Developers",
+      "color": "cyan",
+      "lines": [
+        "app/               manifests",
+        "web/               Dockerfile",
+        "dev/vcluster.yaml  tenant cluster"
+      ]
+    },
+    {
+      "title": "Platform team",
+      "color": "magenta",
+      "lines": [
+        "terraform/gpu/",
+        "  environment/  network",
+        "  node/         GPU VM, driver",
+        "  kubernetes/   NVIDIA runtime"
+      ]
+    }
+  ],
+  "arrows": [
+    {
+      "row": 2,
+      "dir": "right"
+    }
+  ]
+}

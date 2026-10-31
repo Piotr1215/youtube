@@ -208,7 +208,7 @@ paint gray '        └── ' cyan 'at join         ' plain 'kubelet and the t
 
 ## Private Nodes
 
-> A Linux host joins the laptop cluster over WireGuard.
+> A Linux host joins the laptop cluster over a VPN built on the Tailscale SDK.
 
 ```bash +exec_replace
 just boxart vpn-architecture | sed 's/^/              /'
@@ -216,15 +216,15 @@ paint
 paint cyan '              host      ' plain 'KVM VM, cloud VM, or bare metal'
 paint cyan '              join      ' plain 'a curl command installs kubelet and connects the tunnel'
 paint cyan '              token     ' plain 'an expiring join token for this cluster'
-paint cyan '              Platform  ' plain 'a public URL the node dials; it coordinates WireGuard'
-paint cyan '              VPN       ' plain 'Tailscale library + WireGuard; no Tailscale account'
+paint cyan '              Platform  ' plain 'a public URL the node dials; it coordinates the VPN'
+paint cyan '              VPN       ' plain 'Tailscale SDK, WireGuard protocol; no Tailscale account'
 paint
 paint yellow '          Every node joins the same way, with no network setup per VM.'
 ```
 
 <!-- end_slide -->
 
-## The VPN in vcluster.yaml
+## Configuring VPN in vcluster.yaml
 
 > The cluster config gives every joined node the VPN.
 
@@ -375,13 +375,14 @@ paint yellow '  The same kube context reaches local workers and remote GPU nodes
 
 ```bash +exec_replace
 paint plain '  app/' gray ' ──▶ ' plain 'pull request' gray ' ──▶ ' plain 'CI builds the image' gray ' ──▶ ' plain 'Argo CD' gray ' ──▶ ' plain 'shared cluster'
-paint
-paint cyan '  moves to Git   ' plain 'app/, the manifests from the laptop'
-paint cyan '  changes        ' plain 'web:dev becomes an immutable tag from CI'
-paint cyan '  stays local    ' plain 'Docker workers and this T4'
-paint cyan '  each cluster   ' plain 'supplies its own GPU and model endpoint'
-paint
-paint yellow '  Git holds the app; each cluster supplies its own GPU.'
+```
+
+```bash +exec_replace
+just boxart ownership
+```
+
+```bash +exec_replace
+paint yellow 'Developers own the app; the platform team owns the GPU under it.'
 ```
 
 <!-- end_slide -->
