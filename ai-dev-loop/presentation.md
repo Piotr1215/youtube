@@ -394,7 +394,7 @@ paint cyan '  Why     ' plain 'a public request now crosses ingress, the laptop,
 
 ## Try It From Your Phone
 
-> Ask Winnow on the T4 any yes or no question.
+> Scan the code, ask a yes or no question, and the cloud GPU answers on your phone.
 
 ```bash +exec
 ./audience.sh qr
