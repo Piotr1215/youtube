@@ -131,7 +131,7 @@ paint yellow '  A fast, production-shaped API before scarce GPU capacity enters 
 
 ## Simple and Local
 
-> Which parts of the service should stay fast and local?
+> Which parts of the dev loop should stay fast and local?
 
 ```bash +exec_replace
 ./journey.sh 3
@@ -421,7 +421,7 @@ paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Acti
 
 ## Closing the Loop
 
-> How does this become a reviewed service instead of a ticket?
+> How does this move from the laptop to a shared cluster?
 
 ```bash +exec_replace
 ./journey.sh 6
@@ -431,17 +431,17 @@ paint yellow '  ▶  ' cyan 'CI                  ' plain 'setup-vind GitHub Acti
 
 ## From Laptop to Git
 
-> The service definition moves to Git and goes through review.
+> The app and its manifests move to Git and go through review.
 
 ```bash +exec_replace
 paint plain '  app/' gray ' ──▶ ' plain 'pull request' gray ' ──▶ ' plain 'CI builds the image' gray ' ──▶ ' plain 'Argo CD' gray ' ──▶ ' plain 'shared cluster'
 paint
 paint cyan '  moves to Git   ' plain 'app/, the manifests from the laptop'
 paint cyan '  changes        ' plain 'web:dev becomes an immutable tag from CI'
-paint cyan '  stays local    ' plain 'Docker workers, this T4 and its node pin'
-paint cyan '  each cluster   ' plain 'supplies its own GPU and model Service'
+paint cyan '  stays local    ' plain 'Docker workers and this T4'
+paint cyan '  each cluster   ' plain 'supplies its own GPU and model endpoint'
 paint
-paint yellow '  Git carries the service contract; each cluster supplies its own capacity.'
+paint yellow '  Git holds the app; each cluster supplies its own GPU.'
 ```
 
 <!-- end_slide -->
