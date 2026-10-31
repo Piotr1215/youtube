@@ -10,28 +10,9 @@ echo "AI Users" | figlet -f small -w 90
 
 <!-- end_slide -->
 
-## About Me
-
 <!-- skip_slide -->
 
-```bash +exec_replace
-echo "Piotr Zaniewski" | figlet -f small -w 90
-```
-
-> Head of Engineering Enablement @ vCluster
-
-```bash +exec_replace
-m() { printf '  \e[1;36m%s\e[0m\e[37m%s\e[0m\n' "$1" "$2"; }
-m 'Expertise   ' 'platform engineering, Kubernetes, GitOps, SRE'
-m 'AI work     ' 'agent platforms, MCP servers, RAG'
-m 'Speaking    ' 'workshops, conference talks, live demos'
-m 'Content     ' 'YouTube, Medium, Killercoda'
-```
-
-```bash +exec_replace
-qrencode -t UTF8 -m 2 "https://cloudrumble.net"
-printf '  \e[37m%s\e[0m\n' 'cloudrumble.net  ·  github.com/Piotr1215  ·  @cloud-native-corner'
-```
+<!-- include: ../_partials/about-me.md -->
 
 <!-- end_slide -->
 
