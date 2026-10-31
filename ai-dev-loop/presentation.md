@@ -464,7 +464,7 @@ paint yellow '  Node pools are a path to self-service GPU capacity.'
 
 ## Self-Service Requirements
 
-> The demo proves the pattern. Teams still need these to run it on their own.
+> Giving every team GPU access takes more than a working cluster.
 
 ```bash +exec_replace
 paint cyan '  access       ' plain 'authenticate callers; enforce tenant boundaries'
