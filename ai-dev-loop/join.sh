@@ -63,7 +63,11 @@ vm)
 	;;
 gpu)
 	# A paste can fail on stage, so the command also waits on the VM as a file.
-	shell=(gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t "printf '%s\n' '${join}' | sudo tee /root/join-cmd >/dev/null; sudo -i")
+	# vcluster-vpn holds its key in memory, and the join rewrites its config but only
+	# runs enable --now, which leaves a running daemon alone. A daemon left from an
+	# earlier cluster keeps the deleted key and the join hangs waiting for the tunnel,
+	# so stop it here and the join starts it with the new key.
+	shell=(gcloud compute ssh "${GPU_VM}" "${GCE[@]}" -- -t "sudo systemctl stop vcluster-vpn 2>/dev/null; printf '%s\n' '${join}' | sudo tee /root/join-cmd >/dev/null; sudo -i")
 	;;
 esac
 
