@@ -8,6 +8,10 @@ echo "Your Title Here" | figlet -f small -w 90
 
 <!-- end_slide -->
 
+<!-- include: ../_partials/about-me.md -->
+
+<!-- end_slide -->
+
 ## Why It Matters
 
 > Which problem does the viewer already have?
