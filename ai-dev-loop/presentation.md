@@ -462,24 +462,19 @@ paint yellow '  Node pools are a path to self-service GPU capacity.'
 
 <!-- end_slide -->
 
-## Before This Is Self-Service
+## Self-Service Requirements
 
-> The demo proves the path. A platform offering needs an operating contract.
+> The demo proves the pattern. Teams still need these to run it on their own.
 
 ```bash +exec_replace
-paint green '  ✓  ' cyan 'proven           ' plain 'same context, remote T4, Stack health, public page'
+paint cyan '  access       ' plain 'authenticate callers; enforce tenant boundaries'
+paint cyan '  capacity     ' plain 'quota, placement policy, node pools for on-demand GPUs'
+paint cyan '  reliability  ' plain 'replace the GPU VMs GCE stops for maintenance'
+paint cyan '  cost         ' plain 'budget idle GPU time and model downloads'
+paint cyan '  telemetry    ' plain 'measure tunnel health, inference latency, and failures'
+paint cyan '  promotion    ' plain 'publish the image, then sync the Argo CD Application'
 paint
-paint red '  ✗  ' cyan 'laptop sleeps    ' plain 'pause first; on resume the tunnel returns'
-paint red '  ✗  ' cyan 'model downloads  ' plain 'gigabytes per new VM: pull them at first boot'
-paint red '  ✗  ' cyan 'GPU host event   ' plain 'GCE stops GPU VMs for maintenance, no live migration'
-paint
-paint cyan '     access           ' plain 'authenticate callers; enforce tenant boundaries'
-paint cyan '     capacity         ' plain 'quota, placement policy, node pools for on-demand GPUs'
-paint cyan '     operations       ' plain 'measure tunnel health, inference latency, and failures'
-paint cyan '     cost             ' plain 'budget idle time and model pulls; replace failed GPU VMs'
-paint cyan '     promotion        ' plain 'publish the image, then sync the Argo CD Application'
-paint
-paint yellow '  Self-service needs these as defaults.'
+paint yellow '  With these in place, teams get a GPU without filing a ticket.'
 ```
 
 <!-- end_slide -->
