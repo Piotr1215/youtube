@@ -323,7 +323,7 @@ paint
 paint cyan '  platform owns   ' plain 'model placement, startup, and health check'
 paint cyan '  developer gets  ' plain 'a model endpoint when the dependency is ready'
 paint
-paint yellow '  The service definition waits for the hardware it needs.'
+paint yellow '  The model service waits for the GPU it needs.'
 ```
 
 <!-- end_slide -->
