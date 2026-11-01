@@ -4,6 +4,9 @@
 # helpers that print each step in plain words.
 
 export KUBECONFIG="${VIND_KUBECONFIG:-${HOME}/.kube/vind-demo.config}"
+# gcloud looks up metadata.google.internal to learn whether it runs on GCE. Away from
+# home that lookup takes over two minutes and freezes the slide; this laptop never is.
+export CLOUDSDK_CORE_CHECK_GCE_METADATA=false
 CLUSTER="${CLUSTER:-ai-dev}"
 GPU_VM="${GPU_VM:-vind-node}"
 # The GCE VM's name in the cluster; gpuNode in vcluster.yaml must match it.
