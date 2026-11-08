@@ -1,52 +1,70 @@
 # Narrative: Your Platform Already Has AI Users
 
-Draft for LLM Days Hamburg. It keeps the deck's four chapters and adds a fifth, "the operator", before next steps. The new beats are marked NEW; the rest restate what the deck already says, so the whole talk can be read as one story.
+Draft for LLM Days Hamburg, rebuilt around one idea: the agent is a platform user. The MCP interface chapter and the research data example are cut. The runtime chapter is trimmed, and a new chapter shows an agent using the platform under its own identity, with a system built for it filling what the platform lacks.
 
 ## Journey
 
-- Problem the viewer recognizes: agents already call the APIs their developers call, and every team wires its AI tools up alone, with its own keys, its own isolation and its own rules.
-- Why the usual ways fall short: tickets make the platform team the bottleneck, and per-team solutions drift. Handing agents tools (MCP) solves how they reach a service, not who runs the service or what it keeps between sessions.
-- New understanding: agents are platform users with their own needs (context budget, no memory, authority, containment, testing). A platform can serve them twice: as a paved road for the AI tools teams ship, and as services built for agents to operate.
-- How each discovery motivates the next: the shift raises the problem; platform engineering answers it with paved roads; roads need a runtime with walls; the runtime needs an interface agents can call; once agents call services, the next question is what a service looks like when an agent is the one running it.
-- What the viewer can do at the end: put a team's AI tool on a paved road by risk class, and design one internal service with the agent as its primary operator.
-- So what: agents are already users, so a platform that ignores them pushes every team into ad hoc AI plumbing. Now what: start with one road and one real tool. Then what: build a service an agent operates, where the agent's decisions become rules the platform keeps, tests and replays.
+- Problem the viewer recognizes: agents already call the APIs their developers call, and nobody designed the platform for them. Every team wires its AI tools up alone.
+- Why the usual ways fall short: handing an agent tools (MCP) gives it hands, not a place in the platform. The platform does not know it is there, so the agent gets no identity, no limits, no events and no memory beyond what the team hand-builds.
+- New understanding: an agent is a platform user with needs of its own. A platform built for automation already meets half of them (identity, limits, golden paths). The other half (events, memory, context, testing) needs a service built for agents from the first line.
+- How each discovery motivates the next: the shift raises the problem; platform engineering answers it with paved roads; roads need walls between teams; once the walls exist, the question is whether an agent can walk the same roads as a person, and what it still lacks when it does.
+- What the viewer can do at the end: audit their own platform against an agent's needs, give an agent its own identity and limits on the roads they already have, and add the missing half as a service built for agents.
+- So what: agents are already users, so a platform that ignores them pushes every team into ad hoc AI plumbing. Now what: give one agent an identity, a quota and one road. Then what: let it react to events and write its own rules, and promote it the way a platform promotes anything, from shadow to live.
 
 ## Subject and example
 
-Subject: platforms now have agent users, so build for them twice: paved roads for the AI tools teams ship, and services designed from the first line for agents to operate. Examples: the docs MCP server on a team's isolated cluster (chapters 2 to 4), and the event intake engine an agent runs on the presenter's behalf (chapter 5). The examples serve the subject; neither is the product being sold.
+Subject: agents are platform users; meet their needs with the platform's own primitives where they exist, and with services built for agents where they do not. Examples: tenant clusters on vCluster Platform (identity, templates, quotas, Stacks), and Intake, the event and rules engine an agent operates (events, memory, context, testing). The examples serve the subject; the demo is a live case of it.
 
 ## Narration
 
-1. Your platform already has AI users. Agents call the same APIs your developers do, and most platforms don't know it yet.
-2. Developers and agents differ where it matters: an agent's bottleneck is its context window, it remembers nothing between sessions unless something keeps it, and its cost is tokens.
-3. Teams across the company now ship AI tools: docs servers, retrieval over company data, agents that act on other systems. Each needs a place to run, credentials, and limits on what it reaches.
-4. Without shared guardrails, each team solves isolation and data access alone. The platform team becomes a ticket queue, and the rules drift team by team.
-5. Platform engineering has answered this before with paved roads: a team brings its tool, the platform provides the runtime and the guardrails around it.
-6. Roads fork by risk. A read-only docs server and an agent with write access do not get the same road.
-7. Agents bring needs a human platform never had to meet: context delivered pre-filtered, memory the platform keeps, authority of their own, containment of what they read, and tests for manipulation.
-8. The runtime: every team gets a cluster of its own on shared machines, with full freedom inside and walls between teams.
-9. Every runtime on the road inherits the same baseline, and the team writes none of it. The demo shows a team cluster, a tool shipped onto it, and an unsafe tool refused.
-10. The interface: MCP is a standard plug, so any assistant can call the tool the team shipped. Another team asks in plain English and gets a valid config back.
-11. NEW. So far the agent is a guest: it calls a tool a team built, and a human decided what that tool does. The next question is what changes when the agent is the one running a service, every day.
-12. NEW. I run one. Every event that reaches me, from chat, code review, mail and alerts, goes through one engine, and an agent operates it on my behalf. It was not built for me to click through; it was built for the agent from the first line.
-13. NEW. Built for the agent means the needs from beat 7 are met by design. Context arrives as a brief sized to the agent's budget. Memory is the rules themselves, so what the agent learned survives a restart or a new model. Authority is the agent's name on every change. Rules need no approval because they are data: checked, logged, committed and reversible. Programs a rule runs are code with the machine's own logins, so they are the part a person reviews, and in this setup that review is still a habit, not a gate. Containment is one typed event shape at the edge, so no feed can smuggle fields in. Testing is a dry run against recent real events before any rule is written.
-14. NEW. Demo, from the agent's side: the brief it reads when it starts, an event tested against the rules, a rule change previewed against the last day of events, and the history of rules the agent wrote, each with its reason.
-15. NEW. The engine climbs a ladder: rules first, a cheap model only for what rules cannot decide, the agent only for what is left. When the agent handles the same kind of event by hand twice, it writes a rule, so the expensive rung keeps shrinking. The output is not prose or code; it is a decision the platform keeps and can replay.
-16. NEW. This is the paved road again, with the agent as the user: a golden path of verbs and a skill, guardrails that refuse a bad rule, a shadow mode before anything goes live, and words that can never be dropped. The platform keeps the standards; the agent does the work.
-17. Next steps: platform maturity applies to agents too. Most teams are scalable for developers and provisional for agents; at the top level, agents earn wider permissions, the way a shadow rule earns live.
-18. Takeaways: teams ship AI tools on runtimes the platform defines; roads fork by risk; agents are platform users, so serve them tools, context and memory; and build services agents operate, not only tools they call. Start with one road and one real tool.
+1. Your platform already has AI users. Agents call the same APIs your developers do, and most platforms do not know it yet.
+2. Developers and agents differ where it matters: an agent's bottleneck is its context window, it remembers nothing between sessions unless something keeps it, and it acts at machine speed.
+3. Teams across the company now ship AI tools and agents. Each needs a place to run, credentials, and limits on what it reaches; without shared guardrails each team solves that alone, and the platform team becomes a ticket queue.
+4. Platform engineering has answered this before with paved roads: a team brings its tool, the platform provides the runtime and the guardrails around it, and roads fork by risk.
+5. Agents bring needs a platform built for people never had to meet: authority of their own, containment of what they reach, events instead of polling, memory the platform keeps, context delivered pre-filtered, and tests for manipulation.
+6. The runtime: every team gets a tenant cluster of its own on one control plane cluster, with full freedom inside and walls between teams. Every tenant cluster inherits the same baseline, and the team writes none of it; an unsafe tool is refused before it starts.
+7. The question that follows: the roads work for people. Can an agent walk them too, and what does it still lack when it does?
+8. Audit the platform against the agent's needs. Authority: the platform treats a user as one identity, human or automated, with keys scoped to one project, short-lived keys, and a lock that stops them at once. Containment: non-admins create only from templates, and quotas cap what one user may hold. Roads: a Stack is a golden path written as a task graph, with health gates and outputs, requested through the API.
+9. Now the other half. Events: the platform has none to push; an agent would have to poll, burning context and tokens. Memory, context and testing: nothing. That half needs a service built for the agent from the first line.
+10. I built one. Every event goes through one engine that an agent operates: rules first, a cheap decision model for what rules cannot place, the agent for what is left. Its brief fits the agent's context budget, its rules are the agent's memory, every change carries the agent's name and reason, and a dry run against recent events tests a rule before it is written.
+11. Demo. The room is the event source: everyone can ask the platform for something from their phone. The agent holds its own platform identity, a quota, and a few roads it may request.
+12. Requests climb the ladder. Rules catch the obvious, the decision model maps a request to a road and its parameters, and the agent takes what neither can place. A request that gets through becomes a Stack on the platform under the agent's identity, and the requester's phone shows the result when the Stack is healthy.
+13. The room floods it. The platform refuses the agent at its quota, in the same words it would use for a person, and the refusal shows on the phones. The guardrails need no new code for an agent user.
+14. The room tries to talk the agent into something else. The text stays data, and the agent can only pick a road the platform offers; the screen counts the attempts and their effects.
+15. Halfway through, the agent writes a rule from what the room asked for most, and the preview says how much of the recent traffic it would have handled. The next wave goes through the rule with no model call, and the counters show the expensive rungs draining.
+16. What just happened is a golden path written by its user. A platform team writes Stacks for people; here the agent wrote its own path, and the platform validated it, journaled it and can replay it.
+17. Platform maturity applies to agents too. Most teams are scalable for developers and provisional for agents; at the top level, an agent earns wider permissions the way a rule earns live mode, after a week in shadow.
+18. Takeaways: agents are platform users; give them an identity, limits and roads with the primitives you already have; build the missing half (events, memory, context, testing) as a service for agents; start with one agent, one quota and one road.
 
-## Moment lines for the new chapter
+## Moment lines
 
-- Chapter divider "the operator": after the MCP demo the viewer asks what comes after giving agents tools. The journey map shows a fifth stop.
-- Beat 11 to 12, "An Agent Runs This Service": the viewer has seen agents as callers; the slide shows the inverse, a service whose operator is an agent, as a role diagram (event sources, the engine, the agent, the human), no hosts.
-- Beat 13, "Agent Needs, Met by Design": the viewer just heard the needs list in chapter 2; the slide puts each need beside the mechanism that meets it, so the earlier slide pays off.
-- Beat 14, "What the Agent Sees": the viewer wants proof it is real; the slide runs the real commands on a demo event log with made-up sources (the brief, a test, a previewed change, the rule history).
-- Beat 15, "Decisions the Platform Keeps": the viewer wonders about cost and drift; the slide shows the ladder and one rule the agent wrote after handling an event twice.
-- Beat 16 folds into the Takeaways slide: one new line, "Build services agents operate, not only tools they call."
+- "The Shift" divider: the viewer meets the claim and the chapter map.
+- "Two Kinds of Platform Users": the viewer asks how an agent differs from a developer; the table answers.
+- "Without Shared Guardrails": the viewer recognizes the ticket queue and the drift.
+- "What a Paved Road Is" and "Roads by Risk Class": the viewer asks how platform engineering answers it.
+- "What Agents Need From the Platform": the viewer now knows roads; the slide lists what agents need beyond them. This list returns in beat 8 as the audit.
+- "Isolating Teams" and "The Contract": the viewer asks how teams are kept apart; tenant clusters and the inherited baseline answer. "An Unsafe Tool Is Refused" runs live.
+- "The Agent as a User" divider: after the refusal, the viewer asks whether an agent can walk the same roads.
+- "What the Platform Already Gives an Agent": the needs list beside the platform primitive that meets each need; the met half lights up.
+- "What No Platform Gives an Agent": the same list with the missing half (events, memory, context, testing) highlighted.
+- "A Service Built for the Agent": a role diagram (event sources, the engine with its ladder, the agent, the platform, the human). No hosts.
+- "Ask the Platform": the QR code and the live screen; beats 12 to 15 run on it.
+- "A Golden Path Its User Wrote": the rule the agent wrote, shown as the real file, beside a Stack template; same shape, different author.
+- "Agent Platform Maturity" and "Takeaways": the viewer asks where to start.
 
-## Open points for the presenter
+## Demo design
 
-- Demo data: the live engine holds private chat, mail and customer text, so the demo runs against a fixture log with made-up sources. The engine reads every path from environment variables, so a fixture needs no code change.
-- Time: the new chapter costs about five minutes. Candidates to trim: "Example: Research Data Agents", or merge "AI Tools Across Teams" with "Without Shared Guardrails".
-- Chapter map: journey.sh gains "the operator: built for agents" as chapter 5, and "next steps" moves to 6.
+- Event source: the audience page and tunnel from ai-dev-loop, writing into a separate demo instance of the engine with its own NATS, state and rules; nothing personal is in it.
+- Platform: one project, one automated user for the agent with a project-scoped key and a per-user quota, two or three small StackTemplates whose output is a link.
+- Adapters: phone messages in; Stack status back out as events and to the phone.
+- The demo agent: its own folder, constitution and profile, built like the standing agents; it reads the engine's brief at start.
+- Screen: the engine's TUI with each event's rung and outcome, counters per rung, the attempts and effects counter.
+- Safety: rate limits per phone, the decision model and agent budgets capped, the agent able to act only through templates under its quota.
+- Fallbacks: a rehearsal crowd script that replays recorded messages if the room is quiet or the network fails, and a recording of the whole run.
+- Backup demo, if the room cannot take part: the same flow driven by pull requests in a public demo repo, each opening a preview environment and each close deleting it.
+
+## Open points
+
+- Time: the new chapter costs about eight minutes; the cut MCP chapter and research example give most of it back. Step 2 (shipping a tool) may go as well if the runtime chapter runs long.
+- Terminology: slides follow the current naming (tenant cluster, control plane cluster, and the tenancy model named instead of "shared cluster").
+- Framing: say "agents already call your platform's APIs", not "every company runs agents".
