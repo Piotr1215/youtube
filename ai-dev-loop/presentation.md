@@ -32,6 +32,7 @@ if [[ -e .reset-done ]]; then
 else
   paint 'bold red' '  ✗  reset needed before the demo'
 fi
+./net-check.sh || true
 paint
 paint red '  ✗  ' cyan 'demo page        ' plain 'server stopped, its state deleted'
 paint red '  ✗  ' cyan 'T4 join          ' plain 'undone, vcluster-vpn stopped, its config deleted'
@@ -62,8 +63,8 @@ paint yellow '  ▶  ' cyan '--clean-gcp      ' plain 'deletes the T4 VM; recrea
 ```file
 path: platform.sh
 language: bash
-start_line: 33
-end_line: 37
+start_line: 35
+end_line: 39
 ```
 
 ```bash +exec

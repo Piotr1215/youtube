@@ -30,6 +30,8 @@ access_key() {
 	printf '%s\n' "${key}"
 }
 
+./net-check.sh || true
+
 vcluster use driver docker 2>&1 | brief
 vcluster platform start 2>&1 | tee "${log}" | brief
 url="$(field 'Login via UI:')"
