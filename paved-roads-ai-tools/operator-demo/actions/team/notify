@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-# team/notify: tell the tenant cluster's team about an event, with the record's text, in the team's inbox
-set -eo pipefail
-inbox="${DEMO_STATE:-$HOME/.local/state/operator-demo}/inbox.log"
-line=$(printf '%s' "${ARGS_JSON:-{}}" | jq -r '"\(.title // "event") \(.text // "")"' | tr '\t\n' '  ')
-printf '%s  %s\n' "$(date +%T)" "${line}" >>"${inbox}"
-jq -cn --arg to team-docs '{notified: true, to: $to}'

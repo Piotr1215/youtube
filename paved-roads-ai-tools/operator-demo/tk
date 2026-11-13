@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# kubectl inside the team's tenant cluster, through the isolated demo kubeconfig.
-set -eo pipefail
-source "$(dirname "$(readlink -f "$0")")/env.sh"
-exec vcluster connect "${TENANT}" --driver helm --silent -- kubectl "$@"
