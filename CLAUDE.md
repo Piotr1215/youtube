@@ -62,7 +62,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
   Recording Options:
   - Live demo: Use demo.sh with tmux sessions for interactive presentations
-  - VHS recording: Use 'just record tape_name' for polished GIFs/videos
+  - VHS recording: tapes in vhs/ render polished GIFs/videos with `vhs <tape>.tape` (the justfile has no `record` recipe)
   - See vhs/ directory for templates (kubectl-demo, nvim-demo, demo-template)
   - Tip: VHS recordings are great for consistent, repeatable demos and thumbnails
 
@@ -72,7 +72,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Use colored printf rows (✓ green, ✗ red, labels cyan) for sequences, steps, or comparisons; markdown tables render plain
   - figlet: Use `-w 90` for width, `-f small` or other fonts as needed
   - Images: Add with ![alt](./path.png) for visual appeal
-  - End every slide with `<!-- end_slide -->`
+  - End every slide except the last with `<!-- end_slide -->`
 
   Colored Text (BEST → WORST):
 
@@ -107,7 +107,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - NEVER use `<!-- pause -->` in slides
   - AVOID sandwich pattern: blockquote → code block → blockquote
   - Blockquotes (>) are for single-line emphasis ONLY
-  - Presentations must NOT end with `<!-- end_slide -->` tag
 
 Avoid sandwitching content between two blockquotes. ONly one blockqute per page.
 
