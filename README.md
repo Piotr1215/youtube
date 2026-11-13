@@ -80,8 +80,6 @@ youtube/
 ├── __demo_magic.sh              # Demo script utilities
 ├── __questions.sh               # Interactive quiz utilities
 ├── __tmux_timer.sh              # Timer utilities for demos
-├── _partials/                   # Reusable slide components
-│   └── *.md
 ├── templates/                   # Additional templates
 ├── [video-name]/                # Individual video directories
 │   ├── presentation.md          # Presentation slides

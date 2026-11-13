@@ -120,7 +120,7 @@ Avoid sandwitching content between two blockquotes. ONly one blockqute per page.
 - Open every chapter with a divider slide: a noun phrase `##` heading, one blockquote question the chapter answers, and `./journey.sh N`. The map shows viewers where they are and cues the presenter to introduce the chapter.
 - Edit the `chapters` array in the deck's `journey.sh` to match the divider headings, in order.
 - Put the About Me slide right after the title with `<!-- include: ../_partials/about-me.md -->`, then the first divider, so the deck never opens cold on a detail slide.
-- Never paste the About Me slide inline: `_partials/about-me.md` is the git-crypt copy. A deck that includes it needs the key to open, and that mix of public and private is intended.
+- `_partials/` (About Me and the vCluster partials) lives only in youtube-private, which keeps it out of this public repo. A deck that includes a partial belongs there; never paste a partial's slide inline into a public deck.
 - Show the payoff early, once the viewer knows the problem it solves: inside chapter one, before any concept, never before the problem.
 - So what, now what, then what shape the whole deck. Answer them once on a Takeaways slide near the end (✓ ✓ ▶ rows), not on every slide.
 - A chapter holds only its own slides. After inserting or moving a divider, check that the slides following it belong to it.

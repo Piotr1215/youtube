@@ -1,5 +1,0 @@
-# Private Nodes - isolated worker nodes via VPN
-privateNodes:
-  enabled: true
-  vpn:
-    enabled: true
