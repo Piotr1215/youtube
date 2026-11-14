@@ -63,13 +63,13 @@ boxart diagram:
 present:
   @cd {{invocation_directory()}}; presenterm -Xx presentation.md
 
-# reset the current deck's demo with its reset.sh
+# prepare the current deck's demo for a run with its reset.sh
 reset:
   @cd {{invocation_directory()}}; [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; ./reset.sh
 
-# rebuild the current deck's demo from scratch: reset.sh --full
-full_reset:
-  @cd {{invocation_directory()}}; [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; grep -q -e '--full' reset.sh || { echo "reset.sh in $PWD has no --full" >&2; exit 1; }; ./reset.sh --full
+# free the resources the current deck's demo uses with its down.sh
+down:
+  @cd {{invocation_directory()}}; [ -x ./down.sh ] || { echo "no down.sh in $PWD" >&2; exit 1; }; ./down.sh
 
 # show freetext
 freetext *free_text:
