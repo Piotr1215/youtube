@@ -60,8 +60,16 @@ boxart diagram:
   fi
 
 # run the presentation
-present: 
+present:
   @cd {{invocation_directory()}}; presenterm -Xx presentation.md
+
+# reset the current deck's demo with its reset.sh
+reset:
+  @cd {{invocation_directory()}}; [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; ./reset.sh
+
+# rebuild the current deck's demo from scratch: reset.sh --full
+full_reset:
+  @cd {{invocation_directory()}}; [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; grep -q -e '--full' reset.sh || { echo "reset.sh in $PWD has no --full" >&2; exit 1; }; ./reset.sh --full
 
 # show freetext
 freetext *free_text:
