@@ -102,7 +102,7 @@ class CoreTests(unittest.TestCase):
     def lifecycle(self, names=("a", "b"), absent=()):
         items = []
         for name in names:
-            items.append({"name": name, "kind": "fake", "prepared": "absent" if name in absent else "present", "timeout": 2, "build": "yes", "remove": "yes"})
+            items.append({"name": name, "kind": "fake", "prepared": "absent" if name in absent else "present", "timeout": 2, "start": "yes", "stop": "yes", "build": "yes", "remove": "yes"})
         return core.Lifecycle(self.deck, {"fake": Fake}, self.clock.clock,
                               self.clock.sleep, self.root,
                               {"deck": "test", "component": items})
@@ -151,21 +151,19 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(Fake.calls)
         self.assertFalse(any(verb in ("build", "remove") for _, verb in Fake.calls))
 
-    # Absent components are removed on wake and reset, and pass when absent.
+    # Wake leaves an in-use absent component for reset to remove.
     def test_05_absent_component(self):
         life = self.lifecycle(("a", "live"), ("live",))
+        (life.state / "set").touch()
         Fake.states.update(a=True, live=True)
-        self.assertTrue(self.invoke(life, "wake")[0][0])
-        self.assertIn(("live", "remove"), Fake.calls)
-        self.assertTrue(self.invoke(life, "ready")[0][0])
-        Fake.calls.clear()
-        Fake.states["live"] = True
+        result, output = self.invoke(life, "wake")
+        self.assertFalse(result[0])
+        self.assertIn("in use", output)
+        self.assertNotIn(("live", "remove"), Fake.calls)
+        self.assertIn("in use", self.invoke(life, "ready")[1])
         self.assertTrue(self.invoke(life, "reset", True)[0][0])
         self.assertIn(("live", "remove"), Fake.calls)
-        Fake.states["live"] = True
-        Fake.calls.clear()
-        self.invoke(life, "resume")
-        self.assertNotIn(("live", "remove"), Fake.calls)
+        self.assertTrue(self.invoke(life, "ready")[0][0])
 
     # A failed build leaves the marker absent and reports remaining work skipped.
     def test_06_build_failure_skips_rest(self):
@@ -310,6 +308,195 @@ class CoreTests(unittest.TestCase):
         started = time.monotonic()
         self.assertTrue(self.invoke(life, "ready")[0][0])
         self.assertLess(time.monotonic() - started, 0.35)
+
+    # Used clears the marker even when another process holds the lock.
+    def test_amendment_01_used_ignores_lock(self):
+        life = self.lifecycle()
+        (life.state / "set").touch()
+        with (life.state / "lock").open("w") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.assertTrue(self.invoke(life, "used")[0][0])
+        self.assertFalse((life.state / "set").exists())
+
+    # Each verb timeout is valid and overrides the default.
+    def test_amendment_02_verb_timeouts(self):
+        for verb in ("probe", "start", "stop", "build", "remove"):
+            with self.subTest(verb=verb):
+                extra = f'{verb}_timeout = 0.05\n'
+                command = 'sleep 1' if verb == "probe" else "true"
+                self.write_manifest(f'probe = "{command}"\n' + (f'{verb} = "sleep 1"\n' if verb != "probe" else "") + extra)
+                life = core.Lifecycle(self.deck, root=self.root)
+                start = time.monotonic()
+                result = life.items[0][1].run(verb)
+                self.assertIsNone(result)
+                self.assertLess(time.monotonic() - start, 0.8)
+                self.write_manifest(f'probe = "true"\n{verb}_timeout = 0\n')
+                with self.assertRaises(ValueError):
+                    core.load_manifest(self.deck)
+
+    # Zero wait still permits one complete probe after a verb.
+    def test_amendment_03_zero_timeout_probes_once(self):
+        self.write_manifest('timeout = 0\nprobe = "sleep 0.05; true"\n')
+        life = core.Lifecycle(self.deck, root=self.root)
+        self.assertTrue(life.wait(life.items[0]))
+        fake = self.lifecycle(("a",))
+        fake.items[0][0]["timeout"] = 0
+        self.assertFalse(fake.wait(fake.items[0]))
+        self.assertEqual(self.clock.now, 0)
+
+    # Missing start and build verbs fail without advancing the clock.
+    def test_amendment_04_missing_verb_fails_immediately(self):
+        for command in ("wake", "reset"):
+            with self.subTest(command=command):
+                life = self.lifecycle(("a",))
+                life.items[0][0].update(hint="repair it")
+                for verb in ("start", "build"):
+                    life.items[0][0].pop(verb)
+                result, output = self.invoke(life, command)
+                self.assertFalse(result[0])
+                self.assertIn("repair it", output)
+                self.assertEqual(self.clock.now, 0)
+
+    # In-use absent components never cause a cold wake or removal.
+    def test_amendment_05_absent_does_not_trigger_cold(self):
+        life = self.lifecycle(("a", "live"), ("live",))
+        Fake.states.update(a=True, live=True)
+        (life.state / "set").touch()
+        for command in ("wake", "resume"):
+            result, output = self.invoke(life, command)
+            self.assertFalse(result[0])
+            self.assertIn("in use", output)
+            self.assertEqual(Fake.calls, [])
+        Fake.states["a"] = False
+        Fake.unresponsive.add("a")
+        self.invoke(life, "wake")
+        self.assertNotIn(("live", "stop"), Fake.calls)
+        self.assertNotIn(("live", "remove"), Fake.calls)
+
+    # Unknown command probes never pass for present or absent components.
+    def test_amendment_06_probe_unknown(self):
+        for prepared in ("present", "absent"):
+            for command in ('exit 2', 'sleep 1'):
+                with self.subTest(prepared=prepared, command=command):
+                    self.write_manifest(f'prepared = "{prepared}"\nprobe = "{command}"\nprobe_timeout = 0.05\n')
+                    life = core.Lifecycle(self.deck, root=self.root)
+                    (life.state / "set").touch()
+                    result, output = self.invoke(life, "ready")
+                    self.assertFalse(result[0])
+                    self.assertIn("cannot tell", output)
+        self.write_manifest('prepared = "absent"\nprobe = "exit 1"\n')
+        life = core.Lifecycle(self.deck, root=self.root)
+        (life.state / "set").touch()
+        self.assertTrue(self.invoke(life, "ready")[0][0])
+
+    # Wake preserves a used marker state, even if the probe succeeds.
+    def test_review_07_wake_keeps_used(self):
+        life = self.lifecycle(("a",))
+        Fake.states["a"] = True
+        self.invoke(life, "wake")
+        self.assertFalse((life.state / "set").exists())
+        (life.state / "set").touch()
+        self.assertTrue(self.invoke(life, "wake")[0][0])
+        self.assertTrue((life.state / "set").exists())
+        Fake.states["a"] = False
+        adapter = life.items[0][1]
+        start = adapter.start
+        # Clear the marker during the wake.
+        def mark_used_during_start():
+            (life.state / "set").unlink()
+            return start()
+        adapter.start = mark_used_during_start
+        self.invoke(life, "wake")
+        self.assertFalse((life.state / "set").exists())
+
+    # Gentle and cold passes stop at their first failed component.
+    def test_review_08_wake_fails_fast_and_skips(self):
+        life = self.lifecycle(("a", "b", "c"))
+        Fake.unresponsive.add("a")
+        result, output = self.invoke(life, "wake")
+        self.assertFalse(result[0])
+        self.assertEqual(self.clock.now, 4)
+        self.assertNotIn(("b", "start"), Fake.calls)
+        self.assertNotIn(("c", "start"), Fake.calls)
+        self.assertEqual(output.count("skipped"), 2)
+        Fake.calls.clear()
+        Fake.unresponsive.clear()
+        Fake.failures.update({("a", "start"), ("b", "start")})
+        Fake.states.update(a=False, b=False, c=False)
+        # The first cold start succeeds; the next can fail before any probe.
+        original = life.items[0][1].start
+        attempts = []
+        # Fail only the gentle start.
+        def fail_once():
+            attempts.append(1)
+            if len(attempts) == 1:
+                return False
+            Fake.failures.discard(("a", "start"))
+            return original()
+        life.items[0][1].start = fail_once
+        life.last_probes.clear()
+        result, output = self.invoke(life, "wake")
+        self.assertFalse(result[0])
+        self.assertIn("b", result[1])
+        self.assertIn("skipped", output)
+
+    # Missing verbs have no progress row and are never invoked.
+    def test_review_09_missing_verb_has_no_row(self):
+        life = self.lifecycle(("a",))
+        life.items[0][0].pop("stop")
+        result, output = self.invoke(life, "down")
+        self.assertTrue(result[0])
+        self.assertNotIn("stopping", output)
+        self.assertEqual(Fake.calls, [])
+
+    # Parallel failed probes retain only their own command output.
+    def test_review_10_parallel_command_logs_and_tails(self):
+        (self.deck / "demo.toml").write_text('deck = "parallel"\n' + ''.join(
+            f'[[component]]\nname = "{name}"\nkind = "command"\nprobe = "echo {name}; sleep 0.1; echo {name}; exit 2"\n'
+            for name in ("first", "second")))
+        life = core.Lifecycle(self.deck, root=self.root)
+        self.invoke(life, "ready")
+        for config, adapter in life.items:
+            self.assertEqual(adapter.tail, [config["name"], config["name"]])
+        log = (life.state / "log").read_text()
+        for name in ("first", "second"):
+            self.assertIn(f'== {name} probe\n{name}\n{name}\n', log)
+        self.assertEqual(list(life.state.glob("command-*")), [])
+
+    # A failed wake explains that reset is rebuilding.
+    def test_review_11_reset_announces_rebuild(self):
+        life = self.lifecycle(("a",))
+        (life.state / "set").touch()
+        Fake.failures.add(("a", "start"))
+        result, output = self.invoke(life, "reset")
+        self.assertTrue(result[0])
+        self.assertIn("wake failed, building the demo again", output)
+
+    # Notification starts identify the operation and end with its summary.
+    def test_review_12_notifications(self):
+        self.write_manifest('probe = "true"\n')
+        for command, message in (("wake", "waking the demo"), ("resume", "waking the demo"),
+                                 ("reset", "preparing the demo"), ("down", "stopping the demo"),
+                                 ("sleep", "stopping the demo")):
+            with self.subTest(command=command), patch.dict(os.environ, {"XDG_STATE_HOME": str(self.path / "xdg")}):
+                root = core.state_root()
+                root.mkdir(parents=True, exist_ok=True)
+                (root / "active").write_text(str(self.deck))
+                with patch.object(core, "notify") as notify, contextlib.redirect_stdout(io.StringIO()):
+                    core.main([command, "--deck", str(self.deck), "--notify"])
+                self.assertEqual(notify.call_args_list[0].args[1], message)
+                self.assertEqual(notify.call_count, 2)
+
+    # Every operation honors has_verb even when methods exist.
+    def test_review_13_core_respects_has_verb(self):
+        life = self.lifecycle(("a",))
+        life.items[0][0].pop("remove")
+        life.items[0][0].pop("start")
+        life.items[0][0].pop("stop")
+        self.assertTrue(self.invoke(life, "reset")[0][0])
+        self.assertEqual(Fake.calls, [("a", "build")])
+        self.invoke(life, "down")
+        self.assertEqual(Fake.calls, [("a", "build")])
 
     # Write a minimal command manifest for subprocess tests.
     def write_manifest(self, fields):

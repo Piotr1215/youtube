@@ -14,7 +14,7 @@ import tomllib
 from adapters import REGISTRY
 
 VERBS = {"probe", "start", "stop", "build", "remove"}
-COMMON = {"name", "kind", "prepared", "timeout", "hint"} | VERBS
+COMMON = {"name", "kind", "prepared", "timeout", "hint"} | VERBS | {f"{verb}_timeout" for verb in VERBS}
 
 
 # Validate strings used as labels and command fields.
@@ -69,8 +69,13 @@ def load_manifest(deck, registry=None):
         if item.get("prepared", "present") not in ("present", "absent"):
             raise ValueError(f"{where}: invalid prepared")
         timeout = item.get("timeout", 180)
-        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout < 0:
             raise ValueError(f"{where}: invalid timeout")
+        for key in (f"{verb}_timeout" for verb in VERBS):
+            if key in item:
+                value = item[key]
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                    raise ValueError(f"{where}: invalid {key}")
         for key in VERBS:
             if key in item and (not isinstance(item[key], str) or not item[key].strip() or "\x00" in item[key]):
                 raise ValueError(f"{where}: invalid {key}")
@@ -117,6 +122,7 @@ class Lifecycle:
         self.state.chmod(0o700)
         self.clock = clock
         self.sleep = sleep
+        self.last_probes = {}
         env = os.environ.copy()
         env.update(self.manifest.get("env", {}))
         if self.manifest.get("kubeconfig"):
@@ -128,10 +134,15 @@ class Lifecycle:
     # Check a component against its desired prepared state.
     def probe(self, item):
         config, adapter = item
-        ok, detail = adapter.probe()
-        if config.get("prepared", "present") == "absent":
-            return not ok, "absent" if not ok else "should be absent"
-        return ok, detail
+        state, detail = adapter.probe()
+        if state is None:
+            result = False, f"cannot tell: {detail}"
+        elif config.get("prepared", "present") == "absent":
+            result = state is False, "absent" if state is False else "in use"
+        else:
+            result = state is True, detail
+        self.last_probes[config["name"]] = result
+        return result
 
     # Probe concurrently while retaining manifest order in the results.
     def probes(self):
@@ -160,6 +171,8 @@ class Lifecycle:
     # Invoke a verb and print progress before it starts.
     def verb(self, item, verb):
         config, adapter = item
+        if not adapter.has_verb(verb):
+            return False
         row("↻", config["name"], {"start": "starting", "stop": "stopping",
                                  "build": "building", "remove": "removing"}[verb])
         return getattr(adapter, verb)() is not False
@@ -170,7 +183,7 @@ class Lifecycle:
         while True:
             adapter = item[1]
             previous = getattr(adapter, "deadline", None)
-            if hasattr(adapter, "deadline"):
+            if hasattr(adapter, "deadline") and item[0].get("timeout", 180) > 0:
                 remaining = max(0, deadline - self.clock())
                 adapter.deadline = time.monotonic() + remaining
                 if previous is not None:
@@ -184,37 +197,55 @@ class Lifecycle:
                 return result[0]
             self.sleep(min(1, max(0, deadline - self.clock())))
 
-    # Record the deck as active and mark it set only when all probes pass.
-    def finish(self):
+    # Mark a rebuilt deck set only when every probe passes.
+    def finish(self, mark_set=True):
         results = self.probes()
         if all(ok for ok, _ in results):
-            (self.state / "set").touch()
+            if mark_set:
+                (self.state / "set").touch()
         else:
             (self.state / "set").unlink(missing_ok=True)
         return self.report(results)
 
-    # Wake gently, then stop and start in dependency order if needed.
-    def wake(self, allow_remove=True):
+    # Report a failed component and skip all following components.
+    def failure(self, index, detail):
+        config, adapter = self.items[index]
+        row("✗", config["name"], detail, config.get("hint"), getattr(adapter, "tail", []))
+        for later, _ in self.items[index + 1:]:
+            row("✗", later["name"], "skipped")
+        summary = f"✗  not ready: {config['name']}"
+        print(summary)
         (self.state / "set").unlink(missing_ok=True)
+        return False, summary
+
+    # Wake gently, then stop and start in dependency order if needed.
+    def wake(self):
         (self.root / "active").write_text(str(self.deck))
         failed = False
-        for item in self.items:
+        for index, item in enumerate(self.items):
+            if item[0].get("prepared", "present") == "absent":
+                continue
             if self.probe(item)[0]:
                 continue
-            if item[0].get("prepared", "present") == "absent":
-                ok = allow_remove and self.verb(item, "remove") and self.wait(item)
-            else:
-                ok = self.verb(item, "start") and self.wait(item)
-            failed = failed or not ok
+            if not item[1].has_verb("start"):
+                return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
+            if not self.verb(item, "start") or not self.wait(item):
+                failed = True
+                break
         if failed:
             for item in reversed(self.items):
-                self.verb(item, "stop")
-            for item in self.items:
+                if item[0].get("prepared", "present") != "absent":
+                    self.verb(item, "stop")
+            for index, item in enumerate(self.items):
                 if item[0].get("prepared", "present") == "absent":
                     continue
-                self.verb(item, "start")
-                self.wait(item)
-        return self.finish()
+                if not item[1].has_verb("start"):
+                    if self.probe(item)[0]:
+                        continue
+                    return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
+                if not self.verb(item, "start") or not self.wait(item):
+                    return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
+        return self.finish(mark_set=False)
 
     # Rebuild in reverse removal order and forward dependency order.
     def reset(self, fresh=False):
@@ -228,13 +259,14 @@ class Lifecycle:
             ok, summary = self.wake()
             if ok:
                 return ok, summary
+            print("  \033[33m↻\033[0m  wake failed, building the demo again")
         marker.unlink(missing_ok=True)
         for item in self.items:
             if item[0].get("prepared", "present") == "present":
                 self.verb(item, "start")
         for item in reversed(self.items):
             config, adapter = item
-            has_remove = getattr(adapter, "has_verb", lambda verb: True)("remove")
+            has_remove = adapter.has_verb("remove")
             absent = config.get("prepared", "present") == "absent"
             if has_remove and (not absent or not self.probe(item)[0]):
                 if not self.verb(item, "remove"):
@@ -250,15 +282,11 @@ class Lifecycle:
             if config.get("prepared", "present") == "absent":
                 success = False
             else:
-                has_build = getattr(adapter, "has_verb", lambda verb: True)("build")
-                success = self.verb(item, "build" if has_build else "start") and self.wait(item)
+                has_build = adapter.has_verb("build")
+                verb = "build" if has_build else "start"
+                success = adapter.has_verb(verb) and self.verb(item, verb) and self.wait(item)
             if not success:
-                row("✗", config["name"], "not ready", config.get("hint"), getattr(adapter, "tail", []))
-                for later, _ in self.items[index + 1:]:
-                    row("✗", later["name"], "skipped")
-                summary = f"✗  not ready: {config['name']}"
-                print(summary)
-                return False, summary
+                return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
         return self.finish()
 
     # Stop in reverse order, optionally retaining the active deck.
@@ -270,7 +298,8 @@ class Lifecycle:
                 break
             if hasattr(item[1], "deadline"):
                 item[1].deadline = deadline
-            success = self.verb(item, "stop") and success
+            if item[1].has_verb("stop"):
+                success = self.verb(item, "stop") and success
         active = self.root / "active"
         if not keep_active and active.exists() and active.read_text() == str(self.deck):
             active.unlink(missing_ok=True)
@@ -282,6 +311,10 @@ class Lifecycle:
     def execute(self, command, fresh=False):
         if command == "ready":
             return self.report()
+        if command == "used":
+            (self.state / "set").unlink(missing_ok=True)
+            print("marked used")
+            return True, "marked used"
         with (self.state / "lock").open("a+") as lock:
             os.set_inheritable(lock.fileno(), False)
             try:
@@ -301,11 +334,12 @@ class Lifecycle:
                 if command == "reset":
                     result = self.reset(fresh)
                 elif command in ("wake", "resume"):
-                    result = self.wake(allow_remove=command != "resume")
+                    result = self.wake()
                     if command == "resume" and not result[0]:
                         failed = [item[0]["name"] for item, value in zip(self.items, self.probes()) if not value[0]]
-                        result = False, f"not ready: {', '.join(failed)}: run just reset"
-                        print(result[1])
+                        if failed:
+                            result = False, f"not ready: {', '.join(failed)}: run just reset"
+                            print(result[1])
                 elif command in ("down", "sleep"):
                     result = self.down(command == "sleep", time.monotonic() + 60 if command == "sleep" else None)
                 else:
@@ -350,7 +384,10 @@ def main(argv=None):
             deck = Path(active.read_text())
         lifecycle = Lifecycle(deck)
         if args.notify:
-            notify(lifecycle.manifest["deck"], f"{args.command} starting")
+            message = {"wake": "waking the demo", "resume": "waking the demo",
+                       "reset": "preparing the demo", "down": "stopping the demo",
+                       "sleep": "stopping the demo"}.get(args.command, f"{args.command} starting")
+            notify(lifecycle.manifest["deck"], message)
         ok, summary = lifecycle.execute(args.command, args.fresh)
         if args.notify and summary:
             notify(lifecycle.manifest["deck"], summary)

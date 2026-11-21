@@ -1,8 +1,10 @@
 """Component port and shell command adapter for demo lifecycle verbs."""
 
+import fcntl
 import os
 import signal
 import subprocess
+import tempfile
 import time
 from typing import Protocol
 
@@ -10,8 +12,11 @@ from typing import Protocol
 class Component(Protocol):
     """The operations the lifecycle core needs from each adapter."""
 
-    # Check whether the component is healthy.
-    def probe(self) -> tuple[bool, str]: ...
+    # Report whether the component exists or is healthy, or None if unknown.
+    def probe(self) -> tuple[bool | None, str]: ...
+
+    # Report whether this component supports a lifecycle verb.
+    def has_verb(self, verb: str) -> bool: ...
 
     # Start the existing component.
     def start(self) -> bool: ...
@@ -45,23 +50,19 @@ class Command:
     def has_verb(self, verb):
         return bool(self.config.get(verb))
 
-    # Run a verb with output directly attached to the shared log file.
+    # Run a verb, isolate its output, and append it to the shared log.
     def run(self, verb):
         command = self.config.get(verb)
         if not command:
-            return True
-        timeout = self.timeouts[verb]
+            return 0
+        timeout = self.config.get(f"{verb}_timeout", self.timeouts[verb])
         if self.deadline is not None:
             timeout = min(timeout, max(0, self.deadline - time.monotonic()))
-        log_path = self.state / "log"
-        with log_path.open("ab", buffering=0) as log:
-            header = f"\n[{time.strftime('%Y-%m-%d %H:%M:%S%z')}] == {self.config['name']} {verb}\n"
-            log.write(header.encode())
-            offset = log.tell()
+        with tempfile.NamedTemporaryFile(dir=self.state, prefix="command-", mode="w+b") as output:
             try:
                 proc = subprocess.Popen(
                     ["bash", "-c", command], cwd=self.deck, env=self.env,
-                    stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                    stdin=subprocess.DEVNULL, stdout=output, stderr=output,
                     start_new_session=True, close_fds=True,
                 )
                 try:
@@ -72,41 +73,50 @@ class Command:
                     except ProcessLookupError:
                         pass
                     proc.wait()
-                    code = 1
-                    log.write(b"command timed out\n")
+                    code = None
+                    output.write(b"command timed out\n")
             except OSError as exc:
-                log.write(f"{exc}\n".encode())
-                code = 1
-        if code:
-            with log_path.open("rb") as log:
-                log.seek(offset)
-                lines = log.read().decode(errors="replace").splitlines()[-3:]
-                if lines:
-                    self.tail = lines
+                output.write(f"{exc}\n".encode())
+                code = None
+            output.flush()
+            output.seek(0)
+            data = output.read()
+            header = f"\n[{time.strftime('%Y-%m-%d %H:%M:%S%z')}] == {self.config['name']} {verb}\n"
+            with (self.state / "log").open("ab") as log:
+                fcntl.flock(log, fcntl.LOCK_EX)
+                log.write(header.encode() + data)
+                log.flush()
+                fcntl.flock(log, fcntl.LOCK_UN)
+        if code != 0:
+            self.tail = data.decode(errors="replace").splitlines()[-3:]
         elif verb != "probe":
             self.tail = []
-        return code == 0
+        return code
 
-    # Check whether the command reports the component as healthy.
+    # Distinguish an unhealthy component from an indeterminate probe.
     def probe(self):
-        ok = self.run("probe")
-        return ok, "ready" if ok else "not ready"
+        code = self.run("probe")
+        if code == 0:
+            return True, "ready"
+        if code == 1:
+            return False, "not ready"
+        return None, self.tail[-1] if self.tail else f"probe exited {code}"
 
     # Start the component if a start command was supplied.
     def start(self):
-        return self.run("start")
+        return self.run("start") == 0
 
     # Stop the component if a stop command was supplied.
     def stop(self):
-        return self.run("stop")
+        return self.run("stop") == 0
 
     # Build the component if a build command was supplied.
     def build(self):
-        return self.run("build")
+        return self.run("build") == 0
 
     # Remove the component if a remove command was supplied.
     def remove(self):
-        return self.run("remove")
+        return self.run("remove") == 0
 
 
 # Register new adapter kinds here without changing the lifecycle state machine.
