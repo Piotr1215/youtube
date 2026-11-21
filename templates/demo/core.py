@@ -453,6 +453,9 @@ class Lifecycle:
                 ok = self.verb(item, verb)
                 row("✓" if ok else "✗", config["name"], getattr(adapter, "note", "") or ("done" if ok else verb + " failed"), config.get("hint") if not ok else None, getattr(adapter, "tail", []) if not ok else ())
                 success = ok and success
+            elif verb == "stop":
+                # Nothing to stop, such as a login, a host setting or a warm VM kept on purpose.
+                row("✓", config["name"], "kept")
             elif verb:
                 row("✗", config["name"], verb + " unavailable")
                 success = False

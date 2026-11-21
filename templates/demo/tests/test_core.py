@@ -608,6 +608,19 @@ class CoreTests(unittest.TestCase):
         self.assertFalse(result[0], output)
         self.assertEqual(Fake.calls, [("uncertain", "remove"), ("live", "remove"), ("a", "remove")])
 
+    # A part with nothing to stop or remove is kept, not a failed teardown.
+    def test_down_keeps_parts_without_stop_or_remove(self):
+        life = core.Lifecycle(self.deck, {"fake": Fake}, self.clock.clock, self.clock.sleep, self.root,
+                              {"deck": "test", "component": [
+                                  {"name": "kept", "kind": "fake", "timeout": 2},
+                                  {"name": "a", "kind": "fake", "timeout": 2, "remove": "yes"}]})
+        Fake.states.update(kept=True, a=True)
+        result, output = self.invoke(life, "down")
+        self.assertTrue(result[0], output)
+        self.assertIn("kept", output.splitlines()[-2])
+        self.assertNotIn("unavailable", output)
+        self.assertEqual(Fake.calls, [("a", "remove")])
+
     # Reject the old manifest field and reset modes.
     def test_old_prepared_and_fresh_are_rejected(self):
         self.write_manifest('prepared = "absent"\nprobe = "false"\n')
