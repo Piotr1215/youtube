@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+active="${XDG_STATE_HOME:-$HOME/.local/state}/demo/active"
+[[ -s "$active" ]] || exit 0
+IFS= read -r deck < "$active" || [[ -n "$deck" ]]
+[[ -n "$deck" && -f "$deck/demo.toml" ]] || exit 0
+engine="$deck/../templates/demo/demo"
+if [[ ! -x "$engine" ]]; then
+  engine="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)/demo"
+fi
+exec "$engine" "$@" --deck "$deck"

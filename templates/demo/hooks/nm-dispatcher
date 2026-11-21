@@ -1,0 +1,7 @@
+#!/bin/sh
+PATH=${DEMO_HOOK_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}
+export PATH
+if [ "${2:-}" = connectivity-change ] && [ "${CONNECTIVITY_STATE:-}" = FULL ]; then
+  systemctl --user -M @USER@@ start --no-block demo-resume.service || :
+fi
+exit 0

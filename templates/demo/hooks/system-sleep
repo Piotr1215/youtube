@@ -1,0 +1,8 @@
+#!/bin/sh
+PATH=${DEMO_HOOK_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}
+export PATH
+case ${1:-} in
+  pre) timeout 70s runuser -u @USER@ -- env HOME=@HOME@ XDG_RUNTIME_DIR=/run/user/@UID@ @RUN_ACTIVE@ sleep || : ;;
+  post) systemctl --user -M @USER@@ start --no-block demo-resume.service || : ;;
+esac
+exit 0

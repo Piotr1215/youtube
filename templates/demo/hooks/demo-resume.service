@@ -1,0 +1,8 @@
+[Unit]
+Description=Wake the active demo after suspend or network recovery
+Documentation=@README@
+
+[Service]
+Type=oneshot
+ExecStart=@RUN_ACTIVE@ resume --notify
+TimeoutStartSec=20min
