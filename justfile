@@ -63,13 +63,31 @@ boxart diagram:
 present:
   @cd {{invocation_directory()}}; presenterm -Xx presentation.md
 
-# prepare the current deck's demo for a run with its reset.sh
-reset:
-  @cd {{invocation_directory()}}; [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; ./reset.sh
+# prepare the current deck's demo for a run
+[positional-arguments]
+reset *args:
+  #!/usr/bin/env bash
+  cd {{quote(invocation_directory())}}
+  fresh=""
+  for arg in "$@"; do
+    case "$arg" in
+      fresh|--fresh) fresh="--fresh" ;;
+      *) echo "usage: just reset [fresh|--fresh]" >&2; exit 1 ;;
+    esac
+  done
+  if [ -f demo.toml ]; then
+    {{quote(justfile_directory() + "/templates/demo/demo")}} reset --deck . ${fresh:+"$fresh"}
+  else
+    [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; ./reset.sh
+  fi
 
-# free the resources the current deck's demo uses with its down.sh
+# free the resources the current deck's demo uses
 down:
-  @cd {{invocation_directory()}}; [ -x ./down.sh ] || { echo "no down.sh in $PWD" >&2; exit 1; }; ./down.sh
+  @cd {{quote(invocation_directory())}}; if [ -f demo.toml ]; then {{quote(justfile_directory() + "/templates/demo/demo")}} down --deck .; else [ -x ./down.sh ] || { echo "no down.sh in $PWD" >&2; exit 1; }; ./down.sh; fi
+
+# check whether the current deck's demo is ready
+ready:
+  @cd {{quote(invocation_directory())}}; if [ -f demo.toml ]; then {{quote(justfile_directory() + "/templates/demo/demo")}} ready --deck .; else echo "no demo.toml in $PWD" >&2; exit 1; fi
 
 # show freetext
 freetext *free_text:

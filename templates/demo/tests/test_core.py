@@ -6,6 +6,7 @@ import io
 import os
 from pathlib import Path
 import signal
+import subprocess
 import tempfile
 import time
 import unittest
@@ -122,15 +123,16 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(Fake.calls, [("a", "start"), ("b", "start"), ("b", "remove"), ("a", "remove"), ("a", "build"), ("b", "build")])
         self.assertTrue((life.state / "set").exists())
 
-    # A healthy marked deck does not run lifecycle verbs.
-    def test_02_reset_already_set(self):
+    # A healthy marked deck is rebuilt for the next talk.
+    def test_02_reset_rebuilds_healthy_deck(self):
         life = self.lifecycle()
         (life.state / "set").touch()
         Fake.states.update(a=True, b=True)
         result, output = self.invoke(life, "reset")
         self.assertTrue(result[0])
-        self.assertIn("already set", output)
-        self.assertEqual(Fake.calls, [])
+        self.assertNotIn("already set", output)
+        self.assertIn(("a", "remove"), Fake.calls)
+        self.assertIn(("a", "build"), Fake.calls)
 
     # A failed gentle wake causes a full reverse stop and forward start.
     def test_03_wake_gentle_then_cold(self):
@@ -270,8 +272,16 @@ class CoreTests(unittest.TestCase):
         pid = int((self.deck / "child").read_text())
         self.addCleanup(self.kill, pid)
         stat = Path(f"/proc/{pid}/stat")
-        if stat.exists():
-            self.assertEqual(stat.read_text().split(") ", 1)[1][0], "Z")
+        deadline = time.monotonic() + 2
+        while True:
+            try:
+                state = stat.read_text().split(") ", 1)[1][0]
+            except FileNotFoundError:
+                break
+            if state == "Z":
+                break
+            self.assertLess(time.monotonic(), deadline, f"child still alive: {state}")
+            time.sleep(0.01)
         self.assertIn("command timed out", (life.state / "log").read_text())
 
     # A slow probe cannot extend a component wait past its timeout.
@@ -474,7 +484,7 @@ class CoreTests(unittest.TestCase):
 
     # Notification starts identify the operation and end with its summary.
     def test_review_12_notifications(self):
-        self.write_manifest('probe = "true"\n')
+        self.write_manifest('probe = "false"\nstart = "true"\ntimeout = 0\n')
         for command, message in (("wake", "waking the demo"), ("resume", "waking the demo"),
                                  ("reset", "preparing the demo"), ("down", "stopping the demo"),
                                  ("sleep", "stopping the demo")):
@@ -497,6 +507,79 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(Fake.calls, [("a", "build")])
         self.invoke(life, "down")
         self.assertEqual(Fake.calls, [("a", "build")])
+
+    # Failed wake paths leave an existing marker untouched.
+    def test_review_14_wake_failure_preserves_set(self):
+        for command in ("wake", "resume"):
+            with self.subTest(command=command):
+                life = self.lifecycle(("a",))
+                (life.state / "set").touch()
+                Fake.states["a"] = False
+                Fake.failures.add(("a", "start"))
+                self.assertFalse(self.invoke(life, command)[0][0])
+                self.assertTrue((life.state / "set").exists())
+                Fake.failures.clear()
+        life = self.lifecycle(("a", "live"), ("live",))
+        (life.state / "set").touch()
+        Fake.states.update(a=True, live=True)
+        self.assertFalse(self.invoke(life, "wake")[0][0])
+        self.assertTrue((life.state / "set").exists())
+
+    # Resume is silent and sends no notifications when ready or locked.
+    def test_review_15_resume_quiet_when_ready_or_locked(self):
+        self.write_manifest('probe = "true"\n')
+        with patch.dict(os.environ, {"XDG_STATE_HOME": str(self.path / "xdg")}):
+            life = core.Lifecycle(self.deck)
+            (life.root / "active").write_text(str(self.deck))
+            for locked in (False, True):
+                with self.subTest(locked=locked), (life.state / "lock").open("w") as lock:
+                    if locked:
+                        self.write_manifest('probe = "false"\n')
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    out = io.StringIO()
+                    with patch.object(core, "notify") as notify, contextlib.redirect_stdout(out):
+                        self.assertEqual(core.main(["resume", "--notify"]), 0)
+                    self.assertEqual(out.getvalue(), "")
+                    notify.assert_not_called()
+
+    # Reset wakes only when a present component is down or unknown.
+    def test_review_16_reset_wakes_only_stopped_present(self):
+        for state, absent_in_use, fresh, marker, rebuild in (
+                (False, False, False, True, False),
+                (None, False, False, True, False),
+                (True, False, False, True, True),
+                (True, True, False, True, True),
+                (False, False, True, True, True),
+                (False, False, False, False, True)):
+            with self.subTest(state=state, absent_in_use=absent_in_use, fresh=fresh, marker=marker):
+                life = self.lifecycle(("a", "live"), ("live",))
+                (life.state / "set").unlink(missing_ok=True)
+                if marker:
+                    (life.state / "set").touch()
+                Fake.calls.clear()
+                Fake.states.update(a=state, live=absent_in_use)
+                self.assertTrue(self.invoke(life, "reset", fresh)[0][0])
+                self.assertEqual(("a", "remove") in Fake.calls, rebuild)
+
+    # The executable accepts all built-in kinds in one manifest.
+    def test_registry_wiring_through_ready_cli(self):
+        (self.deck / "demo.toml").write_text(
+            'deck = "registry"\nclusters = ["demo"]\n'
+            '[[component]]\nname = "cmd"\nkind = "command"\nprobe = "true"\n'
+            '[[component]]\nname = "proc"\nkind = "process"\nrun = "true"\nprobe = "true"\n'
+            '[[component]]\nname = "host"\nkind = "docker-host"\ncluster = "demo"\nprobe = "true"\n'
+            '[[component]]\nname = "platform"\nkind = "platform"\nprobe = "true"\n'
+            '[[component]]\nname = "instance"\nkind = "vcluster-instance"\nproject = "p"\ninstance = "i"\nprobe = "true"\n'
+            '[[component]]\nname = "stack"\nkind = "stack"\nproject = "p"\ninstance = "i"\nprobe = "true"\n')
+        state = self.path / "xdg" / "demo" / "registry"
+        state.mkdir(parents=True)
+        (state / "set").touch()
+        demo = Path(core.__file__).parent / "demo"
+        result = subprocess.run([str(demo), "ready", "--deck", str(self.deck)],
+                                env={**os.environ, "XDG_STATE_HOME": str(self.path / "xdg")},
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertIn("all set for the demo", result.stdout)
 
     # Write a minimal command manifest for subprocess tests.
     def write_manifest(self, fields):

@@ -11,7 +11,10 @@ import sys
 import time
 import tomllib
 
-from adapters import REGISTRY
+from adapters import REGISTRY as COMMAND_REGISTRY
+from kinds import KINDS
+
+REGISTRY = {**COMMAND_REGISTRY, **KINDS}
 
 VERBS = {"probe", "start", "stop", "build", "remove"}
 COMMON = {"name", "kind", "prepared", "timeout", "hint"} | VERBS | {f"{verb}_timeout" for verb in VERBS}
@@ -203,8 +206,6 @@ class Lifecycle:
         if all(ok for ok, _ in results):
             if mark_set:
                 (self.state / "set").touch()
-        else:
-            (self.state / "set").unlink(missing_ok=True)
         return self.report(results)
 
     # Report a failed component and skip all following components.
@@ -215,7 +216,6 @@ class Lifecycle:
             row("✗", later["name"], "skipped")
         summary = f"✗  not ready: {config['name']}"
         print(summary)
-        (self.state / "set").unlink(missing_ok=True)
         return False, summary
 
     # Wake gently, then stop and start in dependency order if needed.
@@ -253,13 +253,12 @@ class Lifecycle:
         marker = self.state / "set"
         if marker.exists() and not fresh:
             results = self.probes()
-            if all(ok for ok, _ in results):
-                print("already set, nothing to do")
-                return True, "already set, nothing to do"
-            ok, summary = self.wake()
-            if ok:
-                return ok, summary
-            print("  \033[33m↻\033[0m  wake failed, building the demo again")
+            if any(not result[0] and item[0].get("prepared", "present") == "present"
+                   for item, result in zip(self.items, results)):
+                ok, summary = self.wake()
+                if ok:
+                    return ok, summary
+                print("  \033[33m↻\033[0m  wake failed, building the demo again")
         marker.unlink(missing_ok=True)
         for item in self.items:
             if item[0].get("prepared", "present") == "present":
@@ -308,7 +307,7 @@ class Lifecycle:
         return success, summary
 
     # Hold a non-inheritable, nonblocking deck lock while a command runs.
-    def execute(self, command, fresh=False):
+    def execute(self, command, fresh=False, on_start=None):
         if command == "ready":
             return self.report()
         if command == "used":
@@ -320,7 +319,7 @@ class Lifecycle:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
-                if command == "sleep":
+                if command in ("sleep", "resume"):
                     return True, ""
                 lock.seek(0)
                 message = f"a reset is already running (pid {lock.read().strip() or '?'})"
@@ -331,6 +330,10 @@ class Lifecycle:
             lock.write(str(os.getpid()))
             lock.flush()
             try:
+                if command == "resume" and all(ok for ok, _ in self.probes()):
+                    return True, ""
+                if on_start:
+                    on_start()
                 if command == "reset":
                     result = self.reset(fresh)
                 elif command in ("wake", "resume"):
@@ -383,12 +386,14 @@ def main(argv=None):
                 return 0
             deck = Path(active.read_text())
         lifecycle = Lifecycle(deck)
-        if args.notify:
-            message = {"wake": "waking the demo", "resume": "waking the demo",
-                       "reset": "preparing the demo", "down": "stopping the demo",
-                       "sleep": "stopping the demo"}.get(args.command, f"{args.command} starting")
-            notify(lifecycle.manifest["deck"], message)
-        ok, summary = lifecycle.execute(args.command, args.fresh)
+        message = {"wake": "waking the demo", "resume": "waking the demo",
+                   "reset": "preparing the demo", "down": "stopping the demo",
+                   "sleep": "stopping the demo"}.get(args.command, f"{args.command} starting")
+        on_start = lambda: notify(lifecycle.manifest["deck"], message) if args.notify else None
+        if args.command != "resume":
+            on_start()
+            on_start = None
+        ok, summary = lifecycle.execute(args.command, args.fresh, on_start)
         if args.notify and summary:
             notify(lifecycle.manifest["deck"], summary)
         return 0 if ok else 1
