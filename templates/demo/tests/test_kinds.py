@@ -173,6 +173,17 @@ class KindTests(unittest.TestCase):
         self.assertIn(["docker", "network", "rm", "vcluster.alpha"], self.calls())
         self.assertFalse(any("vcluster.other" in call or "vcluster.cp.other" in call for call in self.calls()))
 
+    # With no containers left, the deck's remove still clears what lives outside Docker.
+    def test_docker_remove_without_containers_runs_deck_remove(self):
+        self.data(containers={"vcluster.cp.other": "running"})
+        marker = self.deck / "removed"
+        host = self.kind(DockerHost, cluster="alpha", remove=f"touch {marker}")
+        self.assertTrue(host.remove())
+        self.assertTrue(marker.exists())
+        self.assertFalse(any(call[:2] in (["docker", "rm"], ["vcluster", "delete"]) for call in self.calls()))
+        plain = self.kind(DockerHost, cluster="alpha")
+        self.assertTrue(plain.remove())
+
     # Keep the shared Platform running for another deck's cluster.
     def test_platform_stop_keeps_other_decks_and_has_no_remove(self):
         self.data(containers={"vcluster.cp.alpha": "running", "vcluster.cp.beta": "running"})

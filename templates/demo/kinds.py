@@ -418,7 +418,9 @@ class DockerHost(_Common):
         if names is None:
             return False
         if not names:
-            return True
+            # The deck's remove also clears what lives outside Docker, such as the cluster's
+            # Platform record, and with no container there is no kube server to mistake.
+            return self._command("remove")[0] if self.config.get("remove") else True
         if not self._scope():
             return False
         if self.config.get("remove"):
