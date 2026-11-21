@@ -157,14 +157,16 @@ class KindTests(unittest.TestCase):
     def test_platform_requires_steady_successes(self):
         self.data(check_codes=[0, 1, 0])
         platform = self.kind(Platform, steady=3)
-        with mock.patch("kinds.time.sleep") as sleep:
+        with mock.patch("kinds.time", wraps=time) as clock:
+            clock.sleep = mock.Mock()
             self.assertIs(platform.probe()[0], False)
-            self.assertEqual(sleep.call_count, 1)
+            self.assertEqual(clock.sleep.call_count, 1)
         (self.root / "checks").unlink()
         self.data(check_codes=[0, 0, 0])
-        with mock.patch("kinds.time.sleep") as sleep:
+        with mock.patch("kinds.time", wraps=time) as clock:
+            clock.sleep = mock.Mock()
             self.assertIs(platform.probe()[0], True)
-            self.assertEqual(sleep.call_count, 2)
+            self.assertEqual(clock.sleep.call_count, 2)
 
     # Identify a process by both pid and Linux start time and stop its group.
     def test_process_identity_restart_and_stop_group(self):
@@ -254,7 +256,7 @@ class KindTests(unittest.TestCase):
         self.assertIsNone(instance.probe()[0])
         self.assertEqual((self.state / "mgmt.kubeconfig").stat().st_mode & 0o777, 0o600)
         self.assertEqual((self.state / "mgmt.kubeconfig").read_text(), "apiVersion: v1\n")
-        self.assertEqual((self.root / "kubeconfig-used").read_text(), str(self.state / "mgmt.kubeconfig"))
+        self.assertEqual((self.root / "kubeconfig-used").read_text(), "deck-config")
         self.assertEqual(sum(call[:4] == ["vcluster", "platform", "connect", "management"] for call in self.calls()), 1)
 
     # Treat management API errors as unknown.
@@ -270,7 +272,7 @@ class KindTests(unittest.TestCase):
         self.data(object={"metadata": {}, "status": {"phase": "Healthy"}})
         self.assertIs(stack.probe()[0], True)
         self.assertTrue(stack.remove())
-        self.assertIn(["kubectl", "delete", "stackinstance", "-n", "p-demo", "example", "--ignore-not-found", "--wait=true", "--timeout=420s"], self.calls())
+        self.assertIn(["kubectl", "--kubeconfig", str(self.state / "mgmt.kubeconfig"), "delete", "stackinstance", "-n", "p-demo", "example", "--ignore-not-found", "--wait=true", "--timeout=420s"], self.calls())
 
     # Treat native command timeouts as unknown rather than down.
     def test_native_probe_timeout_is_unknown(self):

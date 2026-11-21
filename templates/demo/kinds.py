@@ -503,15 +503,15 @@ class VclusterInstance(_Common):
                         temporary.unlink(missing_ok=True)
                     self.tail = [str(exc)]
                     return None
-        return {**self.env, "KUBECONFIG": str(path)}
+        return path
 
     # Fetch the target object as JSON from the management API.
     def _object(self):
-        env = self._management_env()
-        if env is None:
+        kubeconfig = self._management_env()
+        if kubeconfig is None:
             return None
-        code, out, _ = self._call(["kubectl", "get", self.resource, "-n", f"p-{self.config['project']}",
-                                   self.config["instance"], "-o", "json"], "probe", env=env)
+        code, out, _ = self._call(["kubectl", "--kubeconfig", str(kubeconfig), "get", self.resource, "-n", f"p-{self.config['project']}",
+                                   self.config["instance"], "-o", "json"], "probe")
         if code != 0:
             return None
         try:
@@ -548,13 +548,13 @@ class VclusterInstance(_Common):
     def remove(self):
         if self.config.get("remove"):
             return self._command("remove")[0]
-        env = self._management_env()
-        if env is None:
+        kubeconfig = self._management_env()
+        if kubeconfig is None:
             return False
         timeout = self.config.get("remove_timeout", self.remove_timeout)
-        args = ["kubectl", "delete", self.resource, "-n", f"p-{self.config['project']}", self.config["instance"],
+        args = ["kubectl", "--kubeconfig", str(kubeconfig), "delete", self.resource, "-n", f"p-{self.config['project']}", self.config["instance"],
                 "--ignore-not-found", "--wait=true", f"--timeout={timeout}s"]
-        return self._call(args, "remove", self.remove_timeout, env)[0] == 0
+        return self._call(args, "remove", self.remove_timeout)[0] == 0
 
 
 class Stack(VclusterInstance):

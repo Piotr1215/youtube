@@ -4,12 +4,16 @@ import argparse
 import concurrent.futures
 import fcntl
 import math
+import ipaddress
+import json
+import re
 import os
 from pathlib import Path
 import subprocess
 import sys
 import time
 import tomllib
+from urllib.parse import urlsplit
 
 from adapters import REGISTRY as COMMAND_REGISTRY
 from kinds import KINDS
@@ -23,7 +27,7 @@ COMMON = {"name", "kind", "prepared", "timeout", "hint"} | VERBS | {f"{verb}_tim
 # Validate strings used as labels and command fields.
 def _string(value, key, where, limit=None):
     if (not isinstance(value, str) or not value.strip() or "\n" in value
-            or "\r" in value or (limit and len(value) > limit)):
+            or "\r" in value or "\x00" in value or (limit and len(value) > limit)):
         raise ValueError(f"{where}: invalid {key}")
 
 
@@ -32,7 +36,7 @@ def load_manifest(deck, registry=None):
     registry = REGISTRY if registry is None else registry
     with (Path(deck) / "demo.toml").open("rb") as source:
         data = tomllib.load(source)
-    unknown = set(data) - {"deck", "kubeconfig", "clusters", "env", "component"}
+    unknown = set(data) - {"deck", "kubeconfig", "clusters", "env", "component", "platform", "gcp_project", "gcp_zone"}
     if unknown:
         raise ValueError(f"manifest: unknown key {sorted(unknown)[0]}")
     _string(data.get("deck"), "deck", "manifest")
@@ -40,6 +44,17 @@ def load_manifest(deck, registry=None):
         raise ValueError("manifest: invalid deck")
     if "kubeconfig" in data:
         _string(data["kubeconfig"], "kubeconfig", "manifest")
+    for key in ("platform", "gcp_project", "gcp_zone"):
+        if key in data:
+            _string(data[key], key, "manifest")
+    if "platform" in data:
+        try:
+            url = urlsplit(data["platform"])
+            if url.scheme != "https" or not url.hostname or url.username or url.password:
+                raise ValueError
+            _ = url.port
+        except ValueError:
+            raise ValueError("manifest: invalid platform") from None
     clusters = data.get("clusters", [])
     if not isinstance(clusters, list) or any(not isinstance(c, str) or not c for c in clusters):
         raise ValueError("manifest: invalid clusters")
@@ -64,6 +79,8 @@ def load_manifest(deck, registry=None):
         kind = item.get("kind")
         if not isinstance(kind, str) or kind not in registry:
             raise ValueError(f"{where}: unknown kind {kind}")
+        if kind in ("vcluster-instance", "stack") and not data.get("platform"):
+            raise ValueError(f"{where}: missing platform")
         adapter = registry[kind]
         allowed = COMMON | set(getattr(adapter, "fields", ()))
         unknown = set(item) - allowed
@@ -103,7 +120,7 @@ def state_root(root=None):
 def row(mark, label, detail, hint=None, tail=()):
     colors = {"✓": "32", "✗": "31", "↻": "33"}
     detail = " ".join(str(detail).split())
-    text = detail[:61]
+    text = detail if label == "scope" else detail[:61]
     print(f"  \033[{colors[mark]}m{mark}\033[0m  \033[36m{label:<16}\033[0m  {text}")
     if mark == "✗":
         for line in ([hint] if hint else []) + list(tail)[-3:]:
@@ -126,13 +143,66 @@ class Lifecycle:
         self.clock = clock
         self.sleep = sleep
         self.last_probes = {}
-        env = os.environ.copy()
+        allowed = {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "TERM", "TZ", "TMPDIR", "DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "WAYLAND_DISPLAY", "SSH_AUTH_SOCK"}
+        env = {key: value for key, value in os.environ.items()
+               if key in allowed or key.startswith(("LC_", "XDG_"))}
         env.update(self.manifest.get("env", {}))
-        if self.manifest.get("kubeconfig"):
-            env["KUBECONFIG"] = os.path.expanduser(self.manifest["kubeconfig"])
+        kubeconfig = Path(os.path.expanduser(self.manifest.get("kubeconfig", str(self.state / "no-kubeconfig"))))
+        self.kubeconfig = kubeconfig if kubeconfig.is_absolute() else self.deck / kubeconfig
+        if "kubeconfig" not in self.manifest and self.kubeconfig.exists():
+            raise ValueError("manifest: no-kubeconfig path exists")
+        env["KUBECONFIG"] = str(self.kubeconfig)
+        env["DOCKER_CONTEXT"] = "default"
+        env.pop("DOCKER_HOST", None)
+        for key, target in (("gcp_project", "CLOUDSDK_CORE_PROJECT"), ("gcp_zone", "CLOUDSDK_COMPUTE_ZONE")):
+            if key in self.manifest:
+                env[target] = self.manifest[key]
         env["DEMO_STATE"] = str(self.state)
+        self.env = env
         self.items = [(config, self.registry[config["kind"]](config, self.deck, self.state, env))
                       for config in self.manifest["component"]]
+
+    # Check declared kube servers and the current Platform login.
+    def scope(self):
+        platform = self.manifest.get("platform")
+        platform_host = urlsplit(platform).hostname if platform else None
+        hosts = []
+        errors = []
+        if "kubeconfig" in self.manifest:
+            try:
+                if self.kubeconfig.exists():
+                    for line in self.kubeconfig.read_text().splitlines():
+                        content = line.split("#", 1)[0]
+                        for key in re.finditer(r"(?<![\w-])['\"]?server['\"]?\s*:", content):
+                            value = re.match(r"\s*['\"]?([^\s'\",}]+)", content[key.end():])
+                            if not value:
+                                errors.append("invalid kube server")
+                                continue
+                            try:
+                                host = urlsplit(value.group(1)).hostname
+                                if not host:
+                                    raise ValueError
+                                hosts.append(host)
+                                try:
+                                    loopback = ipaddress.ip_address(host).is_loopback
+                                except ValueError:
+                                    loopback = host.lower() == "localhost"
+                                if not loopback and host != platform_host:
+                                    errors.append(f"kube server {host}")
+                            except ValueError:
+                                errors.append(f"invalid kube server {value.group(1)}")
+            except (OSError, UnicodeError) as exc:
+                errors.append(f"kubeconfig {exc}")
+        if platform:
+            try:
+                login = json.loads((Path(self.env.get("HOME", "")) / ".vcluster/config.json").read_text())
+                current = login.get("platform", {}).get("host")
+            except (OSError, ValueError, TypeError, AttributeError):
+                current = None
+            if current != platform:
+                errors.append(f"platform login {current or 'missing'} != {platform}")
+        detail = f"{', '.join(hosts) or 'none'}, platform {platform_host or 'none'}, gcp {self.manifest.get('gcp_project', 'none')}"
+        return not errors, "; ".join(errors) if errors else detail
 
     # Check a component against its desired prepared state.
     def probe(self, item):
@@ -164,12 +234,10 @@ class Lifecycle:
                 failed.append(config["name"])
         if failed:
             summary = "✗  not ready: " + ", ".join(failed)
-        elif not (self.state / "set").exists():
-            summary = "✗  used since the last reset: run just reset"
         else:
             summary = "✓  all set for the demo"
         print(summary)
-        return not failed and (self.state / "set").exists(), summary
+        return not failed, summary
 
     # Invoke a verb and print progress before it starts.
     def verb(self, item, verb):
@@ -200,13 +268,9 @@ class Lifecycle:
                 return result[0]
             self.sleep(min(1, max(0, deadline - self.clock())))
 
-    # Mark a rebuilt deck set only when every probe passes.
-    def finish(self, mark_set=True):
-        results = self.probes()
-        if all(ok for ok, _ in results):
-            if mark_set:
-                (self.state / "set").touch()
-        return self.report(results)
+    # Report the final probe verdict.
+    def finish(self):
+        return self.report()
 
     # Report a failed component and skip all following components.
     def failure(self, index, detail):
@@ -219,7 +283,7 @@ class Lifecycle:
         return False, summary
 
     # Wake gently, then stop and start in dependency order if needed.
-    def wake(self):
+    def wake_present(self):
         (self.root / "active").write_text(str(self.deck))
         failed = False
         for index, item in enumerate(self.items):
@@ -245,21 +309,23 @@ class Lifecycle:
                     return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
                 if not self.verb(item, "start") or not self.wait(item):
                     return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
-        return self.finish(mark_set=False)
+        return True, ""
 
-    # Rebuild in reverse removal order and forward dependency order.
+    # Restore a deck or rebuild it in dependency order when fresh.
     def reset(self, fresh=False):
         (self.root / "active").write_text(str(self.deck))
-        marker = self.state / "set"
-        if marker.exists() and not fresh:
-            results = self.probes()
-            if any(not result[0] and item[0].get("prepared", "present") == "present"
-                   for item, result in zip(self.items, results)):
-                ok, summary = self.wake()
-                if ok:
-                    return ok, summary
-                print("  \033[33m↻\033[0m  wake failed, building the demo again")
-        marker.unlink(missing_ok=True)
+        if not fresh:
+            ok, _ = self.wake_present()
+            if not ok:
+                summary = "✗  cannot restore: run just reset fresh to rebuild"
+                print(summary)
+                return False, summary
+            for item in reversed(self.items):
+                config, adapter = item
+                if config.get("prepared", "present") == "absent" and adapter.probe()[0] is True:
+                    if not self.verb(item, "remove"):
+                        return self.failure(self.items.index(item), "remove failed")
+            return self.finish()
         for item in self.items:
             if item[0].get("prepared", "present") == "present":
                 self.verb(item, "start")
@@ -267,7 +333,7 @@ class Lifecycle:
             config, adapter = item
             has_remove = adapter.has_verb("remove")
             absent = config.get("prepared", "present") == "absent"
-            if has_remove and (not absent or not self.probe(item)[0]):
+            if has_remove and (not absent or adapter.probe()[0] is True):
                 if not self.verb(item, "remove"):
                     row("✗", config["name"], "remove failed", config.get("hint"),
                         getattr(adapter, "tail", []))
@@ -308,12 +374,16 @@ class Lifecycle:
 
     # Hold a non-inheritable, nonblocking deck lock while a command runs.
     def execute(self, command, fresh=False, on_start=None):
-        if command == "ready":
-            return self.report()
-        if command == "used":
-            (self.state / "set").unlink(missing_ok=True)
-            print("marked used")
-            return True, "marked used"
+        scope_result = None
+        if command != "resume":
+            scope_result = self.scope()
+            if not scope_result[0]:
+                row("✗", "scope", scope_result[1])
+                print("✗  not ready: scope")
+                return False, "✗  not ready: scope"
+            if command == "ready":
+                row("✓", "scope", scope_result[1])
+                return self.report()
         with (self.state / "lock").open("a+") as lock:
             os.set_inheritable(lock.fileno(), False)
             try:
@@ -321,6 +391,7 @@ class Lifecycle:
             except BlockingIOError:
                 if command in ("sleep", "resume"):
                     return True, ""
+                row("✓", "scope", scope_result[1])
                 lock.seek(0)
                 message = f"a reset is already running (pid {lock.read().strip() or '?'})"
                 print(message)
@@ -330,14 +401,22 @@ class Lifecycle:
             lock.write(str(os.getpid()))
             lock.flush()
             try:
+                scope_ok, detail = scope_result if scope_result is not None else self.scope()
+                if not scope_ok:
+                    row("✗", "scope", detail)
+                    print("✗  not ready: scope")
+                    return False, "✗  not ready: scope"
                 if command == "resume" and all(ok for ok, _ in self.probes()):
                     return True, ""
+                row("✓", "scope", detail)
                 if on_start:
                     on_start()
                 if command == "reset":
                     result = self.reset(fresh)
                 elif command in ("wake", "resume"):
-                    result = self.wake()
+                    result = self.wake_present()
+                    if result[0]:
+                        result = self.finish()
                     if command == "resume" and not result[0]:
                         failed = [item[0]["name"] for item, value in zip(self.items, self.probes()) if not value[0]]
                         if failed:
@@ -345,10 +424,6 @@ class Lifecycle:
                             print(result[1])
                 elif command in ("down", "sleep"):
                     result = self.down(command == "sleep", time.monotonic() + 60 if command == "sleep" else None)
-                else:
-                    (self.state / "set").unlink(missing_ok=True)
-                    print("marked used")
-                    result = True, "marked used"
                 if command in ("reset", "wake", "down"):
                     presentation = self.deck / "presentation.md"
                     if presentation.exists():
@@ -359,11 +434,11 @@ class Lifecycle:
 
 
 # Send an optional desktop notification without requiring notify-send.
-def notify(deck, message):
+def notify(deck, message, env=None):
     try:
         subprocess.run(["notify-send", deck, message], stdin=subprocess.DEVNULL,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5,
-                       check=False, close_fds=True)
+                       check=False, close_fds=True, env=env)
     except (OSError, subprocess.TimeoutExpired):
         pass
 
@@ -371,7 +446,7 @@ def notify(deck, message):
 # Parse the CLI, select the active deck for suspend hooks, and run a command.
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Prepare and check a deck's demo")
-    parser.add_argument("command", choices=["ready", "wake", "reset", "down", "sleep", "resume", "used"])
+    parser.add_argument("command", choices=["ready", "wake", "reset", "down", "sleep", "resume"])
     parser.add_argument("--deck", default=".")
     parser.add_argument("--notify", action="store_true")
     parser.add_argument("--fresh", action="store_true")
@@ -389,13 +464,10 @@ def main(argv=None):
         message = {"wake": "waking the demo", "resume": "waking the demo",
                    "reset": "preparing the demo", "down": "stopping the demo",
                    "sleep": "stopping the demo"}.get(args.command, f"{args.command} starting")
-        on_start = lambda: notify(lifecycle.manifest["deck"], message) if args.notify else None
-        if args.command != "resume":
-            on_start()
-            on_start = None
+        on_start = lambda: notify(lifecycle.manifest["deck"], message, lifecycle.env) if args.notify else None
         ok, summary = lifecycle.execute(args.command, args.fresh, on_start)
         if args.notify and summary:
-            notify(lifecycle.manifest["deck"], summary)
+            notify(lifecycle.manifest["deck"], summary, lifecycle.env)
         return 0 if ok else 1
     except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
         print(f"demo: {exc}", file=sys.stderr)

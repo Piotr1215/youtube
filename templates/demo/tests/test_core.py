@@ -115,24 +115,19 @@ class CoreTests(unittest.TestCase):
             result = life.execute(command, fresh)
         return result, output.getvalue()
 
-    # A first reset removes in reverse and builds in dependency order.
-    def test_01_reset_order_and_set(self):
+    # Fresh reset removes in reverse and builds in dependency order.
+    def test_01_fresh_reset_order(self):
         life = self.lifecycle()
-        result, _ = self.invoke(life, "reset")
+        result, _ = self.invoke(life, "reset", True)
         self.assertTrue(result[0])
         self.assertEqual(Fake.calls, [("a", "start"), ("b", "start"), ("b", "remove"), ("a", "remove"), ("a", "build"), ("b", "build")])
-        self.assertTrue((life.state / "set").exists())
 
-    # A healthy marked deck is rebuilt for the next talk.
-    def test_02_reset_rebuilds_healthy_deck(self):
+    # Reset leaves healthy present components intact.
+    def test_02_reset_leaves_healthy_deck(self):
         life = self.lifecycle()
-        (life.state / "set").touch()
         Fake.states.update(a=True, b=True)
-        result, output = self.invoke(life, "reset")
-        self.assertTrue(result[0])
-        self.assertNotIn("already set", output)
-        self.assertIn(("a", "remove"), Fake.calls)
-        self.assertIn(("a", "build"), Fake.calls)
+        self.assertTrue(self.invoke(life, "reset")[0][0])
+        self.assertEqual(Fake.calls, [])
 
     # A failed gentle wake causes a full reverse stop and forward start.
     def test_03_wake_gentle_then_cold(self):
@@ -156,7 +151,6 @@ class CoreTests(unittest.TestCase):
     # Wake leaves an in-use absent component for reset to remove.
     def test_05_absent_component(self):
         life = self.lifecycle(("a", "live"), ("live",))
-        (life.state / "set").touch()
         Fake.states.update(a=True, live=True)
         result, output = self.invoke(life, "wake")
         self.assertFalse(result[0])
@@ -167,26 +161,22 @@ class CoreTests(unittest.TestCase):
         self.assertIn(("live", "remove"), Fake.calls)
         self.assertTrue(self.invoke(life, "ready")[0][0])
 
-    # A failed build leaves the marker absent and reports remaining work skipped.
+    # A failed build reports remaining work skipped.
     def test_06_build_failure_skips_rest(self):
         life = self.lifecycle()
         Fake.failures.add(("a", "build"))
-        result, output = self.invoke(life, "reset")
+        result, output = self.invoke(life, "reset", True)
         self.assertFalse(result[0])
         self.assertIn("skipped", output)
         self.assertNotIn(("b", "build"), Fake.calls)
-        self.assertFalse((life.state / "set").exists())
 
-    # Down clears active while sleep keeps it and both preserve the marker.
+    # Down clears active while sleep keeps it.
     def test_07_down_sleep_and_no_active(self):
         life = self.lifecycle()
-        (life.state / "set").touch()
         (life.root / "active").write_text(str(self.deck))
         self.invoke(life, "sleep")
-        self.assertTrue((life.state / "set").exists())
         self.assertTrue((life.root / "active").exists())
         self.invoke(life, "down")
-        self.assertTrue((life.state / "set").exists())
         self.assertFalse((life.root / "active").exists())
         with patch.dict(os.environ, {"XDG_STATE_HOME": str(self.path / "unused")}):
             self.assertEqual(core.main(["sleep"]), 0)
@@ -205,7 +195,7 @@ class CoreTests(unittest.TestCase):
             self.assertTrue(self.invoke(life, "sleep")[0][0])
         self.write_manifest('probe = "true"\nstart = "sleep 30 & echo $! > child"\n')
         command_life = core.Lifecycle(self.deck, root=self.root)
-        self.invoke(command_life, "reset")
+        self.invoke(command_life, "reset", True)
         pid = int((self.deck / "child").read_text())
         self.addCleanup(self.kill, pid)
         paths = []
@@ -215,7 +205,6 @@ class CoreTests(unittest.TestCase):
             except FileNotFoundError:
                 pass
         self.assertNotIn(str(command_life.state / "lock"), paths)
-        self.assertTrue(self.invoke(command_life, "used")[0][0])
 
     # A failed health check stops at the configured timeout.
     def test_09_wait_timeout(self):
@@ -244,20 +233,20 @@ class CoreTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, expected):
                     core.load_manifest(self.deck, registry)
 
-    # A healthy unmarked deck is reported as used.
-    def test_11_ready_reports_used(self):
+    # Readiness depends on probes alone.
+    def test_11_ready_reports_probes(self):
         life = self.lifecycle()
         Fake.states.update(a=True, b=True)
         result, output = self.invoke(life, "ready")
-        self.assertFalse(result[0])
-        self.assertIn("used since the last reset", output)
+        self.assertTrue(result[0])
+        self.assertIn("all set for the demo", output)
 
     # A daemon inheriting output must not keep the shell verb waiting.
     def test_12_background_daemon_does_not_block(self):
         self.write_manifest('probe = "true"\nstart = "sleep 30 & echo $! > child"\n')
         life = core.Lifecycle(self.deck, root=self.root)
         start = time.monotonic()
-        self.invoke(life, "reset")
+        self.invoke(life, "reset", True)
         self.assertLess(time.monotonic() - start, 3)
         pid = int((self.deck / "child").read_text())
         self.addCleanup(self.kill, pid)
@@ -301,7 +290,7 @@ class CoreTests(unittest.TestCase):
             "build = 'printenv SAMPLE KUBECONFIG DEMO_STATE > env; touch flag'\n"
             'remove = "rm -f flag"\n')
         life = core.Lifecycle(self.deck, root=self.root)
-        self.assertTrue(self.invoke(life, "reset")[0][0])
+        self.assertTrue(self.invoke(life, "reset", True)[0][0])
         self.assertEqual((self.deck / "env").read_text().splitlines(),
                          ["hello", os.path.expanduser("~/demo-config"), str(life.state)])
         adapter = life.items[0][1]
@@ -309,24 +298,36 @@ class CoreTests(unittest.TestCase):
         self.assertFalse(adapter.start())
         self.assertEqual(adapter.tail, ["two", "three", "four"])
 
+    # Engine pins override manifest values and caller variables are filtered.
+    def test_environment_pins_and_missing_kubeconfig(self):
+        manifest = {"deck": "pins", "env": {"KUBECONFIG": "bad", "DOCKER_HOST": "bad", "DOCKER_CONTEXT": "bad", "CLOUDSDK_CORE_PROJECT": "bad", "CLOUDSDK_COMPUTE_ZONE": "bad"},
+                    "gcp_project": "demo", "gcp_zone": "zone", "component": [{"name": "a", "kind": "fake"}]}
+        with patch.dict(os.environ, {"CLUSTER": "prod", "PROJECT": "prod", "LC_TEST": "yes"}, clear=True):
+            life = core.Lifecycle(self.deck, {"fake": Fake}, root=self.root, manifest=manifest)
+        self.assertEqual(life.env["KUBECONFIG"], str(life.state / "no-kubeconfig"))
+        self.assertFalse(Path(life.env["KUBECONFIG"]).exists())
+        self.assertEqual(life.env["DOCKER_CONTEXT"], "default")
+        self.assertNotIn("DOCKER_HOST", life.env)
+        self.assertNotIn("CLUSTER", life.env)
+        self.assertNotIn("PROJECT", life.env)
+        self.assertEqual(life.env["LC_TEST"], "yes")
+        self.assertEqual(life.env["CLOUDSDK_CORE_PROJECT"], "demo")
+        self.assertEqual(life.env["CLOUDSDK_COMPUTE_ZONE"], "zone")
+        self.assertEqual(life.env["DEMO_STATE"], str(life.state))
+
     # Ready probes run together rather than waiting for each component in turn.
     def test_ready_probes_in_parallel(self):
         life = self.lifecycle()
         for _, adapter in life.items:
             adapter.probe = lambda: (time.sleep(0.2) or True, "healthy")
-        (life.state / "set").touch()
         started = time.monotonic()
         self.assertTrue(self.invoke(life, "ready")[0][0])
         self.assertLess(time.monotonic() - started, 0.35)
 
-    # Used clears the marker even when another process holds the lock.
-    def test_amendment_01_used_ignores_lock(self):
-        life = self.lifecycle()
-        (life.state / "set").touch()
-        with (life.state / "lock").open("w") as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.assertTrue(self.invoke(life, "used")[0][0])
-        self.assertFalse((life.state / "set").exists())
+    # The removed command is not accepted by the CLI.
+    def test_used_command_removed(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            core.main(["used"])
 
     # Each verb timeout is valid and overrides the default.
     def test_amendment_02_verb_timeouts(self):
@@ -371,7 +372,6 @@ class CoreTests(unittest.TestCase):
     def test_amendment_05_absent_does_not_trigger_cold(self):
         life = self.lifecycle(("a", "live"), ("live",))
         Fake.states.update(a=True, live=True)
-        (life.state / "set").touch()
         for command in ("wake", "resume"):
             result, output = self.invoke(life, command)
             self.assertFalse(result[0])
@@ -390,34 +390,18 @@ class CoreTests(unittest.TestCase):
                 with self.subTest(prepared=prepared, command=command):
                     self.write_manifest(f'prepared = "{prepared}"\nprobe = "{command}"\nprobe_timeout = 0.05\n')
                     life = core.Lifecycle(self.deck, root=self.root)
-                    (life.state / "set").touch()
                     result, output = self.invoke(life, "ready")
                     self.assertFalse(result[0])
                     self.assertIn("cannot tell", output)
         self.write_manifest('prepared = "absent"\nprobe = "exit 1"\n')
         life = core.Lifecycle(self.deck, root=self.root)
-        (life.state / "set").touch()
         self.assertTrue(self.invoke(life, "ready")[0][0])
 
-    # Wake preserves a used marker state, even if the probe succeeds.
-    def test_review_07_wake_keeps_used(self):
+    # Wake readiness does not rely on a marker.
+    def test_wake_uses_probes(self):
         life = self.lifecycle(("a",))
         Fake.states["a"] = True
-        self.invoke(life, "wake")
-        self.assertFalse((life.state / "set").exists())
-        (life.state / "set").touch()
         self.assertTrue(self.invoke(life, "wake")[0][0])
-        self.assertTrue((life.state / "set").exists())
-        Fake.states["a"] = False
-        adapter = life.items[0][1]
-        start = adapter.start
-        # Clear the marker during the wake.
-        def mark_used_during_start():
-            (life.state / "set").unlink()
-            return start()
-        adapter.start = mark_used_during_start
-        self.invoke(life, "wake")
-        self.assertFalse((life.state / "set").exists())
 
     # Gentle and cold passes stop at their first failed component.
     def test_review_08_wake_fails_fast_and_skips(self):
@@ -473,14 +457,15 @@ class CoreTests(unittest.TestCase):
             self.assertIn(f'== {name} probe\n{name}\n{name}\n', log)
         self.assertEqual(list(life.state.glob("command-*")), [])
 
-    # A failed wake explains that reset is rebuilding.
-    def test_review_11_reset_announces_rebuild(self):
-        life = self.lifecycle(("a",))
-        (life.state / "set").touch()
+    # A failed wake does not remove anything or rebuild.
+    def test_reset_failed_wake_does_not_remove(self):
+        life = self.lifecycle(("a", "live"), ("live",))
+        Fake.states["live"] = True
         Fake.failures.add(("a", "start"))
         result, output = self.invoke(life, "reset")
-        self.assertTrue(result[0])
-        self.assertIn("wake failed, building the demo again", output)
+        self.assertFalse(result[0])
+        self.assertIn("cannot restore: run just reset fresh to rebuild", output)
+        self.assertFalse(any(verb in ("remove", "build") for _, verb in Fake.calls))
 
     # Notification starts identify the operation and end with its summary.
     def test_review_12_notifications(self):
@@ -503,27 +488,18 @@ class CoreTests(unittest.TestCase):
         life.items[0][0].pop("remove")
         life.items[0][0].pop("start")
         life.items[0][0].pop("stop")
-        self.assertTrue(self.invoke(life, "reset")[0][0])
+        self.assertTrue(self.invoke(life, "reset", True)[0][0])
         self.assertEqual(Fake.calls, [("a", "build")])
         self.invoke(life, "down")
         self.assertEqual(Fake.calls, [("a", "build")])
 
-    # Failed wake paths leave an existing marker untouched.
-    def test_review_14_wake_failure_preserves_set(self):
-        for command in ("wake", "resume"):
-            with self.subTest(command=command):
-                life = self.lifecycle(("a",))
-                (life.state / "set").touch()
-                Fake.states["a"] = False
-                Fake.failures.add(("a", "start"))
-                self.assertFalse(self.invoke(life, command)[0][0])
-                self.assertTrue((life.state / "set").exists())
-                Fake.failures.clear()
-        life = self.lifecycle(("a", "live"), ("live",))
-        (life.state / "set").touch()
-        Fake.states.update(a=True, live=True)
-        self.assertFalse(self.invoke(life, "wake")[0][0])
-        self.assertTrue((life.state / "set").exists())
+    # A failed wake reports the component.
+    def test_wake_failure_reports_component(self):
+        life = self.lifecycle(("a",))
+        Fake.failures.add(("a", "start"))
+        result, output = self.invoke(life, "wake")
+        self.assertFalse(result[0])
+        self.assertIn("a", output)
 
     # Resume is silent and sends no notifications when ready or locked.
     def test_review_15_resume_quiet_when_ready_or_locked(self):
@@ -542,29 +518,26 @@ class CoreTests(unittest.TestCase):
                     self.assertEqual(out.getvalue(), "")
                     notify.assert_not_called()
 
-    # Reset wakes only when a present component is down or unknown.
-    def test_review_16_reset_wakes_only_stopped_present(self):
-        for state, absent_in_use, fresh, marker, rebuild in (
-                (False, False, False, True, False),
-                (None, False, False, True, False),
-                (True, False, False, True, True),
-                (True, True, False, True, True),
-                (False, False, True, True, True),
-                (False, False, False, False, True)):
-            with self.subTest(state=state, absent_in_use=absent_in_use, fresh=fresh, marker=marker):
-                life = self.lifecycle(("a", "live"), ("live",))
-                (life.state / "set").unlink(missing_ok=True)
-                if marker:
-                    (life.state / "set").touch()
-                Fake.calls.clear()
-                Fake.states.update(a=state, live=absent_in_use)
-                self.assertTrue(self.invoke(life, "reset", fresh)[0][0])
-                self.assertEqual(("a", "remove") in Fake.calls, rebuild)
+    # Reset restores present components and removes only known live moments.
+    def test_reset_restores_and_removes_live_moment(self):
+        life = self.lifecycle(("a", "live", "other"), ("live", "other"))
+        Fake.states.update(a=False, live=True, other=False)
+        self.assertTrue(self.invoke(life, "reset")[0][0])
+        self.assertEqual(Fake.calls, [("a", "start"), ("live", "remove")])
+
+    # An unknown live moment stays untouched and fails the verdict.
+    def test_reset_unknown_live_moment(self):
+        life = self.lifecycle(("a", "live"), ("live",))
+        Fake.states.update(a=True, live=None)
+        result, output = self.invoke(life, "reset")
+        self.assertFalse(result[0])
+        self.assertIn("cannot tell", output)
+        self.assertEqual(Fake.calls, [])
 
     # The executable accepts all built-in kinds in one manifest.
     def test_registry_wiring_through_ready_cli(self):
         (self.deck / "demo.toml").write_text(
-            'deck = "registry"\nclusters = ["demo"]\n'
+            'deck = "registry"\nplatform = "https://localhost"\nclusters = ["demo"]\n'
             '[[component]]\nname = "cmd"\nkind = "command"\nprobe = "true"\n'
             '[[component]]\nname = "proc"\nkind = "process"\nrun = "true"\nprobe = "true"\n'
             '[[component]]\nname = "host"\nkind = "docker-host"\ncluster = "demo"\nprobe = "true"\n'
@@ -573,10 +546,12 @@ class CoreTests(unittest.TestCase):
             '[[component]]\nname = "stack"\nkind = "stack"\nproject = "p"\ninstance = "i"\nprobe = "true"\n')
         state = self.path / "xdg" / "demo" / "registry"
         state.mkdir(parents=True)
-        (state / "set").touch()
+        home = self.path / "home"
+        (home / ".vcluster").mkdir(parents=True)
+        (home / ".vcluster/config.json").write_text('{"platform": {"host": "https://localhost"}}')
         demo = Path(core.__file__).parent / "demo"
         result = subprocess.run([str(demo), "ready", "--deck", str(self.deck)],
-                                env={**os.environ, "XDG_STATE_HOME": str(self.path / "xdg")},
+                                env={**os.environ, "HOME": str(home), "XDG_STATE_HOME": str(self.path / "xdg")},
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertIn("all set for the demo", result.stdout)
