@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ "${1:-}" == sleep ]]; then
+  engine="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)/demo"
+  exec "$engine" "$@"
+fi
 active="${XDG_STATE_HOME:-$HOME/.local/state}/demo/active"
 [[ -s "$active" ]] || exit 0
 IFS= read -r deck < "$active" || [[ -n "$deck" ]]

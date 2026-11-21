@@ -68,15 +68,9 @@ present:
 reset *args:
   #!/usr/bin/env bash
   cd {{quote(invocation_directory())}}
-  fresh=""
-  for arg in "$@"; do
-    case "$arg" in
-      fresh|--fresh) fresh="--fresh" ;;
-      *) echo "usage: just reset [fresh|--fresh]" >&2; exit 1 ;;
-    esac
-  done
   if [ -f demo.toml ]; then
-    {{quote(justfile_directory() + "/templates/demo/demo")}} reset --deck . ${fresh:+"$fresh"}
+    [ "$#" -eq 0 ] || { echo "usage: just reset" >&2; exit 1; }
+    {{quote(justfile_directory() + "/templates/demo/demo")}} reset --deck .
   else
     [ -x ./reset.sh ] || { echo "no reset.sh in $PWD" >&2; exit 1; }; ./reset.sh
   fi

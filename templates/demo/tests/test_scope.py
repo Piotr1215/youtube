@@ -18,10 +18,14 @@ with open(os.environ["CALL_LOG"], "a") as output:
 if name == "docker":
     if args[0] == "ps":
         print("vcluster.cp.demo")
+    elif args[0] == "port":
+        print("127.0.0.1:6443")
     elif args[0] == "inspect":
         print("true")
 elif name == "vcluster" and args[:4] == ["platform", "connect", "management", "--print"]:
     print("apiVersion: v1")
+elif name == "kubectl" and "config" in args and "view" in args:
+    print("https://127.0.0.1:6443")
 elif name == "kubectl" and "get" in args:
     if "nodes" in args:
         print(json.dumps({"items": [{"status": {"conditions": [{"type": "Ready", "status": "True"}]}}]}))
@@ -120,9 +124,9 @@ instance = "sample"
         return subprocess.run([str(demo), *args, "--deck", str(self.deck)], env=self.env,
                               text=True, capture_output=True, timeout=30)
 
-    # Wrong login refuses all three operations before any fake tool runs.
+    # Wrong login refuses both operations before any fake tool runs.
     def test_wrong_login_refuses_all_operations(self):
-        for command in (("reset",), ("reset", "--fresh"), ("down",)):
+        for command in (("reset",), ("down",)):
             with self.subTest(command=command):
                 result = self.run_demo(*command)
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
@@ -133,7 +137,7 @@ instance = "sample"
     # Correct login keeps every native and shell invocation inside the pins.
     def test_hostile_caller_environment_is_pinned(self):
         self.login(self.platform)
-        for command in (("reset",), ("reset", "--fresh"), ("down",)):
+        for command in (("reset",), ("down",)):
             with self.subTest(command=command):
                 result = self.run_demo(*command)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

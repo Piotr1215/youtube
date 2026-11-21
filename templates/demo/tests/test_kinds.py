@@ -28,6 +28,8 @@ if name == "docker":
         names = fixture.get("containers", {})
         status = next((x.split("=", 1)[1] for x in args if x.startswith("status=")), None)
         print("\\n".join(n for n, s in names.items() if not status or s == status))
+    elif args[0] == "port":
+        print(fixture.get("docker_port", "127.0.0.1:6443"))
     elif args[0] == "inspect":
         print("true" if fixture.get("platform", True) else "false")
     elif args[:2] == ["network", "ls"]:
@@ -42,6 +44,9 @@ elif name == "vcluster":
         sys.exit(fixture.get("check_codes", [0])[min(n, len(fixture.get("check_codes", [0])) - 1)])
 elif name == "kubectl":
     (pathlib.Path(os.environ["FAKE_ROOT"]) / "kubeconfig-used").write_text(os.environ.get("KUBECONFIG", ""))
+    if "config" in args and "view" in args:
+        print(fixture.get("kube_server", "https://127.0.0.1:6443"))
+        sys.exit(0)
     if fixture.get("api_down"):
         print("API unavailable", file=sys.stderr)
         sys.exit(1)
@@ -126,6 +131,20 @@ class KindTests(unittest.TestCase):
         self.assertIs(host.probe()[0], False)
         self.data(containers={"vcluster.cp.alpha": "running"})
         self.assertIs(host.probe()[0], True)
+
+    # Refuse an unrelated loopback server before any cluster action.
+    def test_docker_host_rejects_unpublished_loopback_port(self):
+        self.data(containers={"vcluster.cp.alpha": "running"},
+                  kube_server="https://127.0.0.1:9999", docker_port="127.0.0.1:6443")
+        host = self.kind(DockerHost, cluster="alpha")
+        status, detail = host.probe()
+        self.assertIsNone(status)
+        self.assertIn("kube server is not alpha's container", detail)
+        for verb in ("start", "stop", "remove"):
+            self.assertFalse(getattr(host, verb)())
+        calls = self.calls()
+        self.assertFalse(any(call[0] == "kubectl" and "config" not in call for call in calls))
+        self.assertFalse(any(call[:2] in (["docker", "start"], ["docker", "stop"], ["docker", "rm"], ["vcluster", "delete"]) for call in calls))
 
     # Delete only the cluster's leftover containers and network.
     def test_docker_remove_leaves_other_clusters(self):

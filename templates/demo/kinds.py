@@ -12,6 +12,7 @@ import time
 import tomllib
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 
 from adapters import Command
 
@@ -325,13 +326,42 @@ class DockerHost(_Common):
             return True
         return self._call(["docker", *action, *names], action[0])[0] == 0
 
+    # Verify the context port belongs to this cluster before acting on it.
+    def _scope(self):
+        self.scope_refused = False
+        cluster = self.config["cluster"]
+        ctx = self.config.get("context", f"vcluster-docker_{cluster}")
+        code, out, _ = self._call(["kubectl", "config", "view", "--minify", "--context", ctx,
+                                    "-o", "jsonpath={.clusters[0].cluster.server}"], "probe")
+        try:
+            port = urlsplit(out.strip()).port if code == 0 else None
+        except ValueError:
+            port = None
+        code, ports, _ = self._call(["docker", "port", f"vcluster.cp.{cluster}"], "probe")
+        published = set()
+        for line in ports.splitlines():
+            try:
+                published.add(int(line.rsplit(":", 1)[1]))
+            except (IndexError, ValueError):
+                continue
+        if port is None or code != 0 or port not in published:
+            self.tail = [f"kube server is not {cluster}'s container"]
+            self.scope_refused = True
+            return False
+        return True
+
     # Check containers, API readiness, and every node's Ready condition.
     def probe(self):
-        if self.config.get("probe"):
-            return self._override_probe()
+        self.scope_refused = False
         all_names = self._containers()
         if all_names is None:
             return None, "docker unavailable"
+        if f"vcluster.cp.{self.config['cluster']}" not in all_names:
+            return False, "containers missing"
+        if not self._scope():
+            return None, self.tail[-1]
+        if self.config.get("probe"):
+            return self._override_probe()
         running = self._containers("running")
         if running is None:
             return None, "docker unavailable"
@@ -355,6 +385,9 @@ class DockerHost(_Common):
 
     # Start exited containers in control plane, node, load balancer order.
     def start(self):
+        names = self._containers()
+        if names is None or f"vcluster.cp.{self.config['cluster']}" not in names or not self._scope():
+            return False
         if self.config.get("start"):
             return self._command("start")[0]
         names = self._containers("exited")
@@ -362,6 +395,13 @@ class DockerHost(_Common):
 
     # Stop the cluster's running containers.
     def stop(self):
+        names = self._containers()
+        if names is None:
+            return False
+        if not names:
+            return True
+        if not self._scope():
+            return False
         if self.config.get("stop"):
             return self._command("stop")[0]
         names = self._containers("running")
@@ -369,6 +409,13 @@ class DockerHost(_Common):
 
     # Delete the cluster, then remove only its remaining Docker objects.
     def remove(self):
+        names = self._containers()
+        if names is None:
+            return False
+        if not names:
+            return True
+        if not self._scope():
+            return False
         if self.config.get("remove"):
             return self._command("remove")[0]
         cluster = self.config["cluster"]

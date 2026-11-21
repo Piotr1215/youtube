@@ -136,9 +136,21 @@ class HookTests(unittest.TestCase):
         active = self.root / 'state/demo/active'
         active.parent.mkdir(parents=True)
         active.write_text(str(deck) + '\n')
+        result = self.run_hook(local / 'hooks/run-active', 'resume')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), ['resume', '--deck', str(deck)])
+
+    # Sleep scans the state root even when no deck is active.
+    def test_run_active_sleep_without_active_deck(self):
+        local = self.root / 'engine'
+        (local / 'hooks').mkdir(parents=True)
+        shutil.copy2(HOOKS / 'run-active', local / 'hooks/run-active')
+        engine = local / 'demo'
+        engine.write_text('#!/usr/bin/python3\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n')
+        engine.chmod(0o755)
         result = self.run_hook(local / 'hooks/run-active', 'sleep')
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout), ['sleep', '--deck', str(deck)])
+        self.assertEqual(json.loads(result.stdout), ['sleep'])
 
     def test_install_dry_run_renders_without_sudo(self):
         result = self.run_hook(HOOKS / 'install.sh', '--dry-run')

@@ -31,16 +31,16 @@ timeout = 300
 [[component]]
 name = "demo page"
 kind = "command"
-prepared = "absent"
+live = true
 probe = "./demo.sh status"
 remove = "./demo.sh stop"
 ```
 
 `deck` is the state and notification label. `kubeconfig`, `platform`, `gcp_project`, `gcp_zone`, `clusters` and `env` are optional. `platform` must be an HTTPS URL and is required for a `vcluster-instance` or `stack`. `clusters` scopes Docker host operations. `env` adds variables to commands.
 
-Components start and build in file order, and stop and remove in reverse order. Each needs a unique `name` of at most 16 characters and a `kind`. Common fields are `prepared` (`present` by default or `absent`), `timeout` (probe wait after start or build, default 180 seconds), `hint`, and `probe`, `start`, `stop`, `build` and `remove` shell commands. A supplied command overrides the kind's matching operation. Per verb timeout fields such as `probe_timeout` override command limits. `timeout = 0` checks once without waiting.
+Components start and build in file order, and stop and remove in reverse order. Each needs a unique `name` of at most 16 characters and a `kind`. Common fields are `live` (false by default), `inputs`, `tools`, `timeout` (probe wait after start or build, default 180 seconds), `hint`, and `probe`, `start`, `stop`, `build` and `remove` shell commands. A supplied command overrides the kind's matching operation. Per verb timeout fields such as `probe_timeout` override command limits. `timeout = 0` checks once without waiting.
 
-A probe exit of 0 means present, 1 means absent, and other results are unknown. An absent component is ready only when its probe says it is absent. Declare every state-changing live step as a `prepared = "absent"` component with a probe and remove command. Every other demo command must be idempotent.
+A probe exit of 0 means present, 1 means absent, and other results are unknown. A live step is ready only when its probe says it has not happened. Declare every state-changing live step as a `live = true` component with a probe and remove command. Every other demo command must be idempotent. The old `prepared` field is rejected.
 
 Before any component runs, the engine checks every server in the declared kubeconfig. Each server must be loopback or use the declared Platform host. If `platform` is set, `~/.vcluster/config.json` must have the exact URL in `platform.host`. A mismatch stops the command before any probe or action. Every report begins with the scope, including kube server hosts, Platform host and GCP project.
 
@@ -50,30 +50,26 @@ Commands run in the deck directory. The engine passes PATH, HOME, USER, LOGNAME,
 | --- | --- |
 | `command` | `probe` is required. Supply any other verbs needed by the demo. |
 | `process` | `run` is required. Optional `health` is an HTTP URL or shell command; `steady` is the number of consecutive health checks, default 1. The engine tracks and stops its process group. |
-| `docker-host` | `cluster` is required and must appear in `clusters`. `context` defaults to `vcluster-docker_<cluster>`. Supply `build` to create it; `remove` can override the default deletion. |
+| `docker-host` | `cluster` is required and must appear in `clusters`. `context` defaults to `vcluster-docker_<cluster>`. Supply `build` to create it; `remove` can override the default deletion. Its kubeconfig server port must be published by `vcluster.cp.<cluster>`. If it is not, the engine refuses to probe or change that host through kubectl. |
 | `platform` | Optional `check` defaults to `vcluster platform get current-user`; `steady` defaults to 3. The engine keeps the shared Platform running if another deck's cluster needs it. Supply `build` to create it. |
 | `vcluster-instance` | `project` and `instance` are required. Checks the instance through the Platform management API. Supply `build` to create it; the default remove deletes it. |
 | `stack` | `project` and `instance` are required. Optional `want` lists accepted phases, default `["Healthy"]`. Supply `build` to create it; the default remove deletes it. |
 
 ## Commands
 
-Run `templates/demo/demo <command> --deck <deck-directory>` or run the engine from the deck directory without `--deck`. Add `--notify` for desktop notifications.
+From a deck directory, use `just reset` to get the demo ready. It starts stopped parts, builds missing parts, rebuilds a part that cannot come back, and undoes completed live steps. After suspend it can wake the demo without rebuilding. After `just down`, it builds what is missing. To rebuild the whole demo, run `just down` followed by `just reset`.
 
-| Command | Effect |
-| --- | --- |
-| `ready` | Probe components and report readiness. |
-| `wake` | Start stopped present components, with a stop and start pass if needed. |
-| `reset` | Wake present components, remove live moments that are present, then probe the verdict. A failed wake removes nothing and asks for a fresh reset. Unknown live moments are left alone and fail the verdict. |
-| `reset --fresh` | Remove and rebuild present components, and remove live moments that are present. |
-| `down` | Stop components and clear this deck as active. |
-| `sleep` | Stop the active deck, keeping it active for resume. |
-| `resume` | Wake the active deck without rebuilding. It stays quiet if probes pass or the lock is held. |
+Use `just down` to remove the demo infrastructure. It removes parts with a remove verb in reverse order and stops parts without one. Keep downloaded resources such as the image cache, T4 VM and model by leaving them out of remove commands. The shared Platform is stopped rather than removed. Down reports each part and continues after a failure.
 
-From a deck directory, `just reset`, `just reset fresh`, `just down` and `just ready` call the engine when `demo.toml` exists. For older decks without a manifest, reset and down use the deck's `reset.sh` and `down.sh` instead.
+`just ready` probes without changing the demo. A completed live step is reported as `live steps done`; run `just reset` for a fresh run. Sleep stops all known decks and keeps their infrastructure. Resume and the Wi-Fi trigger wake only the active deck and never build, remove or undo a live step.
+
+A part can declare `inputs = ["relative/path"]` and `tools = ["tool-name"]`. After a successful build, the engine records the content hash of each input and the output of each tool's `--version`. On reset, a changed input or tool version causes that part to be removed and built again. The first reset without a stored value records the current values without rebuilding.
+
+The engine also accepts `templates/demo/demo <command> --deck <deck-directory>`. Run it from the deck directory to omit `--deck`, and add `--notify` for desktop notifications. Available commands are `ready`, `wake`, `reset`, `down`, `sleep` and `resume`. For older decks without a manifest, `just reset` and `just down` run the deck's `reset.sh` and `down.sh`.
 
 ## Suspend hooks
 
-Run `templates/demo/hooks/install.sh` as your normal user to install the system sleep hook, NetworkManager dispatcher and user service. The installer uses sudo for the two system hooks. Use `--dry-run` to inspect the filled files and commands, or `--uninstall` to remove them. Before suspend the hook stops the active demo as your user. After resume the user service wakes it with notifications. A NetworkManager connectivity change to FULL starts the service again.
+Run `templates/demo/hooks/install.sh` as your normal user to install the system sleep hook, NetworkManager dispatcher and user service. The installer uses sudo for the two system hooks. Use `--dry-run` to inspect the filled files and commands, or `--uninstall` to remove them. Before suspend the hook stops every known demo as your user. After resume the user service wakes it with notifications. A NetworkManager connectivity change to FULL starts the service again.
 
 ## Tests
 

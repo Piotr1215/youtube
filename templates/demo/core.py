@@ -3,6 +3,7 @@
 import argparse
 import concurrent.futures
 import fcntl
+import hashlib
 import math
 import ipaddress
 import json
@@ -21,7 +22,7 @@ from kinds import KINDS
 REGISTRY = {**COMMAND_REGISTRY, **KINDS}
 
 VERBS = {"probe", "start", "stop", "build", "remove"}
-COMMON = {"name", "kind", "prepared", "timeout", "hint"} | VERBS | {f"{verb}_timeout" for verb in VERBS}
+COMMON = {"name", "kind", "live", "inputs", "tools", "timeout", "hint"} | VERBS | {f"{verb}_timeout" for verb in VERBS}
 
 
 # Validate strings used as labels and command fields.
@@ -72,6 +73,8 @@ def load_manifest(deck, registry=None):
             raise ValueError("component: invalid entry")
         name = item.get("name")
         _string(name, "name", "component", 16)
+        if name in (".", "..") or "/" in name or "\\" in name:
+            raise ValueError("component: invalid name")
         where = f"component {name}"
         if name in names:
             raise ValueError(f"{where}: duplicate name")
@@ -84,10 +87,21 @@ def load_manifest(deck, registry=None):
         adapter = registry[kind]
         allowed = COMMON | set(getattr(adapter, "fields", ()))
         unknown = set(item) - allowed
+        if "prepared" in unknown:
+            raise ValueError(f"{where}: prepared is no longer supported; use live = true")
         if unknown:
             raise ValueError(f"{where}: unknown key {sorted(unknown)[0]}")
-        if item.get("prepared", "present") not in ("present", "absent"):
-            raise ValueError(f"{where}: invalid prepared")
+        if "live" in item and not isinstance(item["live"], bool):
+            raise ValueError(f"{where}: invalid live")
+        for key in ("inputs", "tools"):
+            if key in item and (not isinstance(item[key], list) or any(not isinstance(x, str) or not x or "\x00" in x for x in item[key])):
+                raise ValueError(f"{where}: invalid {key}")
+        for name in item.get("inputs", []):
+            path = Path(name)
+            if path.is_absolute() or ".." in path.parts:
+                raise ValueError(f"{where}: invalid inputs")
+            if not (Path(deck).resolve() / path).resolve().is_relative_to(Path(deck).resolve()):
+                raise ValueError(f"{where}: input outside deck")
         timeout = item.get("timeout", 180)
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout < 0:
             raise ValueError(f"{where}: invalid timeout")
@@ -120,7 +134,7 @@ def state_root(root=None):
 def row(mark, label, detail, hint=None, tail=()):
     colors = {"✓": "32", "✗": "31", "↻": "33"}
     detail = " ".join(str(detail).split())
-    text = detail if label == "scope" else detail[:61]
+    text = detail if label == "scope" or detail.startswith("rebuilding ") else detail[:61]
     print(f"  \033[{colors[mark]}m{mark}\033[0m  \033[36m{label:<16}\033[0m  {text}")
     if mark == "✗":
         for line in ([hint] if hint else []) + list(tail)[-3:]:
@@ -140,6 +154,7 @@ class Lifecycle:
         self.state = self.root / self.manifest["deck"]
         self.state.mkdir(parents=True, mode=0o700, exist_ok=True)
         self.state.chmod(0o700)
+        (self.state / "deck").write_text(str(self.deck))
         self.clock = clock
         self.sleep = sleep
         self.last_probes = {}
@@ -210,7 +225,7 @@ class Lifecycle:
         state, detail = adapter.probe()
         if state is None:
             result = False, f"cannot tell: {detail}"
-        elif config.get("prepared", "present") == "absent":
+        elif config.get("live", False):
             result = state is False, "absent" if state is False else "in use"
         else:
             result = state is True, detail
@@ -226,18 +241,25 @@ class Lifecycle:
     def report(self, results=None):
         results = self.probes() if results is None else results
         failed = []
+        live = []
         for (config, adapter), (ok, detail) in zip(self.items, results):
             row("✓" if ok else "✗", config["name"], detail,
                 config.get("hint") if not ok else None,
                 getattr(adapter, "tail", []) if not ok else ())
             if not ok:
-                failed.append(config["name"])
+                if config.get("live") and detail == "in use":
+                    live.append(config["name"])
+                else:
+                    failed.append(config["name"])
         if failed:
-            summary = "✗  not ready: " + ", ".join(failed)
+            names = [config["name"] for (config, _), (ok, _) in zip(self.items, results) if not ok]
+            summary = "✗  not ready: " + ", ".join(names)
+        elif live:
+            summary = "✗  live steps done: " + ", ".join(live) + "; run just reset for a fresh run"
         else:
             summary = "✓  all set for the demo"
         print(summary)
-        return not failed, summary
+        return not failed and not live, summary
 
     # Invoke a verb and print progress before it starts.
     def verb(self, item, verb):
@@ -282,98 +304,167 @@ class Lifecycle:
         print(summary)
         return False, summary
 
-    # Wake gently, then stop and start in dependency order if needed.
-    def wake_present(self):
+    # Hash declared files and tool versions independently for useful change reports.
+    def fingerprint(self, item):
+        config, _ = item
+        values = {"inputs": {}, "tools": {}}
+        for name in config.get("inputs", []):
+            path = (self.deck / name).resolve()
+            if not path.is_relative_to(self.deck):
+                raise ValueError(f"{config['name']}: input {name} outside deck")
+            try:
+                values["inputs"][name] = hashlib.sha256(path.read_bytes()).hexdigest()
+            except OSError as exc:
+                raise ValueError(f"{config['name']}: input {name}: {exc}") from exc
+        for tool in config.get("tools", []):
+            try:
+                result = subprocess.run([tool, "--version"], cwd=self.deck, env=self.env,
+                                        stdin=subprocess.DEVNULL, capture_output=True, timeout=10, check=True)
+            except (OSError, subprocess.SubprocessError) as exc:
+                raise ValueError(f"{config['name']}: tool {tool}: {exc}") from exc
+            values["tools"][tool] = {"stdout": result.stdout.decode("utf-8", errors="replace"),
+                                      "stderr": result.stderr.decode("utf-8", errors="replace")}
+        return values
+
+    # Component names are validated as a single filename at manifest load.
+    def fingerprint_path(self, item):
+        name = item[0]["name"]
+        if name in (".", "..") or "/" in name or "\\" in name:
+            raise ValueError("component: invalid name")
+        return self.state / "built" / name
+
+    # Save the inputs only after the build reaches a healthy state.
+    def build(self, item):
+        if not self.verb(item, "build") or not self.wait(item):
+            return False
+        if item[0].get("inputs") or item[0].get("tools"):
+            path = self.fingerprint_path(item)
+            path.parent.mkdir(exist_ok=True, mode=0o700)
+            path.write_text(json.dumps(self.fingerprint(item), sort_keys=True))
+        return True
+
+    # Establish a baseline for older decks, then identify the first changed input.
+    def changed(self, item):
+        if not (item[0].get("inputs") or item[0].get("tools")):
+            return None
+        current = self.fingerprint(item)
+        path = self.fingerprint_path(item)
+        if not path.exists():
+            path.parent.mkdir(exist_ok=True, mode=0o700)
+            path.write_text(json.dumps(current, sort_keys=True))
+            return None
+        try:
+            previous = json.loads(path.read_text())
+        except (OSError, ValueError):
+            return "fingerprint"
+        if not isinstance(previous, dict):
+            return "fingerprint"
+        for category in ("inputs", "tools"):
+            old = previous.get(category, {})
+            if not isinstance(old, dict):
+                return "fingerprint"
+            for name in sorted(set(current[category]) | set(old)):
+                if current[category].get(name) != old.get(name):
+                    return name
+        return None
+
+    # Wake in dependency order, with build and repair reserved for reset.
+    def wake_present(self, allow_build=False):
         (self.root / "active").write_text(str(self.deck))
-        failed = False
-        for index, item in enumerate(self.items):
-            if item[0].get("prepared", "present") == "absent":
+        for item in self.items:
+            if item[0].get("live"):
+                continue
+            changed = self.changed(item) if allow_build else None
+            if changed:
+                row("↻", item[0]["name"], f"rebuilding {item[0]['name']}: {changed} changed")
+                if not item[1].has_verb("remove") or not self.verb(item, "remove") or not self.build(item):
+                    return self.failure(self.items.index(item), "rebuild failed")
                 continue
             if self.probe(item)[0]:
                 continue
-            if not item[1].has_verb("start"):
-                return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
-            if not self.verb(item, "start") or not self.wait(item):
-                failed = True
-                break
-        if failed:
-            for item in reversed(self.items):
-                if item[0].get("prepared", "present") != "absent":
-                    self.verb(item, "stop")
-            for index, item in enumerate(self.items):
-                if item[0].get("prepared", "present") == "absent":
+            if getattr(item[1], "scope_refused", False):
+                return self.failure(self.items.index(item), self.last_probes[item[0]["name"]][1])
+            if item[1].has_verb("start") and self.verb(item, "start") and self.wait(item):
+                continue
+            if allow_build and item[1].has_verb("build") and self.build(item):
+                continue
+            break
+        else:
+            return True, ""
+        for item in reversed(self.items):
+            if not item[0].get("live") and item[1].has_verb("stop"):
+                self.verb(item, "stop")
+        for index, item in enumerate(self.items):
+            if item[0].get("live"):
+                continue
+            if item[1].has_verb("start") and self.verb(item, "start") and self.wait(item):
+                continue
+            if getattr(item[1], "scope_refused", False):
+                return self.failure(index, item[1].tail[-1])
+            if self.probe(item)[0]:
+                continue
+            if allow_build and item[1].has_verb("build"):
+                if self.build(item):
                     continue
-                if not item[1].has_verb("start"):
-                    if self.probe(item)[0]:
+                if item[1].has_verb("remove"):
+                    row("↻", item[0]["name"], "rebuilding " + item[0]["name"])
+                    if self.verb(item, "remove") and self.build(item):
                         continue
-                    return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
-                if not self.verb(item, "start") or not self.wait(item):
-                    return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
+            return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
         return True, ""
 
-    # Restore a deck or rebuild it in dependency order when fresh.
-    def reset(self, fresh=False):
-        (self.root / "active").write_text(str(self.deck))
-        if not fresh:
-            ok, _ = self.wake_present()
-            if not ok:
-                summary = "✗  cannot restore: run just reset fresh to rebuild"
-                print(summary)
-                return False, summary
-            for item in reversed(self.items):
-                config, adapter = item
-                if config.get("prepared", "present") == "absent" and adapter.probe()[0] is True:
-                    if not self.verb(item, "remove"):
-                        return self.failure(self.items.index(item), "remove failed")
-            return self.finish()
-        for item in self.items:
-            if item[0].get("prepared", "present") == "present":
-                self.verb(item, "start")
-        for item in reversed(self.items):
-            config, adapter = item
-            has_remove = adapter.has_verb("remove")
-            absent = config.get("prepared", "present") == "absent"
-            if has_remove and (not absent or adapter.probe()[0] is True):
-                if not self.verb(item, "remove"):
-                    row("✗", config["name"], "remove failed", config.get("hint"),
-                        getattr(adapter, "tail", []))
-                    summary = f"✗  not ready: {config['name']}"
-                    print(summary)
-                    return False, summary
-        for index, item in enumerate(self.items):
-            if self.probe(item)[0]:
-                continue
-            config, adapter = item
-            if config.get("prepared", "present") == "absent":
-                success = False
-            else:
-                has_build = adapter.has_verb("build")
-                verb = "build" if has_build else "start"
-                success = adapter.has_verb(verb) and self.verb(item, verb) and self.wait(item)
-            if not success:
-                return self.failure(index, self.last_probes.get(item[0]["name"], (False, "not ready"))[1])
+    # Restore prepared parts and undo completed live steps.
+    def reset(self):
+        try:
+            result = subprocess.run(["docker", "ps", "--filter", "status=running", "--format", "{{.Names}}"], cwd=self.deck, env=self.env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, check=False)
+            clusters = self.manifest.get("clusters", [])
+            if result.returncode == 0 and any(name.startswith("vcluster.cp.") and name[len("vcluster.cp."):] not in clusters for name in result.stdout.splitlines()):
+                row("↻", "platform", "another deck's cluster runs on it")
+        except (OSError, subprocess.SubprocessError):
+            pass
+        ok, summary = self.wake_present(allow_build=True)
+        if not ok:
+            return ok, summary
+        for index in reversed(range(len(self.items))):
+            item = self.items[index]
+            if item[0].get("live"):
+                state, _ = item[1].probe()
+                if state is True and not self.verb(item, "remove"):
+                    return self.failure(index, "remove failed")
         return self.finish()
 
-    # Stop in reverse order, optionally retaining the active deck.
+    # Stop on sleep and remove owned infrastructure on down.
     def down(self, keep_active=False, deadline=None):
         success = True
         for item in reversed(self.items):
+            config, adapter = item
             if deadline is not None and time.monotonic() >= deadline:
                 success = False
                 break
-            if hasattr(item[1], "deadline"):
-                item[1].deadline = deadline
-            if item[1].has_verb("stop"):
-                success = self.verb(item, "stop") and success
+            if hasattr(adapter, "deadline"):
+                adapter.deadline = deadline
+            if keep_active:
+                verb = "stop" if not config.get("live") else None
+            elif config.get("live"):
+                verb = "remove" if adapter.probe()[0] is not False else None
+            else:
+                verb = "remove" if adapter.has_verb("remove") else "stop"
+            if verb and adapter.has_verb(verb):
+                ok = self.verb(item, verb)
+                row("✓" if ok else "✗", config["name"], getattr(adapter, "note", "") or ("done" if ok else verb + " failed"), config.get("hint") if not ok else None, getattr(adapter, "tail", []) if not ok else ())
+                success = ok and success
+            elif verb:
+                row("✗", config["name"], verb + " unavailable")
+                success = False
         active = self.root / "active"
-        if not keep_active and active.exists() and active.read_text() == str(self.deck):
+        if not keep_active and success and active.exists() and active.read_text() == str(self.deck):
             active.unlink(missing_ok=True)
-        summary = "stopped" if success else "not ready: stop failed"
+        summary = "stopped" if success else "not ready: teardown failed"
         print(summary)
         return success, summary
 
     # Hold a non-inheritable, nonblocking deck lock while a command runs.
-    def execute(self, command, fresh=False, on_start=None):
+    def execute(self, command, on_start=None, sleep_deadline=None):
         scope_result = None
         if command != "resume":
             scope_result = self.scope()
@@ -387,7 +478,26 @@ class Lifecycle:
         with (self.state / "lock").open("a+") as lock:
             os.set_inheritable(lock.fileno(), False)
             try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                if command == "resume":
+                    waiter = (self.state / "resume-waiter").open("a+")
+                    try:
+                        fcntl.flock(waiter, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        waiter.close()
+                        return True, ""
+                    deadline = time.monotonic() + 1200
+                    while True:
+                        try:
+                            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                            break
+                        except BlockingIOError:
+                            if time.monotonic() >= deadline:
+                                waiter.close()
+                                return False, "resume timed out waiting for lock"
+                            time.sleep(0.2)
+                    waiter.close()
+                else:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 if command in ("sleep", "resume"):
                     return True, ""
@@ -412,18 +522,18 @@ class Lifecycle:
                 if on_start:
                     on_start()
                 if command == "reset":
-                    result = self.reset(fresh)
+                    result = self.reset()
                 elif command in ("wake", "resume"):
                     result = self.wake_present()
                     if result[0]:
                         result = self.finish()
-                    if command == "resume" and not result[0]:
+                    if command == "resume" and not result[0] and not result[1].startswith("✗  live steps done:"):
                         failed = [item[0]["name"] for item, value in zip(self.items, self.probes()) if not value[0]]
                         if failed:
                             result = False, f"not ready: {', '.join(failed)}: run just reset"
                             print(result[1])
                 elif command in ("down", "sleep"):
-                    result = self.down(command == "sleep", time.monotonic() + 60 if command == "sleep" else None)
+                    result = self.down(command == "sleep", sleep_deadline or time.monotonic() + 60 if command == "sleep" else None)
                 if command in ("reset", "wake", "down"):
                     presentation = self.deck / "presentation.md"
                     if presentation.exists():
@@ -447,15 +557,40 @@ def notify(deck, message, env=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Prepare and check a deck's demo")
     parser.add_argument("command", choices=["ready", "wake", "reset", "down", "sleep", "resume"])
-    parser.add_argument("--deck", default=".")
+    parser.add_argument("--deck")
     parser.add_argument("--notify", action="store_true")
-    parser.add_argument("--fresh", action="store_true")
     args = parser.parse_args(argv)
-    if args.fresh and args.command != "reset":
-        parser.error("--fresh is only valid with reset")
     try:
-        deck = Path(args.deck)
-        if args.command in ("sleep", "resume"):
+        deck = Path(args.deck or ".")
+        if args.command == "sleep":
+            if args.deck is not None:
+                Lifecycle(deck)
+            success = True
+            deadline = time.monotonic() + 60
+            root = state_root()
+            try:
+                active_deck = (root / "active").read_text()
+            except OSError:
+                active_deck = None
+            markers = list(root.glob("*/deck"))
+            # Give the active deck the first share of the suspend deadline.
+            def active_first(marker):
+                try:
+                    return marker.read_text() != active_deck
+                except OSError:
+                    return True
+            markers.sort(key=active_first)
+            for marker in markers:
+                if time.monotonic() >= deadline:
+                    return 1
+                try:
+                    candidate = Lifecycle(Path(marker.read_text()))
+                    ok, _ = candidate.execute("sleep", sleep_deadline=deadline)
+                    success = ok and success
+                except (OSError, ValueError, tomllib.TOMLDecodeError):
+                    success = False
+            return 0 if success else 1
+        if args.command == "resume":
             active = state_root() / "active"
             if not active.exists():
                 return 0
@@ -465,7 +600,7 @@ def main(argv=None):
                    "reset": "preparing the demo", "down": "stopping the demo",
                    "sleep": "stopping the demo"}.get(args.command, f"{args.command} starting")
         on_start = lambda: notify(lifecycle.manifest["deck"], message, lifecycle.env) if args.notify else None
-        ok, summary = lifecycle.execute(args.command, args.fresh, on_start)
+        ok, summary = lifecycle.execute(args.command, on_start)
         if args.notify and summary:
             notify(lifecycle.manifest["deck"], summary, lifecycle.env)
         return 0 if ok else 1
