@@ -337,13 +337,17 @@ class DockerHost(_Common):
             port = urlsplit(out.strip()).port if code == 0 else None
         except ValueError:
             port = None
-        code, ports, _ = self._call(["docker", "port", f"vcluster.cp.{cluster}"], "probe")
+        # The configured bindings, not docker port: a stopped container publishes nothing,
+        # and the wake must prove a stopped cluster's port before it starts it.
+        code, ports, _ = self._call(["docker", "inspect", "-f", "{{json .HostConfig.PortBindings}}",
+                                     f"vcluster.cp.{cluster}"], "probe")
         published = set()
-        for line in ports.splitlines():
-            try:
-                published.add(int(line.rsplit(":", 1)[1]))
-            except (IndexError, ValueError):
-                continue
+        try:
+            for bindings in (json.loads(ports) if code == 0 else {}).values():
+                for binding in bindings or []:
+                    published.add(int(binding["HostPort"]))
+        except (ValueError, TypeError, AttributeError, KeyError):
+            published = set()
         if port is None or code != 0 or port not in published:
             self.tail = [f"kube server is not {cluster}'s container"]
             self.scope_refused = True

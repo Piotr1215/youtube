@@ -29,7 +29,12 @@ if name == "docker":
         status = next((x.split("=", 1)[1] for x in args if x.startswith("status=")), None)
         print("\\n".join(n for n, s in names.items() if not status or s == status))
     elif args[0] == "port":
-        print(fixture.get("docker_port", "127.0.0.1:6443"))
+        # Like real docker: a stopped container publishes nothing.
+        if fixture.get("containers", {}).get(args[1]) == "running":
+            print(fixture.get("docker_port", "127.0.0.1:6443"))
+    elif args[0] == "inspect" and any("PortBindings" in arg for arg in args):
+        # The configured bindings, which docker keeps while the container is stopped.
+        print(json.dumps(fixture.get("port_bindings", {"8443/tcp": [{"HostIp": "", "HostPort": "6443"}]})))
     elif args[0] == "inspect":
         print("true" if fixture.get("platform", True) else "false")
     elif args[:2] == ["network", "ls"]:
@@ -115,6 +120,14 @@ class KindTests(unittest.TestCase):
         self.assertEqual(host.tail, ["scope: refusing vcluster.cp.other"])
         self.assertEqual(self.calls(), before)
 
+    # A stopped cluster still proves its kube port, so a wake can start it.
+    def test_docker_stopped_cluster_passes_locality_and_starts(self):
+        self.data(containers={"vcluster.cp.alpha": "exited", "vcluster.node.alpha.a": "exited"})
+        host = self.kind(DockerHost, cluster="alpha")
+        self.assertEqual(host.probe(), (False, "containers stopped"))
+        self.assertTrue(host.start())
+        self.assertIn(["docker", "start", "vcluster.cp.alpha", "vcluster.node.alpha.a"], self.calls())
+
     # Treat an unreachable API as unknown even when all containers run.
     def test_docker_api_unavailable_is_unknown(self):
         self.data(containers={"vcluster.cp.alpha": "running", "vcluster.node.alpha.a": "running"}, api_down=True)
@@ -135,7 +148,8 @@ class KindTests(unittest.TestCase):
     # Refuse an unrelated loopback server before any cluster action.
     def test_docker_host_rejects_unpublished_loopback_port(self):
         self.data(containers={"vcluster.cp.alpha": "running"},
-                  kube_server="https://127.0.0.1:9999", docker_port="127.0.0.1:6443")
+                  kube_server="https://127.0.0.1:9999", docker_port="127.0.0.1:6443",
+                  port_bindings={"8443/tcp": [{"HostIp": "", "HostPort": "6443"}]})
         host = self.kind(DockerHost, cluster="alpha")
         status, detail = host.probe()
         self.assertIsNone(status)

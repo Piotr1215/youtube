@@ -758,7 +758,8 @@ class CoreTests(unittest.TestCase):
         binary = self.path / "bin"
         binary.mkdir()
         docker = binary / "docker"
-        docker.write_text('#!/bin/sh\ncase "$1" in ps) echo vcluster.cp.demo;; port) echo 127.0.0.1:6443;; esac\n')
+        docker.write_text('#!/bin/sh\ncase "$1" in ps) echo vcluster.cp.demo;; port) echo 127.0.0.1:6443;; '
+                          'inspect) echo \'{"8443/tcp":[{"HostIp":"","HostPort":"6443"}]}\';; esac\n')
         docker.chmod(0o755)
         kubectl = binary / "kubectl"
         kubectl.write_text('#!/bin/sh\necho https://127.0.0.1:6443\n')

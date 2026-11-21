@@ -20,6 +20,8 @@ if name == "docker":
         print("vcluster.cp.demo")
     elif args[0] == "port":
         print("127.0.0.1:6443")
+    elif args[0] == "inspect" and any("PortBindings" in arg for arg in args):
+        print(json.dumps({"8443/tcp": [{"HostIp": "", "HostPort": "6443"}]}))
     elif args[0] == "inspect":
         print("true")
 elif name == "vcluster" and args[:4] == ["platform", "connect", "management", "--print"]:
