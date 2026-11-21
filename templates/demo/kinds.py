@@ -88,7 +88,8 @@ class _Common:
     def _call(self, argv, verb, default=15, env=None):
         code, out, err = _run(argv, self.env if env is None else env,
                               self._timeout(verb, default), self.deck)
-        self.tail = (err or out or ("command failed" if code else "")).splitlines()[-3:]
+        # Keep output only from a failed call, so a failed row never shows a good call's.
+        self.tail = (err or out or "command failed").splitlines()[-3:] if code else []
         return code, out, err
 
     # Run a supplied probe using the command adapter's outcome when available.

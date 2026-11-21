@@ -125,6 +125,8 @@ class KindTests(unittest.TestCase):
         self.data(containers={"vcluster.cp.alpha": "exited", "vcluster.node.alpha.a": "exited"})
         host = self.kind(DockerHost, cluster="alpha")
         self.assertEqual(host.probe(), (False, "containers stopped"))
+        # A failed row shows no output from the successful docker calls before it.
+        self.assertEqual(host.tail, [])
         self.assertTrue(host.start())
         self.assertIn(["docker", "start", "vcluster.cp.alpha", "vcluster.node.alpha.a"], self.calls())
 
