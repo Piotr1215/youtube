@@ -67,6 +67,35 @@ A part can declare `inputs = ["relative/path"]` and `tools = ["tool-name"]`. Aft
 
 The engine also accepts `templates/demo/demo <command> --deck <deck-directory>`. Run it from the deck directory to omit `--deck`, and add `--notify` for desktop notifications. Available commands are `ready`, `wake`, `reset`, `down`, `sleep` and `resume`. For older decks without a manifest, `just reset` and `just down` run the deck's `reset.sh` and `down.sh`.
 
+## A deck's own Platform
+
+Each deck runs its own vCluster Platform, so decks run in parallel and no deck's clusters show in another's UI or age toward its offline deletion. `platform.sh` makes the container `vcluster platform start` makes, named `vcluster-platform-<deck>` with its own volume, and logs a deck-only CLI config in to it, `~/.vcluster/<deck>.json` by default. A vind cluster registers with the Platform its CLI config is logged in to, so the deck runs every `vcluster` command with `--config` that file. Declare it as `command` components:
+
+```toml
+[[component]]
+name = "platform"
+kind = "command"
+probe = "./lifecycle/platform.sh probe"
+start = "./lifecycle/platform.sh start"
+build = "./lifecycle/platform.sh build"
+stop = "./lifecycle/platform.sh stop"
+start_timeout = 900
+build_timeout = 900
+
+[[component]]
+name = "activation"
+kind = "command"
+probe = "./lifecycle/platform.sh activated"
+hint = "once, online: log in with ./lifecycle/platform.sh login --show and activate the Platform"
+timeout = 0
+```
+
+The deck's `lifecycle/platform.sh` sets `DEMO_DECK` and runs `templates/demo/platform.sh "$@"`; `ai-dev-loop` in youtube-private is the example. A new Platform blocks creating clusters until it is activated once, online, in its UI, and the activation lives in its volume, so the Platform has no remove: `just down` stops it.
+
+## Shared audience hostname
+
+Decks share one public hostname for their audience pages. A Cloudflare named tunnel routes it to 127.0.0.1:8089, where `audience.py` runs as the user service `demo-audience`. Each deck serves its page on its own port and runs `audience.py use <deck> <port>` from its page start and QR slide: from then on the hostname serves that deck, and a connection open to the previous deck closes so the tunnel reconnects to the new one. No page restarts. `audience.py tunnel <token-file>` keeps the named tunnel's connector running as the user service `demo-audience-tunnel`. `audience.py release <deck>` in the page stop hands the hostname to the deck that took it most recently before, and stops the connector once no deck has a route. `audience.py active` prints the deck the hostname serves, so a page probe fails while it serves another deck and the next reset takes it back. `audience.py status` prints the router, the routes and the connector.
+
 ## Suspend hooks
 
 Run `templates/demo/hooks/install.sh` as your normal user to install the system sleep hook, NetworkManager dispatcher and user service. The installer uses sudo for the two system hooks. Use `--dry-run` to inspect the filled files and commands, or `--uninstall` to remove them. Before suspend the hook stops every known demo as your user. After resume the user service wakes it with notifications. A NetworkManager connectivity change to FULL starts the service again.
