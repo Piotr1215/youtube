@@ -22,10 +22,12 @@
 #   stop        stops the container; down keeps it, since a new one needs activating
 #   activated   its license lets clusters be created: a new Platform blocks them until
 #               it is activated once, online, in its UI
-#   login       prints the UI address and copies the admin password to the clipboard;
+#   login       prints the UI login row and copies the admin password to the clipboard;
 #               --show also prints the password
+#   ui PATH     prints a link into the UI, for under a step that changed that page
+#   key         prints a fresh admin access key, for a slide's hidden login line
 #
-#   DEMO_DECK=<deck> ./platform.sh probe|start|build|stop|activated|login [--show]
+#   DEMO_DECK=<deck> ./platform.sh probe|start|build|stop|activated|login [--show]|ui PATH|key
 set -euo pipefail
 
 deck="${DEMO_DECK:?set DEMO_DECK to the deck name}"
@@ -52,6 +54,14 @@ registered() { jq -r '.url // empty' "${registry}/platform.json" 2>/dev/null || 
 # Print the admin password vcluster platform start derives when none is given: an
 # HMAC-SHA256 of $HOME keyed with this machine's id. Every deck's Platform uses it.
 admin_password() { printf '%s' "${HOME}" | openssl dgst -sha256 -hmac "$(cat /etc/machine-id)" -r | cut -d' ' -f1; }
+
+# Print an admin access key from the Platform, the exchange a UI login does.
+# $1: Platform URL
+access_key() {
+	curl -sk -m 10 -X POST "$1/auth/password/login" -H 'Content-Type: application/json' \
+		-d "$(jq -nc --arg p "$(admin_password)" '{username: "admin", password: $p}')" 2>/dev/null |
+		jq -r '.accessKey // empty' 2>/dev/null || true
+}
 
 # Exit 0 when ready, 1 when not, 2 when Docker cannot be asked. After a Wi-Fi change
 # the Platform can answer once and restart, hence three answers.
@@ -97,9 +107,7 @@ up() {
 	url="https://${domain}"
 	if [[ "$(logged_in)" != "${url}" ]] || ! vc platform get current-user >/dev/null 2>&1; then
 		for _ in $(seq 60); do
-			key="$(curl -sk -m 10 -X POST "${url}/auth/password/login" -H 'Content-Type: application/json' \
-				-d "$(jq -nc --arg p "$(admin_password)" '{username: "admin", password: $p}')" 2>/dev/null |
-				jq -r '.accessKey // empty' 2>/dev/null || true)"
+			key="$(access_key "${url}")"
 			[[ -n "${key}" ]] && break
 			sleep 5
 		done
@@ -132,16 +140,38 @@ activated() {
 	return 1
 }
 
-# Print the UI address and the user, and copy the admin password to the clipboard.
+# Print the UI login row, and copy the admin password to the clipboard.
 # $1: --show to also print the password
 login() {
 	local url password
 	url="$(logged_in)"
+	url="${url:-no Platform in ${config}}"
 	password="$(admin_password)"
 	if printf '%s' "${password}" | xclip -selection clipboard >/dev/null 2>&1; then
-		[[ "${1:-}" == --show ]] || password="password in the clipboard"
+		[[ "${1:-}" == --show ]] || { paint cyan '  login            ' plain "${url}" gray '  admin, password in the clipboard'; return; }
+	elif [[ "${1:-}" != --show ]]; then
+		paint cyan '  login            ' plain "${url}" red '  clipboard failed: login --show'
+		return
 	fi
-	echo "  login  ${url:-no Platform in ${config}}  admin  ${password}"
+	# The password on a row of its own keeps both rows within a slide's width.
+	paint cyan '  login            ' plain "${url}" gray '  admin'
+	paint cyan '  password         ' plain "${password}"
+}
+
+# Print a link into the UI under a step's output.
+# $1: UI path, such as projects/default/vclusters/my-cluster
+ui() {
+	local url
+	url="$(logged_in)"
+	printf '\n  \e[35m↗\e[0m  \e[4;36m%s/%s\e[0m\n' "${url%/}" "${1#/}"
+}
+
+# Print a fresh admin access key for the Platform the deck's CLI is logged in to.
+key() {
+	local key
+	key="$(access_key "$(logged_in)")"
+	[[ -n "${key}" ]] || { echo "no access key from $(logged_in)" >&2; return 1; }
+	printf '%s\n' "${key}"
 }
 
 case "${1:-}" in
@@ -151,5 +181,7 @@ case "${1:-}" in
 	stop) stop ;;
 	activated) activated ;;
 	login) login "${2:-}" ;;
-	*) echo "usage: DEMO_DECK=<deck> platform.sh probe|start|build|stop|activated|login [--show]" >&2; exit 1 ;;
+	ui) ui "${2:?usage: platform.sh ui PATH}" ;;
+	key) key ;;
+	*) echo "usage: DEMO_DECK=<deck> platform.sh probe|start|build|stop|activated|login [--show]|ui PATH|key" >&2; exit 1 ;;
 esac
