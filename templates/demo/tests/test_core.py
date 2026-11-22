@@ -742,15 +742,15 @@ class CoreTests(unittest.TestCase):
         self.write_manifest('probe = "true"\ninputs = ["nested/input"]\n')
         self.assertEqual(core.load_manifest(self.deck)["component"][0]["inputs"], ["nested/input"])
 
-    # Warn about another running cluster without a Platform part.
-    def test_reset_warns_of_another_cluster_without_platform_component(self):
+    # Each deck runs its own Platform, so another deck's running cluster is not reported.
+    def test_reset_ignores_another_decks_cluster(self):
         life = self.lifecycle(("a",))
         Fake.states["a"] = True
         result = subprocess.CompletedProcess([], 0, "vcluster.cp.other\n", "")
         with patch.object(core.subprocess, "run", return_value=result):
             success, output = self.invoke(life, "reset")
         self.assertTrue(success[0], output)
-        self.assertIn("another deck's cluster runs", output)
+        self.assertNotIn("another deck", output)
         self.assertEqual(Fake.calls, [])
 
     # The executable accepts all built-in kinds in one manifest.

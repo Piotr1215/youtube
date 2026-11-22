@@ -415,13 +415,6 @@ class Lifecycle:
 
     # Restore prepared parts and undo completed live steps.
     def reset(self):
-        try:
-            result = subprocess.run(["docker", "ps", "--filter", "status=running", "--format", "{{.Names}}"], cwd=self.deck, env=self.env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, check=False)
-            clusters = self.manifest.get("clusters", [])
-            if result.returncode == 0 and any(name.startswith("vcluster.cp.") and name[len("vcluster.cp."):] not in clusters for name in result.stdout.splitlines()):
-                row("↻", "platform", "another deck's cluster runs on it")
-        except (OSError, subprocess.SubprocessError):
-            pass
         ok, summary = self.wake_present(allow_build=True)
         if not ok:
             return ok, summary
