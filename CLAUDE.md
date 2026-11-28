@@ -39,14 +39,7 @@ These rules govern this public repo only. Every deck made here lives here, and n
 - Start with intro slide and end with "That's All Folks!" slide
 - Use blockquotes (>) for important definitions
 - Include resources section with links
-- For demo sessions, use the tmux switchc command:
-  ```
-  ## Demo Session
-  
-  ```bash
-  tmux switchc -t session-name
-  ```
-  ```
+- Run demos in presenterm's own terminal with `+exec +acquire_terminal` (see Replayable Demos). `tmux switchc -t session-name` is only for a free-flowing demo in another app.
 
 ## Diagram Format & Tools
 - PlantUML (.puml files): Use `@startuml/@enduml` tags for sequence diagrams
@@ -63,7 +56,7 @@ These rules govern this public repo only. Every deck made here lives here, and n
 - Keep diagrams simple with clear visual hierarchy and readable labels
 
   Recording Options:
-  - Live demo: Use demo.sh with tmux sessions for interactive presentations
+  - Live demo: demo.sh run from the slide with `+acquire_terminal`; a tmux session only for free-flowing demos
   - VHS recording: tapes in vhs/ render polished GIFs/videos with `vhs <tape>.tape` (the justfile has no `record` recipe)
   - See vhs/ directory for templates (kubectl-demo, nvim-demo, demo-template)
   - Tip: VHS recordings are great for consistent, repeatable demos and thumbnails
@@ -138,10 +131,10 @@ Avoid sandwitching content between two blockquotes. ONly one blockqute per page.
 
 ## Replayable Demos
 
-`tmux-regex-copy/demo.sh` is the reference.
+`semicolon-shortcuts/demo.sh` is the reference.
 
-- A demo replays without the presenter typing: one segment per slide (`./demo.sh teaser`), each step named on a caption card that waits for Space, `q` to quit, `PACE` to scale pauses.
-- Show captions in a floating pane (`tmux new-pane -x -y -X -Y -T`), never the status bar, which viewers barely see.
+- A demo runs inside presenterm's terminal, on the slide of the milestone it proves: `+exec +acquire_terminal +no_background` with its setup on hidden `/// ` lines. `./demo.sh shell <<'EOF'` starts the presenter's own zsh with the slide's commands queued by `print -z`, so each runs with Enter, and Ctrl+D returns to the slide. Opening a window for every demo makes the presenter leave the deck, and Piotr rejected it (28 Nov 2026).
+- A tmux session with caption cards (`tmux-regex-copy/demo.sh`) is only for a free-flowing demo across other apps. Captions then go in a floating pane (`tmux new-pane -x -y -X -Y -T`), never the status bar, which viewers barely see.
 - `tmux send-keys` cannot type into a `display-popup`: the popup drops keys flagged as sent. Run the popup's command in a floating pane and send keys to that pane id.
 - Switch the client back to the slides when the demo ends or fails (`trap finish EXIT`).
 
