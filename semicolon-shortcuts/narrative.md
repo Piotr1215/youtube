@@ -1,129 +1,83 @@
 # Narrative
 
-The story of the video, written before any slide. Each numbered beat is one moment of the story: what the presenter says, in two or three sentences. Each part becomes a chapter. When the slides and this file disagree, this file wins.
+A teammate asks how the terminal pastes text and where to find the fuzzy finder. The answer is a short note with the Alacritty config path, the `Shift+Insert` binding, and the fzf project link. The same note runs through the video. Each demo leaves something visible in it.
 
-The video follows one convenience for terminal power users: getting a value to where we type. It climbs from the mouse, through clipboard tools and fuzzy finders, to the point where they stop helping, and ends with a fuzzy menu that works in every window.
-
-Every step has the same shape: the slide explains the step with a diagram of how it works, a green ✓ for what it fixes and a red ✗ for what it still cannot do; the demo shows it; the ✗ is the problem the next slide answers.
-
-## Flow
-
-Slide, demo, slide, demo. A demo slide shows the command about to run. Ctrl+E opens a new terminal window with a zsh in the dotfiles repo and that command typed at the prompt, up to the first `;;`, so the presenter's own keys start where the trigger does. The presenter shows the step, closes the window with Ctrl+D (bound to close it even with text at the prompt), is back on the slide, talks over it and moves on. Steps in the browser, a chat app or an email are shown by switching to that window and back.
-
-A replayed tmux demo cannot work here: it types with `tmux send-keys`, which writes straight to the pane, while AutoKey watches the keyboard on the X server and never sees those keys, so no `;;` trigger would fire.
-
-## Journey
-
-- Problem the viewer knows: moving a value from where it is to where we are typing (a file path, a URL, an id) still sends us to the mouse or to another window.
-- Why the usual ways fall short: mouse selection takes the hand off the keyboard; a clipboard manager and a copy alias need the value printed or copied first; fzf finds a file but the path still goes through the clipboard; Ctrl-T drops a path at the cursor, but only files and only in the shell; in the middle of a command, or in a chat or an email, we still leave to fetch the value.
-- What the viewer needs to understand: a desktop-wide trigger can open the same kind of fuzzy menu they know from fzf, in any window; each trigger word points at a list; a list is a file, or a program that prints the values right now; the choice is pasted where the cursor is.
-- So what: any value we need lands at the cursor, in any window, without leaving the keyboard or the half-typed command.
-- Now what: it is the fzf idea, stretched over the whole desktop with AutoKey, rofi and a bash script.
-- Then what: make a list for the value copied by hand most often, and give it a trigger word.
-
-## Subject and example
-
-- Subject: getting the value you need to the cursor, in any window, without breaking your flow.
-- Example: a path, a URL and other values, first in a shell command, then in a chat and an email.
+The idea is a searchable list that inserts a value wherever the cursor already is on X11. The examples are a file path and a URL. The setup is worth learning because opening the source app, copying, and returning gets old even when every individual step is easy.
 
 ## Narration
 
-### Copy and paste
+### The note by hand
 
-1. As terminal power users we live on the keyboard. Yet one of the most common moves of the day still sends us to the mouse or another window: a file path, a project URL, a ticket id, a cloud account, today's date. Each lives somewhere other than where we need it.
+1. A teammate wants to reproduce the terminal's paste shortcut. I can show the setting and send the link for the finder, but the information lives in different places and the note is where it all needs to land.
+2. The mouse can copy a path I can see. A shell alias copies the same command output from the keyboard, and clipboard history lets me pick it again after I've copied another value. Those tools help once the value has already reached the screen or the clipboard.
+3. A fuzzy finder gets me to a file I only half remember. Its shell shortcut can put the result straight into the command I'm typing. It can get me to the configuration, but the project link lives in the browser, and the shell shortcut can't help in the note.
 
-2. With no tools at all, the path is on screen, so we reach for the mouse, drag across it, copy, click back and paste. It works in every app, and the hand leaves the keyboard every single time. Demo: `pwd`, then select and paste with the mouse.
+### The missing piece
 
-3. In zsh, a global alias, a single capital C at the end of a command, sends its output to the clipboard while still showing it, so no mouse is needed. It copies only what a command prints, and each copy replaces the last. Demo: `pwd C`.
+4. The useful part of the finder is picking from a list while I'm in the middle of something. On X11, it can start from the keys typed in the focused app, show choices in a desktop menu, and deliver the picked value back to that app.
+5. AutoKey recognises the trigger and calls a script with a list name. The script reads a file or runs a program, sends labels to rofi, and uses the selected row to get the original value. It waits for the original window before clearing the trigger and pasting the value.
+6. A phrase can insert fixed text on its own. A picker needs a list, and the list can be a small file I maintain or a program that gets the current values. A picker with one result can paste it immediately.
 
-4. A clipboard manager keeps every copy, so something copied ten minutes ago is one pick away. It only holds what we copied before. Demo: `date C`, then the history menu (Ctrl+Alt+1) shows the date and the path from the step before.
+### The same note, assembled in place
 
-### Fuzzy finding
+7. I can pick the same configuration inside the command and then inside an editor or chat draft. Both get the value from the same list, so I don't have to carry it between apps. The project link still needs its own list.
+8. I can keep a list of useful project links and give it a word. When the link appears in the same note, the only new pieces are the values and a binding to the picker I already have.
+9. The whole system is a way to bring a value to the cursor. A first useful list is whatever I copied several times this week.
 
-5. Often we do not have the value on screen yet; we only know roughly what it is. fzf turns every file below the folder into a fuzzy menu: a few letters find the path, and it goes to the clipboard. Found and copied, but still pasted by hand. Demo: `fzf | xsel --clipboard`.
+## Demo beats and what stays on screen
 
-### Breaking the flow
+Keep the draft open throughout. It starts as `Paste key: …`, `Config file: …`, `fzf docs: …`. Use the regular zsh in the dotfiles checkout. Run each terminal block as a continuous session in presenterm's terminal. Switch to the existing browser or draft only when the action calls for it.
 
-6. Halfway through a command, the path is needed right at the cursor. fzf's Ctrl-T opens the same menu mid-command and drops the path there. For files below this folder, inside the shell, that is the right answer, and nothing more. Demo: `nvim`, then Ctrl-T.
+### Demo 1. Find the setting and build the note by hand
 
-7. Now the value is not a file: the address of a project page. We leave the command, open the browser, find the page, copy the URL, come back and paste. Every value is a trip away from the command. Demo: `curl -sI`, with the trip to the browser.
+- Start with a job the viewer recognises. Find evidence for the paste setting with `rg -nH -F 'action = "Paste"' "$PWD/.config/alacritty/alacritty.toml"`. Select and copy the file path, then paste it into the draft. The config line shows `Insert` with the `Shift` modifier.
+- Back in the same terminal, run `realpath .config/alacritty/alacritty.toml C`. The same path appears on screen and goes to the clipboard. Copy `Shift+Insert` as the next value in the note, then recover the file path from clipboard history. Open the history menu after the two public copies have replaced its initial contents.
+- Start `bat `, use Ctrl-T and search `alactoml`. The path fills in at the prompt and `bat` shows the config. For the fzf explanation, show how a matching file path comes out as a line. Keep the terminal interaction on the actual config lookup.
+- Need the fzf link. Switch to the project's page, copy its URL manually, and paste it in the draft. The viewer sees the complete note and the switches it took to fill it. Keep it as the reference for the next two blocks.
 
-8. Outside the terminal it gets worse. In a chat or an email there is no shell, no fzf and no Ctrl-T, so every value goes through copy and paste by hand. Live in the apps.
+- ✓ A command, the clipboard and a finder can get the values into the note.
+- ✗ The shell shortcut ends at the prompt, and the browser still holds the link.
 
-### Semicolon shortcuts
+### Design and code before the shortcut demo
 
-9. What we want is the fuzzy menu we already like, in every window, fed by any list we choose, dropping the choice at the cursor. Two semicolons, a word and a space open a menu, and the chosen value lands where the cursor was, mid-command. Demo: `nvim ;;dot`.
+Show the complete trip on one slide. The original app needs to appear at both ends, and the file or executable list should sit apart from the window that renders the menu.
 
-10. The same keys work in the chat and the email, where nothing else did. Live in the apps.
+```text
+Focused X11 app       AutoKey                 Bash picker
+  ;;dot + Space ────▶ match ;;dot ── dot ───▶ read a file or run a list program
+       ▲                                                 │
+       │                                           labels ▼ ▲ row index
+       │                                              rofi menu
+       │                                                 │
+       └── Shift+Insert ◀── X11 clipboard ◀── pick the original value
+```
 
-11. Each word is its own list: notes, cloud account ids, open tasks, the agents running in tmux. A word can also hold fixed text and type it with no menu at all.
+Follow the diagram with real source in this order. Use only the public example files and snippets the viewer needs for the next action.
 
-12. Nobody remembers every word. Two semicolons and a question mark list every trigger with what it does, and run the one we pick. Demo: `;;?`.
+- The AutoKey entry's abbreviation and `immediate` setting, next to the `subprocess.Popen` line that passes `dot` and the trigger length.
+- The Bash list loader and call to `rofi -dmenu`. Show a real `VALUE<TAB>label` row and the mapping from rofi's selected index back to its value.
+- The focus check and backspaces, then the two lines that write the clipboard and send `Shift+Insert`. Show where the old clipboard is restored.
+- A fixed phrase with public sample text, a plain URL list, and the executable dotfiles list. These examples explain the types without opening the personal shortcut inventory.
 
-### Shortcut internals
+### Demo 2. Fill the same field from where the cursor is
 
-13. AutoKey watches the keys on the whole desktop. When it sees two semicolons, a word and a space, it runs a bash script for that word; the script reads the word's list, shows it in rofi, a searchable menu like fzf that opens as its own window, and pastes the choice where the cursor was.
+- Start `bat ` in the same terminal. Type `;;dot` and Space, search `alacritty.toml`, and select the same configuration file from Demo 1. Hold on the completed command before running it so the insertion is visible.
+- Switch to the working draft, leave the cursor after `Config file:`, and pick that file again. Show the same path appearing in the draft without a trip to the terminal to copy it. Leave the `fzf docs:` field empty in this copy of the note.
 
-14. A list is a plain file, one value per line, with a label after the bar to search by. When the values change, the list is a small program instead, and the menu shows what it prints right now.
+- ✓ The same picker fills in the command and the draft on X11.
+- ✗ The project link needs a list of its own.
 
-15. A trigger is a word and one line that runs the picker with its list name. The trigger fires on the space after the word, so a short word never swallows a longer one.
+### Demo 3. Add the list, then finish the note
 
-16. Registering a new list takes two steps: write the list, then point a word at it. Demo: a list of project pages gets the word docs, and the command from the detour takes the URL in two keys.
+- Show the checked-in `lists/docs` row for fzf. Show how `;;docs` points the picker at that list, then register the demo binding from the same terminal. The list and binding are the visible inputs. The registration helper is just what applies them on the recording machine.
+- Return to the pending `fzf docs:` field in the same draft. Type `;;docs` and Space, filter to `fzf`, and select the link. Hold on the completed note. It contains the same values as the manual version.
 
-17. The value is pasted, not typed, so a chat app does not open its command menu on a leading slash and an editor does not add a bracket of its own.
+- ✓ A file of links and a trigger are enough to pick a new value in place.
+- ▶ The first list to make is one for a value that keeps sending you to another app.
 
-### Getting started
+## Recording state
 
-18. On Linux with Xorg you need AutoKey and rofi; the script and example lists are in the presenter's public dotfiles. Start with the one list you reach for every day.
-
-19. Any value lands at the cursor in any window, without leaving the keyboard. It is the fzf idea, spread over the whole desktop, so make a list for the value copied by hand most often.
-
-## Facts checked
-
-- C alias: `.zsh_aliases` line 14, `tee` to the screen and to `xsel --clipboard`, colour codes stripped.
-- AutoKey is X11 only: its README says it will not work correctly under Wayland.
-- fzf with no input lists the files below the current folder; Ctrl-T comes from `source <(fzf --zsh)`.
-- Picker values are pasted with Shift+Insert, and the clipboard is restored a second later (`__value_picker.sh`).
-- rofi runs with its default matching, words in order, so the `;;dot` demo searches `alacritty.toml`; fzf's fuzzy `alactoml` stays on the fzf and Ctrl-T slides.
-- The clipboard manager is parcellite; Ctrl+Alt+1 opens its history.
-- The demo shell unsets the fd-based `FZF_*_COMMAND` variables, so fzf and Ctrl-T use fzf's own walker.
-
-## Slides
-
-Each line: the slide and its demo. Every step slide carries the steps taken so far (`ladder.sh`, later steps hidden), a diagram of how the step works, a ✓ for what it fixes and a ✗ for the problem the next slide answers, with the demo command last.
-
-- Semicolon Shortcuts: title.
-- Copy and Paste: divider.
-- Values Fetched All Day: table of values, where they live, where they are needed.
-- Copying with the Mouse: hand-lane diagram; demo `pwd`.
-- Copying What a Command Prints: tee diagram and the alias; demo `pwd C`.
-- Clipboard History: diagram; demo `date C`, then Ctrl+Alt+1.
-- Fuzzy Finding: divider.
-- Any File as a Menu: flow diagram; demo `fzf | xsel --clipboard`.
-- Breaking the Flow: divider.
-- A Path at the Cursor: Ctrl-T diagram; demo `nvim`.
-- The Mid-Command Detour: loop diagram; demo `curl -sI`.
-- Outside the Terminal: table of windows and tools; live in the apps.
-- Semicolon Shortcuts: divider.
-- Two Semicolons and a Word: flow diagram; demo `nvim ;;dot`.
-- In Every Window: the same table with a `;;` column; live in the apps.
-- A Word for Every List: the trigger list.
-- Every Trigger in One Menu: diagram; demo `;;?`.
-- Shortcut Internals: divider.
-- From Keys to Value: the whole path as a diagram, each piece handing its output to the next.
-- Why These Pieces: piece, job, why this one.
-- A List Is a File: the demo list and what each side of the bar does.
-- A List Can Be a Program: the dotfiles list program and its output.
-- A Word Points at a List: the trigger entry and the line it runs.
-- A New List, Live: the two registration steps; demo `curl -sI ;;docs | head -1`.
-- Pasted, Not Typed: rows.
-- Getting Started: divider.
-- Install: packages, the picker files, the trigger example and where a first list goes.
-- Takeaways, Resources, That's All Folks.
-
-## Demo state
-
-- `;;docs` is the only change the demo makes to the desktop. `demo.toml` declares it as a live step, so `just reset` removes it.
-- The demo shell is zsh with fzf's own key bindings and the C alias and nothing else, so the prompt shows no host, branch or cluster.
-- `register` records what it added in `.registered` (gitignored) and refuses to touch a `docs` list or `;;docs` trigger it did not create; `unregister` removes only what that file names.
-- Before recording: clear the parcellite history, since the Clipboard History demo shows it. `;;?` lists every trigger's description (no values); pick only `;;dot` or `;;date` from it.
+- The reference note and working draft contain only the public file path, shortcut and URL. Use draft text throughout.
+- Clipboard history uses the demo profile with two public entries and a two-entry limit. The live history can pick up whatever the monitored X11 selection already holds at startup. Start the demo profile before seeding both entries and never open the menu before they are present.
+- `;;dot` uses the regular public dotfiles example. The rofi query is `alacritty.toml`; `alactoml` is for fzf. A live `;;?` menu would reveal the personal shortcut inventory.
+- Register `;;docs` through the demo helper. Its live-step cleanup removes the demo's list and binding. Reset restores the presenter's clipboard manager if the demo profile was used.
