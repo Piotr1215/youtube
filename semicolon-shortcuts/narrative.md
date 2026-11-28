@@ -30,9 +30,9 @@ Keep the draft open throughout. It starts as `Paste key: …`, `Config file: …
 
 ### Demo 1. Find the setting and build the note by hand
 
-- Start with a job the viewer recognises. Find evidence for the paste setting with `rg -nH -F 'action = "Paste"' "$PWD/.config/alacritty/alacritty.toml"`. Select and copy the file path, then paste it into the draft. The config line shows `Insert` with the `Shift` modifier.
-- Back in the same terminal, run `realpath .config/alacritty/alacritty.toml C`. The same path appears on screen and goes to the clipboard. Copy `Shift+Insert` as the next value in the note, then recover the file path from clipboard history. Open the history menu after the two public copies have replaced its initial contents.
-- Start `bat `, use Ctrl-T and search `alactoml`. The path fills in at the prompt and `bat` shows the config. For the fzf explanation, show how a matching file path comes out as a line. Keep the terminal interaction on the actual config lookup.
+- Start with a job the viewer recognises. Find the paste setting with `rg -nw Paste .config/alacritty`. Select and copy the file path, then paste it into the draft. The config line shows `Insert` with the `Shift` modifier.
+- Back in the same terminal, run `realpath .config/alacritty/alacritty.toml C`. The absolute path appears on screen and goes to the clipboard. Run `rg -w Paste .config/alacritty/alacritty.toml C` to copy the binding itself, then recover the absolute path from clipboard history. Open the history menu after the two public copies have replaced its initial contents.
+- Run `fzf` so the viewer sees a chosen path come out as a line. Then start `rg -w Paste `, use Ctrl-T and search `alactoml`. The path fills in at the prompt, and `rg` shows the setting again.
 - Need the fzf link. Switch to the project's page, copy its URL manually, and paste it in the draft. The viewer sees the complete note and the switches it took to fill it. Keep it as the reference for the next two blocks.
 
 - ✓ A command, the clipboard and a finder can get the values into the note.
@@ -48,7 +48,7 @@ A fixed phrase with public sample text, a plain URL list, and the executable dot
 
 ### Demo 2. Fill the same field from where the cursor is
 
-- Start `bat ` in the same terminal. Type `;;dot` and Space, search `alacritty.toml`, and select the same configuration file from Demo 1. Hold on the completed command before running it so the insertion is visible.
+- Start `rg -w Paste ` in the same terminal. Type `;;dot` and Space, search `alacritty.toml`, and select the same configuration file from Demo 1. Hold on the completed command before running it so the insertion is visible.
 - Switch to the working draft, leave the cursor after `Config file:`, and pick that file again. Show the same path appearing in the draft without a trip to the terminal to copy it. Leave the `fzf docs:` field empty in this copy of the note.
 
 - ✓ The same picker fills in the command and the draft on X11.
@@ -58,7 +58,7 @@ A fixed phrase with public sample text, a plain URL list, and the executable dot
 
 - Use `just plantuml build-shortcut` to show how the list, AutoKey entry and existing picker fit together before registering the binding.
 - Show the checked-in `lists/docs` row for fzf. Show how `;;docs` points the picker at that list, then register the demo binding from the same terminal. The list and binding are the visible inputs. The registration helper is just what applies them on the recording machine.
-- Return to the pending `fzf docs:` field in the same draft. Type `;;docs` and Space, filter to `fzf`, and select the link. Hold on the completed note. It contains the same values as the manual version.
+- Pick the link at the `curl -sI ` prompt. Then return to the pending `fzf docs:` field in the same draft and use the same `;;docs` trigger there. Hold on the completed note. It contains the same values as the manual version.
 
 - ✓ A file of links and a trigger are enough to pick a new value in place.
 - ▶ The first list to make is one for a value that keeps sending you to another app.
