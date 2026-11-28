@@ -34,9 +34,9 @@ Keep the draft open with `Paste key: Shift+Insert`, `Config file: …`, and `fzf
 
 ### Demo 1. Find the setting and build the note by hand
 
-- Select and copy the fzf URL in the browser. In the terminal, run `rg -nw Paste .config/alacritty`, then select and copy its output the same way. Put the values in the draft.
+- Select and copy the fzf URL in the browser. In the terminal, run `realpath .config/alacritty/alacritty.toml`, then select and copy the path the same way. Put the values in the draft.
 - Show `realpath .config/alacritty/alacritty.toml C` once. The absolute path reaches the clipboard without a mouse selection.
-- Copy the public fzf URL from the browser as the second value. Back in the draft, recover the earlier path from history. Open the menu only after both public values have replaced the initial contents.
+- With `curl -sI ` at the prompt, use history to recover the earlier fzf URL after the clipboard has moved on to the path. Open the menu only after both public values have replaced the initial contents.
 - Run `fzf` once to find a path that is missing from the screen. Start `rg -w Paste `, then use Ctrl-T and `alactoml` to put the result into the command. Return to the draft and point out its remaining gap. The same key there cannot open the shell's file picker.
 
 - ✓ A command, the clipboard and a finder can get the values into the note.
