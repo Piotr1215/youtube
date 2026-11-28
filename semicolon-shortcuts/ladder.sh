@@ -7,7 +7,7 @@
 set -euo pipefail
 
 current="${1:?usage: ladder.sh <step number>}"
-steps=("mouse" "C alias" "clipboard history" "fzf" "Ctrl-T" ";; shortcuts")
+steps=("select" "copy output" "recall" "find a file" "insert a path" "insert anywhere")
 
 line=""
 for ((i = 0; i < current; i++)); do

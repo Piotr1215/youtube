@@ -1,22 +1,31 @@
-# The demo shell: fzf's own key bindings and file walker, the presenter's C
-# alias read from the dotfiles so it cannot drift, and nothing else, so the
-# prompt shows no host, branch or cluster.
-PROMPT='%F{cyan}%1~%f %F{yellow}›%f '
+# The presenter's regular shell, plus the slide's commands queued at the
+# prompt. Outside tmux, TMUX is set but empty while the presenter's config
+# loads, which keeps its tmuxinator autostart out of the demo.
+ZDOTDIR="${HOME}"
+if [[ -z ${TMUX+X} ]]; then
+	TMUX=''
+	[[ -f "${HOME}/.zshenv" ]] && source "${HOME}/.zshenv"
+	source "${HOME}/.zshrc"
+	unset TMUX
+else
+	[[ -f "${HOME}/.zshenv" ]] && source "${HOME}/.zshenv"
+	source "${HOME}/.zshrc"
+fi
 
-# Unset, not empty: an empty FZF_CTRL_T_COMMAND turns Ctrl-T off.
-unset FZF_DEFAULT_COMMAND FZF_CTRL_T_COMMAND FZF_ALT_C_COMMAND
-source <(fzf --zsh)
-eval "$(grep -m1 '^alias -g C=' "${HOME}/dev/dotfiles/.zsh_aliases")"
-
-# Ctrl+D closes the demo window even with text left at the prompt.
+# Ctrl+D ends the demo even with text left at the prompt.
 demo-close() { exit 0; }
 zle -N demo-close
 bindkey -M emacs '^D' demo-close
 bindkey -M viins '^D' demo-close
 bindkey -M vicmd '^D' demo-close
 
-# The slide's command, typed at the first prompt and waiting for the presenter.
+# The slide's commands, one per prompt: the buffer stack hands out the last one
+# pushed first, so they go on in reverse.
 if [[ -n ${DEMO_PRELOAD-} ]]; then
-	print -z -- "${DEMO_PRELOAD}"
+	demo_lines=("${(@f)DEMO_PRELOAD}")
+	for ((demo_i = ${#demo_lines}; demo_i > 0; demo_i--)); do
+		print -z -- "${demo_lines[demo_i]}"
+	done
+	unset demo_lines demo_i
 fi
 unset DEMO_PRELOAD

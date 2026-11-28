@@ -1,10 +1,18 @@
 deck = "semicolon-shortcuts"
 
-# The only change the deck makes to the desktop: "A New List, Live" registers
-# ;;docs. just reset removes it, so the deck is ready to record again.
+# The changes the deck makes to the desktop. "A New List, Live" registers
+# ;;docs, and the clipboard demos swap in an empty clipboard history. just
+# reset takes both back, so the deck is ready to record again.
 [[component]]
 name = "docs trigger"
 kind = "command"
 live = true
 probe = "./demo.sh registered"
 remove = "./demo.sh unregister"
+
+[[component]]
+name = "clip history"
+kind = "command"
+live = true
+probe = "./demo.sh clip-swapped"
+remove = "./demo.sh clip-own"

@@ -16,3 +16,4 @@ __pycache__/
 # Written by reset.sh, read by the Demo Reset slide
 ai-dev-loop/.reset-done
 semicolon-shortcuts/.registered
+semicolon-shortcuts/.clipboard/
