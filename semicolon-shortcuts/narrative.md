@@ -40,24 +40,11 @@ Keep the draft open throughout. It starts as `Paste key: …`, `Config file: …
 
 ### Design and code before the shortcut demo
 
-Show the complete trip on one slide. The original app needs to appear at both ends, and the file or executable list should sit apart from the window that renders the menu.
+Show the full sequence with `just plantuml use-shortcut`. The first and last messages go through the same app. Bash reads a value set and sends labels to rofi, which returns the selected row.
 
-```text
-Focused X11 app       AutoKey                 Bash picker
-  ;;dot + Space ────▶ match ;;dot ── dot ───▶ read a file or run a list program
-       ▲                                                 │
-       │                                           labels ▼ ▲ row index
-       │                                              rofi menu
-       │                                                 │
-       └── Shift+Insert ◀── X11 clipboard ◀── pick the original value
-```
+Keep source to the interfaces the viewer needs. Show the AutoKey abbreviation and the `subprocess.Popen` line that passes the set name and trigger length. Show one real `VALUE<TAB>label` row and the `rofi -dmenu` call. Explain the focus check, trigger erasure and clipboard restore while pointing at the return path.
 
-Follow the diagram with real source in this order. Use only the public example files and snippets the viewer needs for the next action.
-
-- The AutoKey entry's abbreviation and `immediate` setting, next to the `subprocess.Popen` line that passes `dot` and the trigger length.
-- The Bash list loader and call to `rofi -dmenu`. Show a real `VALUE<TAB>label` row and the mapping from rofi's selected index back to its value.
-- The focus check and backspaces, then the two lines that write the clipboard and send `Shift+Insert`. Show where the old clipboard is restored.
-- A fixed phrase with public sample text, a plain URL list, and the executable dotfiles list. These examples explain the types without opening the personal shortcut inventory.
+A fixed phrase with public sample text, a plain URL list, and the executable dotfiles list show the types without opening the personal shortcut inventory.
 
 ### Demo 2. Fill the same field from where the cursor is
 
@@ -69,6 +56,7 @@ Follow the diagram with real source in this order. Use only the public example f
 
 ### Demo 3. Add the list, then finish the note
 
+- Use `just plantuml build-shortcut` to show how the list, AutoKey entry and existing picker fit together before registering the binding.
 - Show the checked-in `lists/docs` row for fzf. Show how `;;docs` points the picker at that list, then register the demo binding from the same terminal. The list and binding are the visible inputs. The registration helper is just what applies them on the recording machine.
 - Return to the pending `fzf docs:` field in the same draft. Type `;;docs` and Space, filter to `fzf`, and select the link. Hold on the completed note. It contains the same values as the manual version.
 

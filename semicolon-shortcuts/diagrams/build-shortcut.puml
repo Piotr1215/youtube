@@ -1,0 +1,16 @@
+@startuml
+hide footbox
+actor Author
+participant "Value set" as List
+participant AutoKey
+participant "Bash picker" as Picker
+
+Author -> List: create docs
+note right of List: URL | label
+Author -> AutoKey: register ;;docs
+note right of AutoKey: abbreviation + Python
+Author -> AutoKey: type ;;docs + Space
+AutoKey -> Picker: docs, 6
+Picker -> List: read docs
+Picker --> Author: chosen URL lands in the draft
+@enduml

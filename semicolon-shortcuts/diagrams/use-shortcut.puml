@@ -1,0 +1,17 @@
+@startuml
+hide footbox
+participant "X11 app" as App
+participant AutoKey
+participant Bash as Picker
+participant List
+participant rofi
+
+App -> AutoKey: ;;dot Space
+AutoKey -> Picker: dot, 5
+Picker -> List: read/run
+List --> Picker: rows
+Picker -> rofi: label lines
+rofi --> Picker: row index
+Picker -> App: erase ;;dot
+Picker -> App: Shift+Insert
+@enduml

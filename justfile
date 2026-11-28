@@ -30,9 +30,7 @@ plantuml diagram:
   #!/usr/bin/env bash  
   export diagram="{{diagram}}"
   if command -v plantuml &>/dev/null; then
-          java -jar /usr/local/bin/plantuml.jar {{diagrams}}/"$diagram".puml -utxt
-          mv {{diagrams}}/"$diagram".utxt /tmp/"$diagram".utxt
-          cat /tmp/"$diagram".utxt
+          plantuml -utxt -pipe < "{{diagrams}}/$diagram.puml"
   else
           echo " "
   fi
