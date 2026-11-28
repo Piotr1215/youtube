@@ -2,15 +2,19 @@
 
 A teammate asks how the terminal pastes text and where to find the fuzzy finder. The answer is a short note with the Alacritty config path, the `Shift+Insert` binding, and the fzf project link. The same note runs through the video. Each demo leaves something visible in it.
 
-The idea is a searchable list that inserts a value wherever the cursor already is on X11. The examples are a file path and a URL. The setup is worth learning because opening the source app, copying, and returning gets old even when every individual step is easy.
+The story starts with a familiar act, copying something already on screen. It moves to finding a missing value, then getting it directly into the draft. Each step gets one explanation and leaves the next problem visible.
+
+## Screen and voice
+
+The screen shows what to look at while the narration explains why it matters. Start on the draft with two empty fields. Hold on the real command output, the chosen path at the cursor, and the completed draft when each appears. Use a title and diagram for each sequence. Give each new milestone a short gain and remaining limit when that limit motivates the next slide.
 
 ## Narration
 
 ### The note by hand
 
-1. A teammate wants to reproduce the terminal's paste shortcut. I can show the setting and send the link for the finder, but the information lives in different places and the note is where it all needs to land.
-2. The mouse can copy a path I can see. A shell alias copies the same command output from the keyboard, and clipboard history lets me pick it again after I've copied another value. Those tools help once the value has already reached the screen or the clipboard.
-3. A fuzzy finder gets me to a file I only half remember. Its shell shortcut can put the result straight into the command I'm typing. It can get me to the configuration, but the project link lives in the browser, and the shell shortcut can't help in the note.
+1. I can select a URL in the browser or a line of command output and copy it with the mouse. That gets a visible value into the teammate's note.
+2. For command output, a shell suffix skips the mouse. If another copy replaces the file path, clipboard history brings it back.
+3. The clipboard can only give me values I have already copied. A fuzzy finder can find an unseen path, and its shell binding drops that path into the command I'm typing. The draft still has no shell binding.
 
 ### The missing piece
 
@@ -26,17 +30,17 @@ The idea is a searchable list that inserts a value wherever the cursor already i
 
 ## Demo beats and what stays on screen
 
-Keep the draft open throughout. It starts as `Paste key: …`, `Config file: …`, `fzf docs: …`. Use the regular zsh in the dotfiles checkout. Run each terminal block as a continuous session in presenterm's terminal. Switch to the existing browser or draft only when the action calls for it.
+Keep the draft open with `Paste key: Shift+Insert`, `Config file: …`, and `fzf docs: …`. Run the terminal demos in presenterm's terminal. Each slide hands off to the next problem.
 
 ### Demo 1. Find the setting and build the note by hand
 
-- Start with a job the viewer recognises. Find the paste setting with `rg -nw Paste .config/alacritty`. Select and copy the file path, then paste it into the draft. The config line shows `Insert` with the `Shift` modifier.
-- Back in the same terminal, run `realpath .config/alacritty/alacritty.toml C`. The absolute path appears on screen and goes to the clipboard. Run `rg -w Paste .config/alacritty/alacritty.toml C` to copy the binding itself, then recover the absolute path from clipboard history. Open the history menu after the two public copies have replaced its initial contents.
-- Run `fzf` so the viewer sees a chosen path come out as a line. Then start `rg -w Paste `, use Ctrl-T and search `alactoml`. The path fills in at the prompt, and `rg` shows the setting again.
-- Need the fzf link. Switch to the project's page, copy its URL manually, and paste it in the draft. The viewer sees the complete note and the switches it took to fill it. Keep it as the reference for the next two blocks.
+- Select and copy the fzf URL in the browser. In the terminal, run `rg -nw Paste .config/alacritty`, then select and copy its output the same way. Put the values in the draft.
+- Show `realpath .config/alacritty/alacritty.toml C` once. The absolute path reaches the clipboard without a mouse selection.
+- Copy the public fzf URL from the browser as the second value. Back in the draft, recover the earlier path from history. Open the menu only after both public values have replaced the initial contents.
+- Run `fzf` once to find a path that is missing from the screen. Start `rg -w Paste `, then use Ctrl-T and `alactoml` to put the result into the command. Return to the draft and point out its remaining gap. The same key there cannot open the shell's file picker.
 
 - ✓ A command, the clipboard and a finder can get the values into the note.
-- ✗ The shell shortcut ends at the prompt, and the browser still holds the link.
+- ✗ The shell picker ends at the prompt. In the draft, the values still come from another app.
 
 ### Design and code before the shortcut demo
 
