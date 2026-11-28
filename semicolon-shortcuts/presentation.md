@@ -1,6 +1,6 @@
 # Semicolon Shortcuts
 
-> Any value at the cursor, in any window, without leaving the keyboard
+> The value at the cursor, in any X11 app, without leaving the keyboard
 
 <!-- new_lines: 3 -->
 
@@ -20,51 +20,99 @@ echo "Semicolon Shortcuts" | figlet -f small -w 90
 
 <!-- end_slide -->
 
+## Values Fetched All Day
+
+> A path, a link or an id lives in one place and is needed in another.
+
+```bash +exec_replace
+printf '  \e[90m%s\e[0m\n\n' 'value               lives in             needed in'
+printf '  \e[36m%s\e[0m%s\e[33m%s\e[0m\n' 'a file path         ' 'the file tree        ' 'a command, a chat'
+printf '  \e[36m%s\e[0m%s\e[33m%s\e[0m\n' 'a project URL       ' 'the browser          ' 'curl, an issue, an email'
+printf '  \e[36m%s\e[0m%s\e[33m%s\e[0m\n' 'a ticket id         ' 'the tracker          ' 'a commit message'
+printf '  \e[36m%s\e[0m%s\e[33m%s\e[0m\n' "today's date        " 'the clock            ' 'a note, a file name'
+echo
+printf '  \e[1;33m%s\e[0m\n' 'Each one has to travel from where it lives to the cursor.'
+```
+
+<!-- end_slide -->
+
 ## Copying with the Mouse
 
-> The path is right there on screen.
+> The path is on screen, so the hand goes to the mouse.
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-fd alacritty
-/// EOF
+```bash +exec_replace
+./ladder.sh 1
 ```
 
 ```bash +exec_replace
-printf '\e[31m%s\e[0m\n' '✗ The hand leaves the keyboard every time.'
+{
+	printf '  %s\n' 'keys    pwd ⏎ ─▶ /home/decoder/dev/dotfiles'
+	printf '  %s\n' '                   │'
+	printf '  %s\n' 'mouse              └─▶ drag over it ─▶ copy ─▶ click the target'
+	printf '  %s\n' '                                                            │'
+	printf '  %s\n' 'keys                                         paste ◀────────┘'
+} | sed -E 's/^(  )(keys|mouse)/\1\x1b[90m\2\x1b[0m/; s/(pwd ⏎|paste)/\x1b[36m\1\x1b[0m/'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ Works in every app.'
+printf '  \e[31m%s\e[0m\n' '✗ The hand leaves the keyboard for every value.'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
+pwd
+/// EOF
 ```
 
 <!-- end_slide -->
 
-## First Look
+## Copying What a Command Prints
 
-> Two semicolons and a word, and the path lands at the cursor.
+> A capital C at the end of a command copies what it prints.
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-nvim ;;dot
+```bash +exec_replace
+./ladder.sh 2
+```
+
+```bash +exec_replace
+printf '  \e[90m%s\e[0m\n' "alias -g C='| tee >(sed … | perl … | xsel --clipboard)'"
+printf '  \e[90m%s\e[0m\n\n' '-g: a global alias, expanded anywhere in the line'
+printf '  \e[36m%s\e[0m%s\n' 'pwd C' ' ─▶ pwd | tee ─┬─▶ screen'
+printf '  %s\n' '                    └─▶ drop colour codes ─▶ drop the last newline ─▶ clipboard'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ Copies from the keyboard, no mouse.'
+printf '  \e[31m%s\e[0m\n' '✗ Only what a command prints, and each copy replaces the last.'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
+pwd C
 /// EOF
 ```
 
 <!-- end_slide -->
 
-## Copying from the Keyboard
+## Clipboard History
 
-> Clipboard history keeps every copy, and C copies what a command prints.
+> A clipboard manager keeps every copy, so an older one is one pick away.
 
 ```bash +exec_replace
-sed -n 14p "$HOME/dev/dotfiles/.zsh_aliases" | sed 's/ | /\n    | /g' |
-	bat -l bash --style=plain --color=always --decorations=always
+./ladder.sh 3
 ```
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-fd alacritty C
+```bash +exec_replace
+printf '  %s\n' 'copy ─▶ clipboard ─▶ paste'
+printf '  %s\n' '            │'
+printf '  %s\e[36m%s\e[0m%s\n' '            └─▶ ' 'history' ' (parcellite): every copy, newest first'
+printf '  %s\e[36m%s\e[0m%s\n' '                   ' 'Ctrl+Alt+1' ' ─▶ pick ─▶ back on the clipboard'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ An earlier copy comes back without copying it again.'
+printf '  \e[31m%s\e[0m\n' '✗ It only holds what was copied before.'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
+date C
 /// EOF
-```
-
-```bash +exec_replace
-printf '\e[31m%s\e[0m\n' '✗ The value has to be on screen first.'
 ```
 
 <!-- end_slide -->
@@ -79,41 +127,35 @@ printf '\e[31m%s\e[0m\n' '✗ The value has to be on screen first.'
 
 <!-- end_slide -->
 
-## Any List as a Menu
+## Any File as a Menu
 
-> A few letters of a path, and fzf finds it.
+> fzf turns a list of lines into a menu that narrows with every letter.
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-fd --type f | fzf | xsel --clipboard
-/// EOF
+```bash +exec_replace
+./ladder.sh 4
 ```
 
 ```bash +exec_replace
-printf '\e[31m%s\e[0m\n' '✗ Found, copied, then pasted by hand.'
+printf '  \e[90m%s\e[0m\n' 'lines in              fzf                   one line out'
+printf '  %s\e[1;36m%s\e[0m%s\n' 'every file below  ─▶  ' '> alactoml' '        ─▶  .config/alacritty/alacritty.toml'
+printf '  %s\n' 'this folder           letters in order,             │'
+printf '  %s\n' '(or any input)        gaps allowed                  └─▶ xsel ─▶ clipboard'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ A few letters find a path that was never on screen.'
+printf '  \e[31m%s\e[0m\n' '✗ The path is copied. It still needs a paste.'
 ```
 
-<!-- end_slide -->
-
-## A Path at the Cursor
-
-> Ctrl-T opens the same menu mid-command and drops the path at the cursor.
-
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-bindkey '^T'
+```bash +exec
+/// ./demo.sh window <<'EOF'
+fzf | xsel --clipboard
 /// EOF
-```
-
-```bash +exec_replace
-printf '\e[31m%s\e[0m\n' '✗ Only files below this folder, and only in the shell.'
 ```
 
 <!-- end_slide -->
 
 ## Breaking the Flow
 
-> What happens when the value lives somewhere else?
+> What happens halfway through a command?
 
 ```bash +exec_replace
 ./journey.sh 3
@@ -121,45 +163,75 @@ printf '\e[31m%s\e[0m\n' '✗ Only files below this folder, and only in the shel
 
 <!-- end_slide -->
 
-## The Mid-Command Detour
+## A Path at the Cursor
 
-> Halfway through a command, the value lives in another app.
+> Ctrl-T opens the same menu mid-command and puts the path at the cursor.
 
 ```bash +exec_replace
-printf '  \e[36m%s\e[90m%s\e[33m%s\e[90m%s\e[33m%s\e[90m%s\e[33m%s\e[0m\n' 'curl -sI ▌' ' ──▶ ' 'browser' ' ──▶ ' 'find the page' ' ──▶ ' 'copy the URL'
-printf '  \e[90m%s\e[0m\n' '  ▲                                               │'
-printf '  \e[90m%s\e[0m\n' '  └──────────── back, paste, carry on ────────────┘'
+./ladder.sh 5
 ```
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-curl -sI
+```bash +exec_replace
+printf '  \e[36m%s\e[0m\n' 'nvim ▌'
+printf '  %s\e[90m%s\e[0m\n' '  │ ' 'Ctrl-T'
+printf '  %s\n' '  ▼'
+printf '  %s\e[1;36m%s\e[0m\n' 'fzf over files and folders below here ─▶ ' '> alactoml'
+printf '  %s\e[90m%s\e[0m\n' '  │ ' 'Enter'
+printf '  %s\n' '  ▼'
+printf '  \e[36m%s\e[0m\n' 'nvim .config/alacritty/alacritty.toml'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ No clipboard and no paste; the command carries on.'
+printf '  \e[31m%s\e[0m\n' '✗ Paths from this folder; URLs and ids are still elsewhere.'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
+nvim
 /// EOF
 ```
 
+<!-- end_slide -->
+
+## The Mid-Command Detour
+
+> When the value is a link, the command waits while the hand fetches it.
+
 ```bash +exec_replace
-printf '\e[31m%s\e[0m\n' '✗ Every value is a trip away from the command.'
+printf '  \e[36m%s\e[0m%s\n' 'curl -sI ▌' ' ─▶ browser ─▶ find the fzf page ─▶ copy the URL'
+printf '  %s\n' '   ▲                                                    │'
+printf '  %s\n' '   └────────────── back, paste, carry on ───────────────┘'
+echo
+printf '  \e[31m%s\e[0m\n' '✗ Every value that is not a file is a trip away from the command.'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
+curl -sI
+/// EOF
 ```
 
 <!-- end_slide -->
 
 ## Outside the Terminal
 
-> A chat box or an email has no shell to help.
+> A chat box or an email has no shell, so most of these stop at the terminal.
 
 ```bash +exec_replace
-printf '  \e[90m%s\e[0m\n' 'window      shell   fzf     Ctrl-T'
-printf '  \e[36m%s\e[32m%s\e[32m%s\e[32m%s\e[0m\n' 'terminal    ' '✓       ' '✓       ' '✓'
-printf '  \e[36m%s\e[31m%s\e[31m%s\e[31m%s\e[0m\n' 'chat app    ' '✗       ' '✗       ' '✗'
-printf '  \e[36m%s\e[31m%s\e[31m%s\e[31m%s\e[0m\n\n' 'email       ' '✗       ' '✗       ' '✗'
-printf '\e[31m%s\e[0m\n' '✗ Every value goes through copy and paste by hand.'
+{
+	printf '  %s\n\n' 'window      mouse   C alias   history   fzf   Ctrl-T'
+	printf '  %s\n' 'terminal      ✓        ✓         ✓       ✓       ✓'
+	printf '  %s\n' 'chat app      ✓        ✗         ✓       ✗       ✗'
+	printf '  %s\n' 'email         ✓        ✗         ✓       ✗       ✗'
+} | sed -E '1s/.*/\x1b[90m&\x1b[0m/; s/^(  )(terminal|chat app|email)/\1\x1b[36m\2\x1b[0m/; s/✓/\x1b[32m✓\x1b[0m/g; s/✗/\x1b[31m✗\x1b[0m/g'
+echo
+printf '  \e[31m%s\e[0m\n' '✗ Outside the shell, every value goes back to copy and paste.'
 ```
 
 <!-- end_slide -->
 
 ## Semicolon Shortcuts
 
-> What if the fuzzy menu worked in every window?
+> What if a menu like fzf worked in every window?
 
 ```bash +exec_replace
 ./journey.sh 4
@@ -167,14 +239,47 @@ printf '\e[31m%s\e[0m\n' '✗ Every value goes through copy and paste by hand.'
 
 <!-- end_slide -->
 
-## A Menu in Every Window
+## Two Semicolons and a Word
 
-> Two semicolons, a word and a space open a menu, and the choice lands at the cursor.
+> Two semicolons, a word and a space open a menu, and the choice is pasted at the cursor.
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
-bat ;;dot
+```bash +exec_replace
+./ladder.sh 6
+```
+
+```bash +exec_replace
+printf '  \e[36m%s\e[0m\n' 'nvim ;;dot␣'
+printf '  %s\e[90m%s\e[0m\n' '  │ ' 'typed like any other text'
+printf '  %s\n' '  ▼'
+printf '  %s\e[1;36m%s\e[0m\n' 'a menu over the window ─▶ ' '> alacritty.toml'
+printf '  %s\e[90m%s\e[0m\n' '  │ ' 'Enter'
+printf '  %s\n' '  ▼'
+printf '  \e[36m%s\e[0m\n' 'nvim /home/decoder/dev/dotfiles/.config/alacritty/alacritty.toml'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ Mid-command, no clipboard trip, in any X11 app.'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
+nvim ;;dot
 /// EOF
+```
+
+<!-- end_slide -->
+
+## In Every Window
+
+> The same menu works in the chat and the email.
+
+```bash +exec_replace
+{
+	printf '  %s\n\n' 'window      mouse   C alias   history   fzf   Ctrl-T   ;;'
+	printf '  %s\n' 'terminal      ✓        ✓         ✓       ✓       ✓     ✓'
+	printf '  %s\n' 'chat app      ✓        ✗         ✓       ✗       ✗     ✓'
+	printf '  %s\n' 'email         ✓        ✗         ✓       ✗       ✗     ✓'
+} | sed -E '1s/.*/\x1b[90m&\x1b[0m/; s/^(  )(terminal|chat app|email)/\1\x1b[36m\2\x1b[0m/; s/✓/\x1b[32m✓\x1b[0m/g; s/✗/\x1b[31m✗\x1b[0m/g'
+echo
+printf '  \e[32m%s\e[0m\n' '✓ A link never copied lands in the chat and the email too.'
 ```
 
 <!-- end_slide -->
@@ -195,8 +300,12 @@ bat ;;dot
 
 > Two semicolons and a question mark list every trigger and run the chosen one.
 
-```bash +exec +acquire_terminal
-/// ./demo.sh shell <<'EOF'
+```bash +exec_replace
+printf '  \e[1;33m%s\e[0m%s\n' ';;?␣' ' ─▶ every trigger, with what it does ─▶ pick ─▶ it runs'
+```
+
+```bash +exec
+/// ./demo.sh window <<'EOF'
 ;;?
 /// EOF
 ```
@@ -215,49 +324,66 @@ bat ;;dot
 
 ## From Keys to Value
 
-> One bash script sits between the keys and the menu.
+> AutoKey hears the word, a bash script finds the list, rofi asks, and the script pastes.
 
 ```bash +exec_replace
-row() { printf '  \e[90m%s\e[1;36m%s\e[90m%s\e[0m %s\n' "$1" "$2" "$3" "$4"; }
-printf '  \e[1;33m%s\e[0m\n' ';;dot␣'
-printf '  \e[90m%s\e[0m\n' '  │'
-printf '  \e[90m%s\e[0m\n' '  ▼'
-row '┌─ ' 'AutoKey'      ' ───────────' 'sees the keys in every window'
-printf '  \e[90m%s\e[0m\n' '│'
-row '├─ ' 'value picker' ' ──────'      'a bash script: one word, one list'
-printf '  \e[90m%s\e[0m\n' '│'
-row '├─ ' 'the list'     ' ──────────'  'a file, or a program that prints values'
-printf '  \e[90m%s\e[0m\n' '│'
-row '├─ ' 'rofi'         ' ──────────────' 'a fuzzy menu over the current window'
-printf '  \e[90m%s\e[0m\n' '│'
-row '└─ ' 'paste'        ' ─────────────'  'the choice lands at the cursor'
+printf '  \e[1;33m%s\e[0m\e[90m%s\e[0m\n' ';;dot␣' '  typed in any window'
+printf '  %s\n' '   │'
+printf '  %s\n' '   ▼'
+printf '  \e[1;36m%s\e[0m%s\n' 'AutoKey' ' ──────── watches every key on the X server; on ;;dot␣ it runs'
+printf '  %s\e[36m%s\e[0m\n' '   │             ' '__value_picker.sh dot'
+printf '  %s\n' '   ▼'
+printf '  \e[1;36m%s\e[0m%s\n' 'value picker' ' ─── bash: reads the list named dot in ~/.config/value-sets/'
+printf '  %s\n' '   │             a file, or a program that prints the lines'
+printf '  %s\n' '   ▼'
+printf '  \e[1;36m%s\e[0m%s\n' 'rofi' ' ─────────── a searchable menu over the window, like fzf'
+printf '  %s\n' '   │             returns the chosen line'
+printf '  %s\n' '   ▼'
+printf '  \e[1;36m%s\e[0m%s\n' 'value picker' ' ─── erases ;;dot, pastes the value, puts the clipboard back'
+```
+
+<!-- end_slide -->
+
+## Why These Pieces
+
+> Each piece does the one job the others cannot.
+
+```bash +exec_replace
+printf '  \e[90m%s\e[0m\n\n' 'piece        job                      why this one'
+printf '  \e[1;36m%s\e[0m%s\e[33m%s\e[0m\n' 'AutoKey      ' 'hears ;;word             ' 'sees keys typed in every X11 app'
+printf '  \e[1;36m%s\e[0m%s\e[33m%s\e[0m\n' 'rofi         ' 'shows the menu           ' 'fzf needs a terminal; rofi is a window'
+printf '  \e[1;36m%s\e[0m%s\e[33m%s\e[0m\n' 'bash         ' 'finds the list, pastes   ' 'a list is a plain file or a program'
 ```
 
 <!-- end_slide -->
 
 ## A List Is a File
 
-> One value per line, and a label after the bar to search by.
+> One value per line; the text after the bar is only there to search by.
 
 ```file
 path: lists/docs
 language: text
 ```
 
+```bash +exec_replace
+printf '\e[90m%s\e[0m\n' 'saved as ~/.config/value-sets/docs, opened by ;;docs'
+```
+
 <!-- end_slide -->
 
 ## A List Can Be a Program
 
-> When the values change, a program prints them fresh every time.
+> When the values change, a program prints them fresh each time the menu opens.
 
 ```bash +exec_replace
 sed -n '/^root=/,/LC_ALL=C sort/p' "$HOME/.config/value-sets/dot" |
 	awk 'length > 84 { l = substr($0, 1, 60); sub(/ [^ ]*$/, "", l); print l " … " $NF; next } 1' |
 	bat -l bash --style=plain --color=always --decorations=always
-```
-
-```bash +exec
-~/.config/value-sets/dot | head -3
+echo
+"$HOME/.config/value-sets/dot" | head -3 | sed -E 's/\t/  \x1b[90m⇥\x1b[0m  /'
+echo
+printf '\e[90m%s\e[0m\n' 'value ⇥ label: the menu shows the label and pastes the value'
 ```
 
 <!-- end_slide -->
@@ -283,9 +409,14 @@ printf '\e[33m%s\e[0m\n' 'immediate false: it fires on the space after the word'
 
 > Write the list, point a word at it, and the detour is gone.
 
-```bash +exec +acquire_terminal
+```bash +exec_replace
+printf '  \e[1;33m%s\e[0m%s\e[36m%s\e[0m\n' '1 ' 'write the list       ' '~/.config/value-sets/docs'
+printf '  \e[1;33m%s\e[0m%s\e[36m%s\e[0m\n' '2 ' 'point a word at it   ' ';;docs ─▶ __value_picker.sh docs'
+```
+
+```bash +exec
 /// ./demo.sh register
-/// ./demo.sh shell <<'EOF'
+/// ./demo.sh window <<'EOF'
 curl -sI ;;docs | head -1
 /// EOF
 ```
@@ -325,9 +456,14 @@ git clone https://github.com/Piotr1215/dotfiles
 ```
 
 ```bash +exec_replace
-printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' 'scripts/__value_picker.sh      ' 'the picker'
-printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' 'scripts/__lib_rofi_theme.sh    ' 'its rofi look'
-printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' '.config/value-sets/            ' 'example lists'
+printf '  \e[90m%s\e[0m\n' 'in the dotfiles clone'
+printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' 'scripts/__value_picker.sh       ' 'the picker'
+printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' 'scripts/__lib_rofi_theme.sh     ' 'its rofi look'
+printf '  \e[90m%s\e[0m\n' 'in .config/autokey/data/My Phrases/'
+printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' '.dot_picker.json                ' 'the trigger word, ;;dot'
+printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' 'dot_picker.py                   ' 'runs the picker; change its path to the clone'
+echo
+printf '  \e[1;33m%s\e[0m\n' '▶ First list: one value per line in ~/.config/value-sets/'
 ```
 
 <!-- end_slide -->
@@ -335,7 +471,7 @@ printf '  \e[35m•\e[0m \e[36m%s\e[0m%s\n' '.config/value-sets/            ' 'e
 ## Takeaways
 
 ```bash +exec_replace
-printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'so what     ' 'any value lands at the cursor, in any window'
+printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'so what     ' 'any value lands at the cursor, in any X11 app'
 printf '  \e[32m%s\e[0m\e[36m%s\e[0m%s\n' '✓ ' 'now what    ' 'the fzf idea, stretched over the whole desktop'
 printf '  \e[1;33m%s\e[0m\e[36m%s\e[0m%s\n' '▶ ' 'then what   ' 'a list for the value copied by hand most often'
 ```
@@ -357,5 +493,5 @@ Channel:     youtube.com/@cloud-native-corner
 # That's All Folks! 👋
 
 ```bash +exec_replace
-just intro_toilet That\'s all folks!
+echo "That's all folks!" | figlet -f small -w 84
 ```
