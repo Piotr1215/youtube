@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+These rules govern this public repo only. Every deck made here lives here, and no other repo's rules, partials or decks belong in this file.
+
 ## Build & Test Commands
 - Run slide presentations: `just present` or `slides slides.md`
 - Run a demo script: `bash demo.sh` or `./demo.sh`
