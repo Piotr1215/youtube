@@ -1,0 +1,10 @@
+deck = "semicolon-shortcuts"
+
+# The only change the deck makes to the desktop: "A New List, Live" registers
+# ;;docs. just reset removes it, so the deck is ready to record again.
+[[component]]
+name = "docs trigger"
+kind = "command"
+live = true
+probe = "./demo.sh registered"
+remove = "./demo.sh unregister"
